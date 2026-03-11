@@ -6,12 +6,6 @@ import plotly.express as px
 from shiny import App, ui, render
 from shinywidgets import output_widget, render_widget
 
-# --- NEW IMPORTS FOR RDKIT ---
-from rdkit import Chem
-from rdkit.Chem import Draw
-import base64
-from io import BytesIO
-
 # 1. Get the directory where app.py is currently running
 app_dir = Path(__file__).parent
 
