@@ -3,4 +3,3 @@ shinywidgets
 pandas
 numpy
 plotly
-rdkit
