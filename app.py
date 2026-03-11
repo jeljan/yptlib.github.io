@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import urllib.parse
 from pathlib import Path
 import plotly.express as px
 from shiny import App, ui, render
@@ -52,26 +53,20 @@ def server(input, output, session):
     def molecule_ui():
         data_type = input.data_type()
         
-        # Get the SMILES string (fallback to a default if not in dict)
+        # Get the SMILES string
         smiles = smiles_dict.get(data_type, "") 
         
         if not smiles:
             return ui.p("No SMILES available for this drug.", style="color: gray; font-style: italic;")
 
-        # Convert SMILES to an image
-        mol = Chem.MolFromSmiles(smiles)
-        if mol is None:
-            return ui.p("Invalid SMILES string.", style="color: red;")
-            
-        img = Draw.MolToImage(mol, size=(250, 250))
+        # URL-encode the SMILES string so special characters (+, #, /, etc.) don't break the web link
+        safe_smiles = urllib.parse.quote(smiles)
         
-        # Convert image to Base64 to render directly in HTML
-        buffered = BytesIO()
-        img.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
-        img_uri = f"data:image/png;base64,{img_str}"
+        # Use the NCI CACTUS API to generate the image automatically
+        img_url = f"https://cactus.nci.nih.gov/chemical/structure/{safe_smiles}/image"
         
-        return ui.HTML(f'<img src="{img_uri}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px;">')
+        # Return the HTML image tag directly pointing to the API
+        return ui.HTML(f'<img src="{img_url}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px;" alt="Chemical Structure">')
 
     @render_widget
     def site_plot():
