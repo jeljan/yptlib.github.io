@@ -1,0 +1,741 @@
+Catalog ID,MW,Formula,Chemical name,Smiles
+Z4320871047,365.4191,C18H20FNO4S,4-{[2-(4-methoxyphenyl)pyrrolidin-1-yl]methyl}phenyl sulfurofluoridate,COC=1C=CC(=CC1)C2CCCN2CC=3C=CC(=CC3)OS(=O)(=O)F
+Z2867527691,331.3648,C7H10FN3O5S3,"2-[2-(N-methylmethanesulfonamido)acetamido]-1,3-thiazole-5-sulfonyl fluoride",CN(CC(=O)NC1=NC=C(S1)S(=O)(=O)F)S(C)(=O)=O
+Z4246893374,335.3931,C17H18FNO3S,"4-{[(5,6,7,8-tetrahydronaphthalen-1-yl)amino]methyl}phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)CNC=2C=CC=C3CCCCC23
+Z2768307128,373.3221,C16H11F4NO3S,"4-[4-(trifluoromethyl)-2,3-dihydro-1H-indole-1-carbonyl]benzene-1-sulfonyl fluoride",O=C(C=1C=CC(=CC1)S(=O)(=O)F)N2CCC=3C(=CC=CC32)C(F)(F)F
+Z4262569460,332.3479,C13H17FN2O5S,5-[(oxolan-3-yl)(propan-2-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,CC(C)N(C(=O)C1=CN=CC(=C1)OS(=O)(=O)F)C2CCOC2
+Z4582622623,400.445,C16H17FN2O5S2,4-[({[3-(sulfamoylmethyl)phenyl]methyl}carbamoyl)methyl]benzene-1-sulfonyl fluoride,NS(=O)(=O)CC=1C=CC=C(C1)CNC(=O)CC=2C=CC(=CC2)S(=O)(=O)F
+Z4344017915,327.3744,C14H18FN3O3S,2-{[(1-ethenyl-1H-pyrazol-5-yl)methyl][(2-methylfuran-3-yl)methyl]amino}ethane-1-sulfonyl fluoride,C=CN1N=CC=C1CN(CCS(=O)(=O)F)CC=2C=COC2C
+Z2867514599,347.3857,C12H14FN3O4S2,3-[(3-ethyl-1-methyl-1H-pyrazol-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CCC1=NN(C)C=C1NS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z4317727300,425.4065,C18H17F2N3O5S,4-{[4-(4-fluorobenzoyl)piperazine-1-carbonyl]amino}phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCN(CC2)C(=O)C=3C=CC(F)=CC3
+Z3488605483,349.3799,C16H16FN3O3S,"3-{3-cyclopropyl-4H,5H,6H,7H-pyrazolo[1,5-a]pyrimidine-4-carbonyl}benzene-1-sulfonyl fluoride",O=C(C=1C=CC=C(C1)S(=O)(=O)F)N2CCCN3N=CC(=C23)C4CC4
+Z4187593658,364.4343,C18H21FN2O3S,"3-{[(3-acetamido-2,4-dimethylphenyl)amino]methyl}-4-methylbenzene-1-sulfonyl fluoride",CC(=O)NC1=C(C)C=CC(NCC=2C=C(C=CC2C)S(=O)(=O)F)=C1C
+Z3488641999,324.2547,C10H8F4N4O2S,"6-{[1-(2,2,2-trifluoroethyl)-1H-pyrazol-4-yl]amino}pyridine-3-sulfonyl fluoride",O=S(=O)(F)C=1C=CC(=NC1)NC=2C=NN(C2)CC(F)(F)F
+Z4343660517,326.3864,C15H19FN2O3S,2-{[(3-methylfuran-2-yl)methyl][(2-methylpyridin-3-yl)methyl]amino}ethane-1-sulfonyl fluoride,CC=1C=COC1CN(CCS(=O)(=O)F)CC=2C=CC=NC2C
+Z3488544889,343.3209,C15H12F3NO3S,3-{2-[3-(difluoromethyl)phenyl]acetamido}benzene-1-sulfonyl fluoride,O=C(CC=1C=CC=C(C1)C(F)F)NC=2C=CC=C(C2)S(=O)(=O)F
+Z3919176082,349.3304,C12H9F2NO5S2,3-(4-fluorobenzenesulfonamido)phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC=C(C1)NS(=O)(=O)C=2C=CC(F)=CC2
+Z2759887155,384.4025,C15H13FN2O5S2,"3-[(1-oxo-1,2,3,4-tetrahydroisoquinolin-6-yl)sulfamoyl]benzene-1-sulfonyl fluoride",O=C1NCCC=2C=C(C=CC12)NS(=O)(=O)C=3C=CC=C(C3)S(=O)(=O)F
+Z4607528727,328.3194,C12H13FN4O4S,5-(3-ethyl-1-methyl-1H-pyrazole-5-amido)pyridin-3-yl sulfurofluoridate,CCC=1C=C(C(=O)NC2=CN=CC(=C2)OS(=O)(=O)F)N(C)N1
+Z4343920061,319.3955,C13H22FN3O3S,2-[(cyclopropylmethyl)[1-(1-methoxypropan-2-yl)-1H-pyrazol-3-yl]amino]ethane-1-sulfonyl fluoride,COCC(C)N1C=CC(=N1)N(CCS(=O)(=O)F)CC2CC2
+Z4607528854,357.2895,C13H9F2N3O5S,5-(3-carbamoyl-5-fluorobenzamido)pyridin-3-yl sulfurofluoridate,NC(=O)C=1C=C(F)C=C(C1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z4343677035,316.3948,C13H21FN4O2S,"2-{[(cyclohex-3-en-1-yl)methyl][(2-methyl-2H-1,2,3-triazol-4-yl)methyl]amino}ethane-1-sulfonyl fluoride",CN1N=CC(CN(CCS(=O)(=O)F)CC2CC=CCC2)=N1
+Z4607528883,332.2552,C12H7F3N2O4S,"5-(2,5-difluorobenzamido)pyridin-3-yl sulfurofluoridate",O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C=2C=C(F)C=CC2F
+Z4326791567,318.3875,C12H15FN2O3S2,"2-{[(2-methylfuran-3-yl)methyl][(1,2-thiazol-5-yl)methyl]amino}ethane-1-sulfonyl fluoride",CC=1OC=CC1CN(CCS(=O)(=O)F)CC2=CC=NS2
+Z4262308904,357.3971,C16H20FNO5S,4-(2-{5-oxaspiro[3.5]nonan-6-yl}acetamido)phenyl sulfurofluoridate,O=C(CC1CCCC2(CCC2)O1)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4344105230,329.4334,C15H24FN3O2S,"2-{[(cyclohex-3-en-1-yl)methyl][(1,4-dimethyl-1H-pyrazol-3-yl)methyl]amino}ethane-1-sulfonyl fluoride",CC1=CN(C)N=C1CN(CCS(=O)(=O)F)CC2CC=CCC2
+Z4332070207,370.371,C16H16F2N2O4S,4-({[1-(2-fluorophenyl)ethyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate,CC(C=1C=CC=CC1F)N(C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4343785824,315.4035,C15H22FNO3S,2-{[(3-methyloxetan-3-yl)methyl][(3-methylphenyl)methyl]amino}ethane-1-sulfonyl fluoride,CC=1C=CC=C(C1)CN(CCS(=O)(=O)F)CC2(C)COC2
+Z4262369568,394.4389,C14H19FN2O6S2,4-[4-(pyrrolidine-1-sulfonyl)butanamido]phenyl sulfurofluoridate,O=C(CCCS(=O)(=O)N1CCCC1)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4343659193,326.3897,C14H19FN4O2S,"2-{[(2-ethyl-2H-1,2,3-triazol-4-yl)methyl](3-methylphenyl)amino}ethane-1-sulfonyl fluoride",CCN1N=CC(CN(CCS(=O)(=O)F)C=2C=CC=C(C)C2)=N1
+Z4607560593,424.3424,C16H13F5N2O4S,4-[({[3-fluoro-5-(trifluoromethyl)phenyl]methyl}(methyl)carbamoyl)amino]phenyl sulfurofluoridate,CN(CC=1C=C(F)C=C(C1)C(F)(F)F)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4343816158,329.4334,C15H24FN3O2S,2-({[1-(cyclopropylmethyl)-1H-pyrazol-5-yl]methyl}(3-methylcyclobutyl)amino)ethane-1-sulfonyl fluoride,CC1CC(C1)N(CCS(=O)(=O)F)CC2=CC=NN2CC3CC3
+Z4332082056,398.8363,C17H16ClFN2O4S,"4-[(7-chloro-8-methyl-1,2,3,4-tetrahydroisoquinoline-2-carbonyl)amino]phenyl sulfurofluoridate",CC=1C(Cl)=CC=C2CCN(CC12)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262296091,377.3587,C14H10F3NO4S2,4-{2-[(difluoromethyl)sulfanyl]benzamido}phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=CC2SC(F)F
+Z3086086023,337.8179,C12H13ClFNO3S2,3-chloro-4-[(2-methylthiolan-3-yl)carbamoyl]benzene-1-sulfonyl fluoride,CC1SCCC1NC(=O)C=2C=CC(=CC2Cl)S(=O)(=O)F
+Z4607528834,348.3473,C13H17FN2O6S,"methyl 4-({5-[(fluorosulfonyl)oxy]pyridin-3-yl}carbamoyl)-3,3-dimethylbutanoate",COC(=O)CC(C)(C)CC(=O)NC=1C=NC=C(C1)OS(=O)(=O)F
+Z3482546899,395.854,C14H15ClFNO5S2,methyl 1-{2-[(4-chlorophenyl)sulfanyl]acetyl}-4-(fluorosulfonyl)pyrrolidine-2-carboxylate,COC(=O)C1CC(CN1C(=O)CSC=2C=CC(Cl)=CC2)S(=O)(=O)F
+Z2867535459,334.3471,C10H11FN4O4S2,"3-[(1-ethyl-1H-1,2,4-triazol-5-yl)sulfamoyl]benzene-1-sulfonyl fluoride",CCN1N=CN=C1NS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z4262406729,332.3479,C13H17FN2O5S,"rac-5-[(2R,4R)-4-(hydroxymethyl)-2-methylpiperidine-1-carbonyl]pyridin-3-yl sulfurofluoridate","C[C@@H]1C[C@H](CO)CCN1C(=O)C=2C=NC=C(C2)OS(=O)(=O)F |&1:1,3|"
+Z3488545562,341.3149,C13H12FN3O5S,"3-[2-(3-methyl-2,4-dioxo-1,2,3,4-tetrahydropyrimidin-1-yl)acetamido]benzene-1-sulfonyl fluoride",CN1C(=O)C=CN(CC(=O)NC=2C=CC=C(C2)S(=O)(=O)F)C1=O
+Z2768315461,362.4185,C18H19FN2O3S,"5-[(1R,3S,5S)-3-phenyl-8-azabicyclo[3.2.1]octane-8-carbonyl]-1H-pyrrole-3-sulfonyl fluoride",O=C(C1=CC(=CN1)S(=O)(=O)F)N2[C@@H]3CC[C@H]2C[C@H](C3)C=4C=CC=CC4
+Z2867517973,320.3173,C10H9FN2O5S2,"3-[(4-methyl-1,2-oxazol-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride",CC1=CON=C1NS(=O)(=O)C2=CC=CC(=C2)S(=O)(=O)F
+Z2768273221,387.3849,C18H14FN3O4S,"3-({3-[(2-oxo-1,2-dihydropyrimidin-1-yl)methyl]phenyl}carbamoyl)benzene-1-sulfonyl fluoride",O=C(NC=1C=CC=C(C1)CN2C=CC=NC2=O)C=3C=CC=C(C3)S(=O)(=O)F
+Z3488600307,323.361,C11H14FNO5S2,"4-({[(1s,3s)-3-hydroxycyclobutyl]methyl}sulfamoyl)benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC[C@@H]2C[C@H](O)C2
+Z2768273220,387.3849,C18H14FN3O4S,"4-({3-[(2-oxo-1,2-dihydropyrimidin-1-yl)methyl]phenyl}carbamoyl)benzene-1-sulfonyl fluoride",O=C(NC=1C=CC=C(C1)CN2C=CC=NC2=O)C=3C=CC(=CC3)S(=O)(=O)F
+Z3488543746,351.3214,C12H8F3NO4S2,3-[3-(difluoromethoxy)thiophene-2-amido]benzene-1-sulfonyl fluoride,O=C(NC=1C=CC=C(C1)S(=O)(=O)F)C=2SC=CC2OC(F)F
+Z2907424037,371.811,C16H15ClFNO4S,4-{2-[(5-chloro-2-methoxyphenyl)formamido]ethyl}benzene-1-sulfonyl fluoride,COC=1C=CC(Cl)=CC1C(=O)NCCC=2C=CC(=CC2)S(=O)(=O)F
+Z3488555485,327.3347,C12H14FN5O3S,"4-{2-[5-(propan-2-yl)-1H-1,2,3,4-tetrazol-1-yl]acetamido}benzene-1-sulfonyl fluoride",CC(C)C1=NN=NN1CC(=O)NC=2C=CC(=CC2)S(=O)(=O)F
+Z4262427692,332.3479,C13H17FN2O5S,5-[(3R)-3-(propan-2-yloxy)pyrrolidine-1-carbonyl]pyridin-3-yl sulfurofluoridate,CC(C)O[C@@H]1CCN(C1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2867503041,335.3948,C11H10FNO4S3,3-[(4-methylthiophen-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CC1=CSC=C1NS(=O)(=O)C2=CC=CC(=C2)S(=O)(=O)F
+Z3292075565,377.4331,C18H20FN3O3S,"4-{2-oxo-2-[4-(pyridin-4-yl)-1,4-diazepan-1-yl]ethyl}benzene-1-sulfonyl fluoride",O=C(CC=1C=CC(=CC1)S(=O)(=O)F)N2CCCN(CC2)C=3C=CN=CC3
+Z4344044178,325.4016,C15H20FN3O2S,"2-{benzyl[(1,3-dimethyl-1H-pyrazol-5-yl)methyl]amino}ethane-1-sulfonyl fluoride",CC=1C=C(CN(CCS(=O)(=O)F)CC=2C=CC=CC2)N(C)N1
+Z3076755441,390.4286,C19H19FN2O4S,4-({[(3-cyclopropaneamidophenyl)methyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride,O=C(CC=1C=CC(=CC1)S(=O)(=O)F)NCC=2C=CC=C(C2)NC(=O)C3CC3
+Z4321023026,392.4444,C19H21FN2O4S,4-[(4-benzamidopiperidin-1-yl)methyl]phenyl sulfurofluoridate,O=C(NC1CCN(CC=2C=CC(=CC2)OS(=O)(=O)F)CC1)C=3C=CC=CC3
+Z4751086371,364.3913,C17H17FN2O4S,4-({[(3-acetamidophenyl)methyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride,CC(=O)NC=1C=CC=C(C1)CNC(=O)CC=2C=CC(=CC2)S(=O)(=O)F
+Z4235912223,317.3597,C11H12FN3O3S2,"3-{[(4-ethyl-5-oxo-4,5-dihydro-1H-1,2,4-triazol-3-yl)sulfanyl]methyl}benzene-1-sulfonyl fluoride",CCN1C(=O)NN=C1SCC2=CC=CC(=C2)S(=O)(=O)F
+Z4751086374,404.4551,C20H21FN2O4S,4-({[(3-cyclobutaneamidophenyl)methyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride,O=C(CC=1C=CC(=CC1)S(=O)(=O)F)NCC=2C=CC=C(C2)NC(=O)C3CCC3
+Z4187619618,387.4462,C16H18FNO5S2,3-{[(3-methanesulfonyl-5-methoxyphenyl)amino]methyl}-4-methylbenzene-1-sulfonyl fluoride,COC=1C=C(C=C(C1)S(C)(=O)=O)NCC=2C=C(C=CC2C)S(=O)(=O)F
+Z4607567192,355.3564,C16H15F2NO4S,4-[4-(4-fluorophenyl)butanamido]phenyl sulfurofluoridate,O=C(CCCC=1C=CC(F)=CC1)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262348928,357.3292,C15H13F2NO5S,4-[3-(4-fluorophenoxy)propanamido]phenyl sulfurofluoridate,O=C(CCOC=1C=CC(F)=CC1)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262362146,341.3579,C14H16FN3O4S,4-{2-[1-(propan-2-yl)-1H-pyrazol-3-yl]acetamido}phenyl sulfurofluoridate,CC(C)N1C=CC(CC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)=N1
+Z2969937130,328.3592,C14H17FN2O4S,6-{[1-(5-ethylfuran-2-yl)-2-methoxyethyl]amino}pyridine-3-sulfonyl fluoride,CCC1=CC=C(O1)C(COC)NC=2C=CC(=CN2)S(=O)(=O)F
+Z4262269852,391.3736,C17H14FN3O5S,4-[1-(3-methoxyphenyl)-1H-pyrazole-3-amido]phenyl sulfurofluoridate,COC=1C=CC=C(C1)N2C=CC(=N2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262452109,332.3479,C13H17FN2O5S,"5-[(5S)-2,2,5-trimethylmorpholine-4-carbonyl]pyridin-3-yl sulfurofluoridate",C[C@H]1COC(C)(C)CN1C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2768287412,392.4444,C19H21FN2O4S,4-[methyl({[2-(morpholin-4-yl)phenyl]methyl})carbamoyl]benzene-1-sulfonyl fluoride,CN(CC=1C=CC=CC1N2CCOCC2)C(=O)C=3C=CC(=CC3)S(=O)(=O)F
+Z4262407994,334.3207,C12H15FN2O6S,5-[3-(methoxymethyl)morpholine-4-carbonyl]pyridin-3-yl sulfurofluoridate,COCC1COCCN1C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z3489903992,421.4857,C20H24FN3O4S,4-{4-[(dimethylcarbamoyl)(phenyl)methyl]piperazin-1-yl}phenyl sulfurofluoridate,CN(C)C(=O)C(C=1C=CC=CC1)N2CCN(CC2)C=3C=CC(=CC3)OS(=O)(=O)F
+Z3488635548,313.3478,C13H16FN3O3S,"6-{[1-(3,5-dimethyl-1,2-oxazol-4-yl)propan-2-yl]amino}pyridine-3-sulfonyl fluoride",CC1=NOC(C)=C1CC(C)NC=2C=CC(=CN2)S(=O)(=O)F
+Z3489903940,335.3732,C15H10FNO3S2,"4-(4-phenyl-1,3-thiazol-2-yl)phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)C2=NC(=CS2)C=3C=CC=CC3
+Z2736753124,323.3394,C15H14FNO4S,4-[2-(3-methylphenoxy)acetamido]benzene-1-sulfonyl fluoride,CC=1C=CC=C(C1)OCC(=O)NC=2C=CC(=CC2)S(=O)(=O)F
+Z3489903955,345.3665,C13H12FNO5S2,3-(4-methylbenzenesulfonamido)phenyl sulfurofluoridate,CC=1C=CC(=CC1)S(=O)(=O)NC=2C=CC=C(C2)OS(=O)(=O)F
+Z4343777755,329.4334,C15H24FN3O2S,"2-{[(2,4-dimethylpyrimidin-5-yl)methyl](3-methylcyclopentyl)amino}ethane-1-sulfonyl fluoride",CC=1N=CC(CN(CCS(=O)(=O)F)C2CCC(C)C2)=C(C)N1
+Z3305234780,381.8489,C18H17ClFNO3S,3-({1-[(4-chlorophenyl)methyl]cyclobutyl}carbamoyl)benzene-1-sulfonyl fluoride,O=C(NC1(CC=2C=CC(Cl)=CC2)CCC1)C=3C=CC=C(C3)S(=O)(=O)F
+Z2907410050,321.3881,C12H16FNO4S2,2-methyl-5-(piperidine-1-sulfonyl)benzene-1-sulfonyl fluoride,CC=1C=CC(=CC1S(=O)(=O)F)S(=O)(=O)N2CCCCC2
+Z3292075605,367.7792,C16H11ClFNO4S,3-{[(2-chloro-1-benzofuran-3-yl)methyl]carbamoyl}benzene-1-sulfonyl fluoride,O=C(NCC1=C(Cl)OC=2C=CC=CC12)C=3C=CC=C(C3)S(=O)(=O)F
+Z4262427163,329.3075,C11H12FN5O4S,"5-{[1-(propan-2-yl)-1H-1,2,4-triazol-5-yl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC(C)N1N=CN=C1NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z3292075696,338.3573,C14H15FN4O3S,"4-{[(1-cyclobutyl-1H-1,2,3-triazol-4-yl)methyl]carbamoyl}benzene-1-sulfonyl fluoride",O=C(NCC1=CN(N=N1)C2CCC2)C=3C=CC(=CC3)S(=O)(=O)F
+Z3489903974,364.3449,C17H13FO6S,3-(4-methoxyphenyl)-2-methyl-4-oxo-4H-chromen-7-yl sulfurofluoridate,COC=1C=CC(=CC1)C=2C(=O)C=3C=CC(=CC3OC2C)OS(=O)(=O)F
+Z3489903949,335.307,C15H10FNO5S,"2-benzyl-1,3-dioxo-2,3-dihydro-1H-isoindol-4-yl sulfurofluoridate",O=C1C=2C=CC=C(OS(=O)(=O)F)C2C(=O)N1CC=3C=CC=CC3
+Z4332080283,342.3427,C14H15FN2O5S,4-({methyl[(3-methylfuran-2-yl)methyl]carbamoyl}amino)phenyl sulfurofluoridate,CC=1C=COC1CN(C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z3282895848,343.4136,C16H22FNO4S,1-(2-methyl-4-phenoxybutanoyl)piperidine-4-sulfonyl fluoride,CC(CCOC=1C=CC=CC1)C(=O)N2CCC(CC2)S(=O)(=O)F
+Z4607560622,336.3366,C12H17FN2O6S,4-({[2-(2-hydroxyethoxy)ethyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate,CN(CCOCCO)C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F
+Z4607531286,365.4191,C18H20FNO4S,4-{[2-(2-methylphenyl)morpholin-4-yl]methyl}phenyl sulfurofluoridate,CC=1C=CC=CC1C2CN(CC=3C=CC(=CC3)OS(=O)(=O)F)CCO2
+Z4187629343,381.4251,C16H20FN5O3S,4-methyl-3-[({1-[2-(2-oxoimidazolidin-1-yl)ethyl]-1H-pyrazol-3-yl}amino)methyl]benzene-1-sulfonyl fluoride,CC=1C=CC(=CC1CNC=2C=CN(CCN3CCNC3=O)N2)S(=O)(=O)F
+Z4607533147,332.3479,C13H17FN2O5S,4-{[4-(2-hydroxyethyl)-3-oxopiperazin-1-yl]methyl}phenyl sulfurofluoridate,O=C1CN(CC=2C=CC(=CC2)OS(=O)(=O)F)CCN1CCO
+Z4344243373,326.3864,C15H19FN2O3S,"2-{[(5-methyl-1,3-oxazol-4-yl)methyl][(2-methylphenyl)methyl]amino}ethane-1-sulfonyl fluoride",CC=1OC=NC1CN(CCS(=O)(=O)F)CC=2C=CC=CC2C
+Z4607533155,409.4286,C19H20FNO6S,"rac-methyl (3R,4S)-1-({4-[(fluorosulfonyl)oxy]phenyl}methyl)-4-(4-hydroxyphenyl)pyrrolidine-3-carboxylate","COC(=O)[C@@H]1CN(CC=2C=CC(=CC2)OS(=O)(=O)F)C[C@H]1C=3C=CC(O)=CC3 |&1:4,20|"
+Z4262529165,329.3075,C11H12FN5O4S,"5-{[1-(propan-2-yl)-1H-1,2,3-triazol-4-yl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC(C)N1C=C(N=N1)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4332080203,398.3811,C17H16F2N2O5S,4-{[3-(2-fluorophenoxy)pyrrolidine-1-carbonyl]amino}phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCC(C2)OC3=CC=CC=C3F
+Z4343805801,317.4027,C12H16FN3O2S2,2-[(1-methyl-1H-pyrazol-4-yl)[(5-methylthiophen-3-yl)methyl]amino]ethane-1-sulfonyl fluoride,CC1=CC(=CS1)CN(CCS(=O)(=O)F)C=2C=NN(C)C2
+Z4607560674,328.3194,C12H13FN4O4S,4-({[(1-methyl-1H-pyrazol-3-yl)methyl]carbamoyl}amino)phenyl sulfurofluoridate,CN1C=CC(CNC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)=N1
+Z4262542917,332.3479,C13H17FN2O5S,5-[2-(methoxymethyl)piperidine-1-carbonyl]pyridin-3-yl sulfurofluoridate,COCC1CCCCN1C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4607533131,363.4032,C18H18FNO4S,"4-({6'-hydroxy-2',3'-dihydro-1'H-spiro[cyclopropane-1,4'-isoquinolin]-2'-yl}methyl)phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)CN2CC=3C=CC(O)=CC3C4(CC4)C2
+Z4262427364,332.3479,C13H17FN2O5S,5-[(2-ethyloxan-4-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,CCC1CC(CCO1)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4332071483,371.4071,C14H14FN3O4S2,"4-({cyclopropyl[(1,3-thiazol-2-yl)methyl]carbamoyl}amino)phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N(CC2=NC=CS2)C3CC3
+Z3481435568,332.7023,C10H9ClF4N2O2S,1-[3-chloro-5-(trifluoromethyl)pyridin-2-yl]pyrrolidine-3-sulfonyl fluoride,O=S(=O)(F)C1CCN(C1)C=2N=CC(=CC2Cl)C(F)(F)F
+Z4332079265,372.4548,C17H25FN2O4S,"4-[(4,4-diethylazepane-1-carbonyl)amino]phenyl sulfurofluoridate",CCC1(CC)CCCN(CC1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z3489903998,344.3601,C17H13FN2O3S,"2-{[1,1'-biphenyl]-4-yl}-6-methylpyrimidin-4-yl sulfurofluoridate",CC=1C=C(N=C(N1)C=2C=CC(=CC2)C=3C=CC=CC3)OS(=O)(=O)F
+Z2675971731,358.1884,C12H11Cl2F2NO3S,"4-[2-(2,2-dichloro-1-methylcyclopropyl)acetamido]-2-fluorobenzene-1-sulfonyl fluoride",CC1(CC(=O)NC2=CC=C(C(F)=C2)S(=O)(=O)F)CC1(Cl)Cl
+Z4607567347,456.3892,C15H12F4N2O6S2,4-[3-methyl-4-(trifluoromethanesulfonamido)benzamido]phenyl sulfurofluoridate,CC=1C=C(C=CC1NS(=O)(=O)C(F)(F)F)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2768306036,388.3481,C17H10F2N4O3S,3-{[1-(2-cyano-3-fluorophenyl)-1H-pyrazol-3-yl]carbamoyl}benzene-1-sulfonyl fluoride,N#CC=1C(F)=CC=CC1N2C=CC(=N2)NC(=O)C=3C=CC=C(C3)S(=O)(=O)F
+Z4262302093,333.3326,C13H16FNO6S,methyl 4-({4-[(fluorosulfonyl)oxy]phenyl}carbamoyl)-3-methylbutanoate,COC(=O)CC(C)CC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F
+Z2768175804,398.2037,C15H9BrFNO4S,4-(5-bromo-1-benzofuran-2-amido)benzene-1-sulfonyl fluoride,O=C(NC=1C=CC(=CC1)S(=O)(=O)F)C2=CC=3C=C(Br)C=CC3O2
+Z4262326692,326.3002,C13H11FN2O5S,4-(5-methoxypyridine-3-amido)phenyl sulfurofluoridate,COC=1C=NC=C(C1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2759769338,335.3319,C10H10FN3O5S2,"3-{[(5-methyl-1,2,4-oxadiazol-3-yl)methyl]sulfamoyl}benzene-1-sulfonyl fluoride",CC1=NC(CNS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F)=NO1
+Z4607567259,372.4117,C16H21FN2O5S,4-[3-(cyclopentylformamido)butanamido]phenyl sulfurofluoridate,CC(CC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)NC(=O)C2CCCC2
+Z4403580735,357.3971,C16H20FNO5S,3-{1-[3-(fluorosulfonyl)benzoyl]piperidin-4-yl}-2-methylpropanoic acid,CC(CC1CCN(CC1)C(=O)C=2C=CC=C(C2)S(=O)(=O)F)C(=O)O
+Z4262289095,357.3143,C13H12FN3O6S,methyl 5-({4-[(fluorosulfonyl)oxy]phenyl}carbamoyl)-1-methyl-1H-pyrazole-3-carboxylate,COC(=O)C=1C=C(C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)N(C)N1
+Z2768316749,367.4168,C12H18FN3O5S2,5-[4-(methanesulfonamidomethyl)piperidine-1-carbonyl]-1H-pyrrole-3-sulfonyl fluoride,CS(=O)(=O)NCC1CCN(CC1)C(=O)C2=CC(=CN2)S(=O)(=O)F
+Z4607560623,434.4051,C18H18F4N2O4S,4-{[methyl({1-[2-(trifluoromethyl)phenyl]propan-2-yl})carbamoyl]amino}phenyl sulfurofluoridate,CC(CC=1C=CC=CC1C(F)(F)F)N(C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z5719503108,504.5166,C18H24F4N2O6S2,"3-{[3,3'-bipiperidine]-1-sulfonyl}benzene-1-sulfonyl fluoride; trifluoroacetic acid",O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)N2CCCC(C2)C3CCCNC3
+Z4607533154,396.4795,C18H25FN4O3S,"4-[(4-{[5-(propan-2-yl)-1H-1,2,4-triazol-3-yl]methyl}piperidin-1-yl)methyl]phenyl sulfurofluoridate",CC(C)C1=NC(CC2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2)=NN1
+Z3271895692,381.2411,C11H10BrFN2O3S2,5-{[(3-bromo-5-methylthiophen-2-yl)methyl]carbamoyl}-1H-pyrrole-3-sulfonyl fluoride,CC1=CC(Br)=C(CNC(=O)C2=CC(=CN2)S(=O)(=O)F)S1
+Z4607528882,356.3726,C14H17FN4O4S,"5-[2-(1-ethyl-3,5-dimethyl-1H-pyrazol-4-yl)acetamido]pyridin-3-yl sulfurofluoridate",CCN1N=C(C)C(CC(=O)NC=2C=NC=C(C2)OS(=O)(=O)F)=C1C
+Z4607560613,404.3178,C15H11F3N2O6S,"4-({[(2,2-difluoro-1,3-dioxaindan-5-yl)methyl]carbamoyl}amino)phenyl sulfurofluoridate",O=C(NCC=1C=CC=2OC(F)(F)OC2C1)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262559672,352.3806,C16H17FN2O4S,5-[(4-methylphenyl)(propan-2-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,CC=1C=CC(=CC1)N(C(=O)C=2C=NC=C(C2)OS(=O)(=O)F)C(C)C
+Z4607533178,326.3433,C14H15FN2O4S,"4-({methyl[(6-oxo-1,6-dihydropyridin-2-yl)methyl]amino}methyl)phenyl sulfurofluoridate",CN(CC=1C=CC(=CC1)OS(=O)(=O)F)CC2=CC=CC(=O)N2
+Z2867517952,330.3551,C12H11FN2O4S2,4-[(4-methylpyridin-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CC=1C=CN=C(C1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4607560773,426.7705,C15H11ClF4N2O4S,4-[({[4-chloro-3-(trifluoromethyl)phenyl]methyl}carbamoyl)amino]phenyl sulfurofluoridate,O=C(NCC=1C=CC(Cl)=C(C1)C(F)(F)F)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2509437180,373.3948,C15H13F2NO4S2,3-[(4-cyclopropyl-3-fluorophenyl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NC=2C=CC(=C(F)C2)C3CC3
+Z4607560595,407.2441,C15H13Cl2FN2O4S,"4-({[(2,6-dichlorophenyl)methyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate",CN(CC=1C(Cl)=CC=CC1Cl)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262581102,332.3479,C13H17FN2O5S,"rac-5-{[(2R,4R)-2-ethyloxan-4-yl]carbamoyl}pyridin-3-yl sulfurofluoridate","CC[C@H]1C[C@H](CCO1)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F |&1:2,4|"
+Z4332079216,396.3901,C17H17FN2O6S,"4-[(9-methoxy-2,3,4,5-tetrahydro-1,4-benzoxazepine-4-carbonyl)amino]phenyl sulfurofluoridate",COC=1C=CC=C2CN(CCOC12)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262408074,328.3592,C14H17FN2O4S,5-({spiro[2.5]octan-5-yl}carbamoyl)pyridin-3-yl sulfurofluoridate,O=C(NC1CCCC2(CC2)C1)C=3C=NC=C(C3)OS(=O)(=O)F
+Z4332064213,370.4389,C17H23FN2O4S,"rac-4-[({[(1R,2S)-2-cyclohexylcyclopropyl]methyl}carbamoyl)amino]phenyl sulfurofluoridate","O=C(NC[C@@H]1C[C@H]1C2CCCCC2)NC=3C=CC(=CC3)OS(=O)(=O)F |&1:4,6|"
+Z4262507898,332.3479,C13H17FN2O5S,5-[3-(methoxymethyl)piperidine-1-carbonyl]pyridin-3-yl sulfurofluoridate,COCC1CCCN(C1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2759888959,363.4032,C18H18FNO4S,3-(3-benzylmorpholine-4-carbonyl)benzene-1-sulfonyl fluoride,O=C(C=1C=CC=C(C1)S(=O)(=O)F)N2CCOCC2CC=3C=CC=CC3
+Z4262549038,328.3161,C13H13FN2O5S,5-[(oxolan-3-yl)(prop-2-yn-1-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,C#CCN(C(=O)C1=CN=CC(=C1)OS(=O)(=O)F)C2CCOC2
+Z4332081600,388.7985,C15H14ClFN2O5S,4-({[(3-chloro-2-methoxyphenyl)methyl]carbamoyl}amino)phenyl sulfurofluoridate,COC=1C(Cl)=CC=CC1CNC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262531957,324.3274,C14H13FN2O4S,5-[(1-phenylethyl)carbamoyl]pyridin-3-yl sulfurofluoridate,CC(NC(=O)C=1C=NC=C(C1)OS(=O)(=O)F)C=2C=CC=CC2
+Z3482547853,466.9319,C17H20ClFN2O6S2,methyl 1-[1-(5-chlorothiophene-2-carbonyl)piperidine-4-carbonyl]-4-(fluorosulfonyl)pyrrolidine-2-carboxylate,COC(=O)C1CC(CN1C(=O)C2CCN(CC2)C(=O)C3=CC=C(Cl)S3)S(=O)(=O)F
+Z4607533231,366.4072,C17H19FN2O4S,4-{[4-(3-hydroxyphenyl)piperazin-1-yl]methyl}phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCN(CC2)C3=CC=CC(O)=C3
+Z2509435253,488.9606,C18H14ClFN2O5S3,3-[(4-chloro-3-{[(thiophen-2-yl)methyl]carbamoyl}phenyl)sulfamoyl]benzene-1-sulfonyl fluoride,O=C(NCC1=CC=CS1)C=2C=C(C=CC2Cl)NS(=O)(=O)C3=CC=CC(=C3)S(=O)(=O)F
+Z4607533197,394.4173,C18H19FN2O5S,4-{[4-(3-hydroxybenzoyl)piperazin-1-yl]methyl}phenyl sulfurofluoridate,O=C(C=1C=CC=C(O)C1)N2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z2759871885,323.3029,C12H10FN5O3S,"5-({2-methyl-[1,2,4]triazolo[1,5-a]pyridin-6-yl}carbamoyl)-1H-pyrrole-3-sulfonyl fluoride",CC1=NN2C=C(C=CC2=N1)NC(=O)C3=CC(=CN3)S(=O)(=O)F
+Z4332081799,398.4242,C18H20F2N2O4S,4-({[(4-fluoro-2-methylphenyl)methyl](propyl)carbamoyl}amino)phenyl sulfurofluoridate,CCCN(CC=1C=CC(F)=CC1C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4246902544,339.3818,C16H18FNO4S,4-[({[2-(methoxymethyl)phenyl]methyl}amino)methyl]phenyl sulfurofluoridate,COCC=1C=CC=CC1CNCC=2C=CC(=CC2)OS(=O)(=O)F
+Z4607533203,369.8382,C17H17ClFNO3S,4-{[2-(2-chlorophenyl)pyrrolidin-1-yl]methyl}phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCCC2C=3C=CC=CC3Cl
+Z1708249248,348.3274,C11H9FN2O6S2,4-{[3-(fluorosulfonyl)phenyl]sulfamoyl}-1H-pyrrole-2-carboxylic acid,O=C(O)C1=CC(=CN1)S(=O)(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z4607533153,359.413,C16H22FNO5S,4-{[4-(oxolan-3-yloxy)piperidin-1-yl]methyl}phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCC(CC2)OC3CCOC3
+Z3489904020,349.3336,C16H12FNO5S,"4-[2-(1,3-dioxo-2,3-dihydro-1H-isoindol-2-yl)ethyl]phenyl sulfurofluoridate",O=C1C=2C=CC=CC2C(=O)N1CCC=3C=CC(=CC3)OS(=O)(=O)F
+Z4607560790,342.3427,C14H15FN2O5S,4-{[(oxolan-3-yl)(prop-2-yn-1-yl)carbamoyl]amino}phenyl sulfurofluoridate,C#CCN(C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C2CCOC2
+Z4246942900,370.4389,C17H23FN2O4S,4-{[(1-cyclohexyl-5-oxopyrrolidin-3-yl)amino]methyl}phenyl sulfurofluoridate,O=C1CC(CN1C2CCCCC2)NCC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262349198,345.2674,C11H11F4NO5S,"4-[2-(2,2,2-trifluoroethoxy)propanamido]phenyl sulfurofluoridate",CC(OCC(F)(F)F)C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F
+Z4129240966,356.4355,C15H17FN2O3S2,4-[({[2-(ethylsulfanyl)pyridin-4-yl]methyl}amino)methyl]phenyl sulfurofluoridate,CCSC=1C=C(C=CN1)CNCC=2C=CC(=CC2)OS(=O)(=O)F
+Z4345080176,350.3632,C13H19FN2O6S,4-{[bis(2-methoxyethyl)carbamoyl]amino}phenyl sulfurofluoridate,COCCN(CCOC)C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F
+Z4262566703,328.3194,C12H13FN4O4S,5-{[1-(propan-2-yl)-1H-pyrazol-3-yl]carbamoyl}pyridin-3-yl sulfurofluoridate,CC(C)N1C=CC(=N1)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4262506483,333.3359,C12H16FN3O5S,5-{[(1S)-1-(dimethylcarbamoyl)ethyl](methyl)carbamoyl}pyridin-3-yl sulfurofluoridate,C[C@@H](C(=O)N(C)C)N(C)C(=O)C=1C=NC=C(C1)OS(=O)(=O)F
+Z4332076107,385.4336,C15H16FN3O4S2,"4-({[(4,5,6,7-tetrahydro-1,3-benzothiazol-2-yl)methyl]carbamoyl}amino)phenyl sulfurofluoridate",O=C(NCC1=NC=2CCCCC2S1)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262527078,330.3751,C14H19FN2O4S,"5-(2,2-diethylpyrrolidine-1-carbonyl)pyridin-3-yl sulfurofluoridate",CCC1(CC)CCCN1C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4332070692,342.3427,C14H15FN2O5S,4-({[1-(furan-2-yl)ethyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate,CC(C1=CC=CO1)N(C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262360610,353.3686,C15H16FN3O4S,4-[4-methyl-2-(propan-2-yl)pyrimidine-5-amido]phenyl sulfurofluoridate,CC=1N=C(N=CC1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)C(C)C
+Z4608617589,402.3962,C19H15FN2O5S,3-ethynyl-5-[(2-oxo-1-phenylpyrrolidin-3-yl)carbamoyl]phenyl sulfurofluoridate,C#CC=1C=C(C=C(C1)C(=O)NC2CCN(C2=O)C=3C=CC=CC3)OS(=O)(=O)F
+Z4262349281,355.3845,C15H18FN3O4S,4-(1-tert-butyl-5-methyl-1H-pyrazole-3-amido)phenyl sulfurofluoridate,CC1=CC(=NN1C(C)(C)C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4607560672,421.3995,C18H16FN3O6S,"4-[({[3-(4-methoxyphenyl)-1,2-oxazol-5-yl]methyl}carbamoyl)amino]phenyl sulfurofluoridate",COC=1C=CC(=CC1)C=2C=C(CNC(=O)NC=3C=CC(=CC3)OS(=O)(=O)F)ON2
+Z2759892846,337.3875,C12H16FNO5S2,"4-({[(1s,3s)-3-methoxycyclobutyl]methyl}sulfamoyl)benzene-1-sulfonyl fluoride",CO[C@@H]1C[C@H](CNS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F)C1
+Z2867517749,349.3585,C11H12FN3O5S2,"3-[(5-propyl-1,3,4-oxadiazol-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride",CCCC1=NN=C(NS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F)O1
+Z4262256191,341.3298,C15H13F2NO4S,4-[2-(3-fluorophenyl)propanamido]phenyl sulfurofluoridate,CC(C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=C(F)C2
+Z4607567310,410.3918,C18H16F2N2O5S,"rac-4-[(2R,3R)-2-(3-fluorophenyl)-1-methyl-5-oxopyrrolidine-3-amido]phenyl sulfurofluoridate","CN1C(=O)C[C@H](C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)[C@H]1C=3C=CC=C(F)C3 |&1:5,20|"
+Z4262362955,383.3946,C16H18FN3O5S,"rac-4-[(2R,3R)-2-(1-methyl-1H-pyrazol-5-yl)oxane-3-amido]phenyl sulfurofluoridate","CN1N=CC=C1[C@@H]2OCCC[C@H]2C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F |&1:6,11|"
+Z4607528881,340.3268,C14H13FN2O5S,5-[2-(2-methoxyphenyl)acetamido]pyridin-3-yl sulfurofluoridate,COC=1C=CC=CC1CC(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z4344000187,325.4016,C15H20FN3O2S,2-{[(1-methyl-1H-pyrazol-5-yl)methyl][(4-methylphenyl)methyl]amino}ethane-1-sulfonyl fluoride,CC=1C=CC(=CC1)CN(CCS(=O)(=O)F)CC2=CC=NN2C
+Z4246876048,385.4518,C21H20FNO3S,"4-{[(1,2-diphenylethyl)amino]methyl}phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)CNC(CC=2C=CC=CC2)C=3C=CC=CC3
+Z4607533221,335.3931,C17H18FNO3S,4-[(2-phenylpyrrolidin-1-yl)methyl]phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCCC2C=3C=CC=CC3
+Z4246933813,368.3982,C17H18F2N2O3S,4-({[1-(2-fluorophenyl)pyrrolidin-3-yl]amino}methyl)phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CNC2CCN(C2)C3=CC=CC=C3F
+Z4607528849,376.8109,C13H10ClFN2O4S2,5-[2-chloro-5-(methylsulfanyl)benzamido]pyridin-3-yl sulfurofluoridate,CSC=1C=CC(Cl)=C(C1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z3085686172,377.4298,C19H20FNO4S,4-{3-[1-(furan-2-yl)-2-azaspiro[3.3]heptan-2-yl]-3-oxopropyl}benzene-1-sulfonyl fluoride,O=C(CCC=1C=CC(=CC1)S(=O)(=O)F)N2CC3(CCC3)C2C4=CC=CO4
+Z4607528728,358.4083,C14H15FN2O4S2,5-[5-(2-methylpropyl)thiophene-2-amido]pyridin-3-yl sulfurofluoridate,CC(C)CC1=CC=C(S1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z4317509583,415.4166,C15H14FN3O6S2,"5-{[3-(1,1-dioxo-1lambda6,2-thiazolidin-2-yl)phenyl]carbamoyl}pyridin-3-yl sulfurofluoridate",O=C(NC=1C=CC=C(C1)N2CCCS2(=O)=O)C=3C=NC=C(C3)OS(=O)(=O)F
+Z4262276562,339.3388,C15H14FNO5S,4-(2-phenoxypropanamido)phenyl sulfurofluoridate,CC(OC=1C=CC=CC1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4317037540,330.332,C13H15FN2O5S,4-({8-oxa-3-azabicyclo[3.2.1]octane-3-carbonyl}amino)phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CC3CCC(C2)O3
+Z4607567313,348.7098,C12H7ClF2N2O4S,4-(4-chloro-3-fluoropyridine-2-amido)phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2N=CC=C(Cl)C2F
+Z2855073454,395.4236,C18H19F2N3O3S,"2-(5-{[(2-fluorophenyl)carbamoyl]amino}-1,2,3,4-tetrahydroquinolin-1-yl)ethane-1-sulfonyl fluoride",O=C(NC=1C=CC=CC1F)NC=2C=CC=C3C2CCCN3CCS(=O)(=O)F
+Z4332064400,356.4123,C16H21FN2O4S,4-{[(1-cyclohexylcyclopropyl)carbamoyl]amino}phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)NC2(CC2)C3CCCCC3
+Z4262533515,395.4053,C17H18FN3O5S,5-{[3-(tert-butylcarbamoyl)phenyl]carbamoyl}pyridin-3-yl sulfurofluoridate,CC(C)(C)NC(=O)C=1C=CC=C(C1)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4607567273,353.3572,C14H18F3NO4S,"4-[3-(difluoromethyl)-4,4-dimethylpentanamido]phenyl sulfurofluoridate",CC(C)(C)C(CC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C(F)F
+Z4344134054,318.3363,C9H13F3N2O3S2,"2-[(2,2-difluoro-3-hydroxypropyl)[(1,2-thiazol-4-yl)methyl]amino]ethane-1-sulfonyl fluoride",O=S(=O)(F)CCN(CC=1C=NSC1)CC(F)(F)CO
+Z4607528828,327.2916,C11H10FN5O4S,"5-[1-(2H-1,2,3-triazol-2-yl)cyclopropaneamido]pyridin-3-yl sulfurofluoridate",O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C2(CC2)N3N=CC=N3
+Z3292075323,383.8217,C17H15ClFNO4S,"4-{[(8-chloro-3,4-dihydro-2H-1-benzopyran-4-yl)carbamoyl]methyl}benzene-1-sulfonyl fluoride",O=C(CC=1C=CC(=CC1)S(=O)(=O)F)NC2CCOC=3C(Cl)=CC=CC32
+Z4262576191,332.3479,C13H17FN2O5S,"5-(6,6-dimethyl-1,4-oxazepane-4-carbonyl)pyridin-3-yl sulfurofluoridate",CC1(C)COCCN(C1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4262358477,363.2842,C14H9F4NO4S,4-[5-(difluoromethyl)-2-fluorobenzamido]phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=C(C=CC2F)C(F)F
+Z3919174965,412.4159,C15H13FN4O5S2,"4-[4-(6-amino-1,3-dimethyl-2,4-dioxo-1,2,3,4-tetrahydropyrimidin-5-yl)-1,3-thiazol-2-yl]phenyl sulfurofluoridate",CN1C(=O)C(C2=CSC(=N2)C=3C=CC(=CC3)OS(=O)(=O)F)=C(N)N(C)C1=O
+Z2759818059,373.3799,C13H12FN3O5S2,3-{[(6-carbamoylpyridin-3-yl)methyl]sulfamoyl}benzene-1-sulfonyl fluoride,NC(=O)C=1C=CC(=CN1)CNS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z4262531677,333.2929,C11H12FN3O6S,"5-{[(4-methyl-2-oxo-1,3-oxazolidin-4-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC1(CNC(=O)C2=CN=CC(=C2)OS(=O)(=O)F)COC(=O)N1
+Z4343888424,328.3625,C13H17FN4O3S,2-[(6-methoxypyridin-3-yl)[(1-methyl-1H-pyrazol-4-yl)methyl]amino]ethane-1-sulfonyl fluoride,COC=1C=CC(=CN1)N(CCS(=O)(=O)F)CC=2C=NN(C)C2
+Z4317727303,407.416,C18H18FN3O5S,"4-{[(1R,9R)-6-oxo-7,11-diazatricyclo[7.3.1.0,2,7]trideca-2,4-diene-11-carbonyl]amino}phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2C[C@@H]3C[C@H](C2)C4=CC=CC(=O)N4C3
+Z2759818346,320.3372,C12H17FN2O5S,5-{[1-(oxolan-3-yloxy)propan-2-yl]carbamoyl}-1H-pyrrole-3-sulfonyl fluoride,CC(COC1CCOC1)NC(=O)C2=CC(=CN2)S(=O)(=O)F
+Z4607533139,401.496,C18H28FN3O4S,"4-({4-[2-(1,4-oxazepan-4-yl)ethyl]piperazin-1-yl}methyl)phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)CN2CCN(CCN3CCCOCC3)CC2
+Z4320871039,324.3705,C15H17FN2O3S,"4-({1-methyl-1H,2H,3H,4H-pyrrolo[1,2-a]pyrazin-2-yl}methyl)phenyl sulfurofluoridate",CC1C2=CC=CN2CCN1CC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262478438,330.332,C13H15FN2O5S,"rac-5-[(4aR,7aS)-octahydrofuro[3,4-b]pyridine-1-carbonyl]pyridin-3-yl sulfurofluoridate","O=C(C=1C=NC=C(C1)OS(=O)(=O)F)N2CCC[C@H]3COC[C@H]32 |&1:17,21|"
+Z4317483456,329.3075,C11H12FN5O4S,"5-{[1-(4-methyl-4H-1,2,4-triazol-3-yl)ethyl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC(NC(=O)C=1C=NC=C(C1)OS(=O)(=O)F)C2=NN=CN2C
+Z9402053982,430.4149,C16H22F4N2O5S,4-[3-(tert-butylamino)propanamido]-2-methylbenzene-1-sulfonyl fluoride; trifluoroacetic acid,CC=1C=C(C=CC1S(=O)(=O)F)NC(=O)CCNC(C)(C)C
+Z4262443370,394.3527,C16H12F2N4O4S,5-({1-[(2-fluorophenyl)methyl]-1H-pyrazol-5-yl}carbamoyl)pyridin-3-yl sulfurofluoridate,O=C(NC1=CC=NN1CC=2C=CC=CC2F)C=3C=NC=C(C3)OS(=O)(=O)F
+Z9402053283,509.475,C19H23F4N5O5S,"4-{4-[4-(piperazin-1-yl)oxan-4-yl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride; trifluoroacetic acid",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(N=N2)C3(CCOCC3)N4CCNCC4
+Z4262453049,332.3479,C13H17FN2O5S,5-[3-(methoxymethyl)-3-methylpyrrolidine-1-carbonyl]pyridin-3-yl sulfurofluoridate,COCC1(C)CCN(C1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4262345191,378.3748,C17H15FN2O5S,"4-[2-(2-oxo-1,2,3,4-tetrahydroquinolin-6-yl)acetamido]phenyl sulfurofluoridate",O=C(CC=1C=CC=2NC(=O)CCC2C1)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262420393,326.3433,C14H15FN2O4S,"5-[(3aR,7aS)-2,3,3a,4,7,7a-hexahydro-1H-isoindole-2-carbonyl]pyridin-3-yl sulfurofluoridate",O=C(C=1C=NC=C(C1)OS(=O)(=O)F)N2C[C@H]3CC=CC[C@H]3C2
+Z4262378378,338.354,C15H15FN2O4S,4-[3-(pyridin-4-yl)butanamido]phenyl sulfurofluoridate,CC(CC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CN=CC2
+Z4320871043,370.4621,C16H19FN2O3S2,4-({4-[(thiophen-2-yl)methyl]piperazin-1-yl}methyl)phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCN(CC3=CC=CS3)CC2
+Z4332081900,396.3901,C17H17FN2O6S,"4-[(8-methoxy-2,3,4,5-tetrahydro-1,4-benzoxazepine-4-carbonyl)amino]phenyl sulfurofluoridate",COC=1C=CC=2CN(CCOC2C1)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4457917946,401.837,C17H17ClFNO5S,2-chloro-5-methoxy-4-{[(2-methoxyphenyl)methyl](methyl)carbamoyl}benzene-1-sulfonyl fluoride,COC=1C=CC=CC1CN(C)C(=O)C=2C=C(Cl)C(=CC2OC)S(=O)(=O)F
+Z4607560775,454.4197,C15H14F4N4O4S2,"4-({4-[4-(trifluoromethyl)-1,3-thiazol-2-yl]piperazine-1-carbonyl}amino)phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCN(CC2)C3=NC(=CS3)C(F)(F)F
+Z4262462615,332.3479,C13H17FN2O5S,"5-(7-ethyl-1,4-oxazepane-4-carbonyl)pyridin-3-yl sulfurofluoridate",CCC1CCN(CCO1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4332081573,375.3958,C13H14FN3O5S2,"4-({[(3-methoxy-1,2-thiazol-4-yl)methyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate",COC1=NSC=C1CN(C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262437460,327.2916,C11H10FN5O4S,"5-{5H,6H,7H,8H-[1,2,4]triazolo[4,3-b]pyridazine-5-carbonyl}pyridin-3-yl sulfurofluoridate",O=C(C=1C=NC=C(C1)OS(=O)(=O)F)N2CCCC3=NN=CN32
+Z4345084863,350.3632,C13H19FN2O6S,4-({[2-(2-methoxyethoxy)ethyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate,COCCOCCN(C)C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F
+Z4386044713,352.3408,C14H13FN4O4S,"3-ethynyl-5-{[1-(4-methyl-4H-1,2,4-triazol-3-yl)ethyl]carbamoyl}phenyl sulfurofluoridate",C#CC1=CC(=CC(=C1)OS(=O)(=O)F)C(=O)NC(C)C2=NN=CN2C
+Z4332069210,363.405,C14H22FN3O5S,4-({[2-(dimethylamino)ethyl](2-methoxyethyl)carbamoyl}amino)phenyl sulfurofluoridate,COCCN(CCN(C)C)C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F
+Z2736752269,322.3563,C9H7FN2O4S3,"4-[(1,3-thiazol-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC2=NC=CS2
+Z4345085173,332.3479,C13H17FN2O5S,"rac-4-{[(2R,5R)-5-hydroxy-2-methylpiperidine-1-carbonyl]amino}phenyl sulfurofluoridate","C[C@H]1CC[C@H](O)CN1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F |&1:1,4|"
+Z2867517740,334.319,C11H8F2N2O4S2,4-[(3-fluoropyridin-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC=2C=CN=CC2F
+Z7760181745,360.8347,C14H18ClFN4O2S,"4-{4-[cyclobutyl(methylamino)methyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride hydrochloride",CNC(C1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F)C3CCC3
+Z4262299442,353.3686,C15H16FN3O4S,"4-(2-methyl-4,5,6,7-tetrahydro-2H-indazole-3-amido)phenyl sulfurofluoridate",CN1N=C2CCCCC2=C1C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z2901809721,311.3287,C14H14FNO4S,4-(2-{[(furan-2-yl)methyl]carbamoyl}ethyl)benzene-1-sulfonyl fluoride,O=C(CCC=1C=CC(=CC1)S(=O)(=O)F)NCC2=CC=CO2
+Z2768292062,400.4267,C19H17FN4O3S,"4-{3-benzyl-5H,6H,7H,8H-[1,2,4]triazolo[4,3-a]pyrazine-7-carbonyl}benzene-1-sulfonyl fluoride",O=C(C=1C=CC(=CC1)S(=O)(=O)F)N2CCN3C(CC=4C=CC=CC4)=NN=C3C2
+Z3482538103,388.4343,C15H17FN2O5S2,1-[4-(3-cyanopropanesulfonyl)benzoyl]pyrrolidine-3-sulfonyl fluoride,N#CCCCS(=O)(=O)C=1C=CC(=CC1)C(=O)N2CCC(C2)S(=O)(=O)F
+Z4262538050,325.3155,C13H12FN3O4S,5-[methyl(2-methylpyridin-4-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,CC=1C=C(C=CN1)N(C)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2509435832,472.5125,C21H17FN4O4S2,"3-{[3-(1-benzyl-1H-1,2,3-triazol-4-yl)phenyl]sulfamoyl}benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NC=2C=CC=C(C2)C3=CN(CC=4C=CC=CC4)N=N3
+Z2867513704,332.328,C11H9FN2O5S2,3-[(2-hydroxypyridin-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NC=2C=CC=NC2O
+Z2768308729,444.4297,C17H14F2N2O6S2,"4-[({5-[(2-fluorophenoxy)methyl]-1,2-oxazol-3-yl}methyl)sulfamoyl]benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NCC=2C=C(COC3=CC=CC=C3F)ON2
+Z2737371374,333.3591,C11H12FN3O4S2,2-[methyl(1-methyl-1H-pyrazol-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CN(C=1C=CN(C)N1)S(=O)(=O)C=2C=CC=CC2S(=O)(=O)F
+Z2156384785,375.3742,C17H14FN3O4S,3-[2-(3-carbamoyl-1H-indol-1-yl)acetamido]benzene-1-sulfonyl fluoride,NC(=O)C1=CN(CC(=O)NC=2C=CC=C(C2)S(=O)(=O)F)C3=CC=CC=C13
+Z2867506069,346.3545,C12H11FN2O5S2,"4-[(5-methyl-6-oxo-1,6-dihydropyridin-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride",CC1=CC(=CNC1=O)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4607567225,347.2665,C13H8F3NO5S,"4-(2,3-difluoro-4-hydroxybenzamido)phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC(O)=C(F)C2F
+Z4262489230,332.3479,C13H17FN2O5S,"rac-5-({[(2R,5S)-5-methyloxan-2-yl]methyl}carbamoyl)pyridin-3-yl sulfurofluoridate","C[C@H]1CC[C@H](CNC(=O)C2=CN=CC(=C2)OS(=O)(=O)F)OC1 |&1:1,4|"
+Z4607533175,394.4173,C18H19FN2O5S,4-{[4-(2-hydroxybenzoyl)piperazin-1-yl]methyl}phenyl sulfurofluoridate,O=C(C=1C=CC=CC1O)N2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z4607560652,421.4857,C20H24FN3O4S,4-{[methyl({[4-(piperidin-1-yl)phenyl]methyl})carbamoyl]amino}phenyl sulfurofluoridate,CN(CC=1C=CC(=CC1)N2CCCCC2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4607533161,342.3858,C15H19FN2O4S,4-({cyclopropyl[(cyclopropylcarbamoyl)methyl]amino}methyl)phenyl sulfurofluoridate,O=C(CN(CC=1C=CC(=CC1)OS(=O)(=O)F)C2CC2)NC3CC3
+Z3488642573,350.3878,C15H11FN2O3S2,"3-{12-oxo-7-thia-9,11-diazatricyclo[6.4.0.0,2,6]dodeca-1(8),2(6),9-trien-10-yl}benzene-1-sulfonyl fluoride",O=C1NC(=NC=2SC=3CCCC3C12)C=4C=CC=C(C4)S(=O)(=O)F
+Z4607560778,345.3698,C12H12FN3O4S2,"4-({methyl[(1,3-thiazol-2-yl)methyl]carbamoyl}amino)phenyl sulfurofluoridate",CN(CC1=NC=CS1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z3919174953,402.4178,C15H15FN2O6S2,4-(N-methyl-4-acetamidobenzenesulfonamido)phenyl sulfurofluoridate,CC(=O)NC=1C=CC(=CC1)S(=O)(=O)N(C)C=2C=CC(=CC2)OS(=O)(=O)F
+Z4607560777,429.2608,C16H14BrFN2O4S,"4-[(6-bromo-1,2,3,4-tetrahydroisoquinoline-2-carbonyl)amino]phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCC3=CC(Br)=CC=C3C2
+Z4607567208,364.3482,C16H13FN2O5S,"4-(2-oxo-1,2,3,4-tetrahydroquinoline-6-amido)phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=3NC(=O)CCC3C2
+Z4262237726,367.3919,C17H18FNO5S,4-[2-(2-phenylpropoxy)acetamido]phenyl sulfurofluoridate,CC(COCC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=CC2
+Z4607567348,400.3821,C15H17FN4O6S,"rac-4-{1-[(3R,4S)-4-ethoxyoxolan-3-yl]-1H-1,2,3-triazole-4-amido}phenyl sulfurofluoridate","CCO[C@@H]1COC[C@H]1N2C=C(N=N2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F |&1:3,7|"
+Z4262292610,339.3421,C14H14FN3O4S,4-(3-cyclopropyl-1-methyl-1H-pyrazole-5-amido)phenyl sulfurofluoridate,CN1N=C(C=C1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)C3CC3
+Z4607567238,360.401,C15H21FN2O5S,"4-[2,2-dimethyl-3-(morpholin-4-yl)propanamido]phenyl sulfurofluoridate",CC(C)(CN1CCOCC1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4607528795,354.3286,C15H12F2N2O4S,5-(3-cyclopropyl-5-fluorobenzamido)pyridin-3-yl sulfurofluoridate,O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C=2C=C(F)C=C(C2)C3CC3
+Z4607560678,436.5003,C20H25FN4O4S,4-({[(1-ethylpyrrolidin-2-yl)methyl][(pyridin-4-yl)methyl]carbamoyl}amino)phenyl sulfurofluoridate,CCN1CCCC1CN(CC=2C=CN=CC2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4608617587,368.423,C17H21FN2O4S,3-ethynyl-5-[4-(2-methylpropyl)piperazine-1-carbonyl]phenyl sulfurofluoridate,C#CC1=CC(=CC(=C1)OS(=O)(=O)F)C(=O)N2CCN(CC(C)C)CC2
+Z4262285338,341.3149,C13H12FN3O5S,"4-{5H,6H,7H-pyrazolo[3,2-b][1,3]oxazine-3-amido}phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=NN3CCCOC23
+Z4262340543,390.3888,C17H15FN4O4S,"4-[4-(1-ethyl-1H-1,2,4-triazol-5-yl)benzamido]phenyl sulfurofluoridate",CCN1N=CN=C1C=2C=CC(=CC2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z2759860232,349.3402,C14H12FN5O3S,"5-{[phenyl(4H-1,2,4-triazol-3-yl)methyl]carbamoyl}-1H-pyrrole-3-sulfonyl fluoride",O=C(NC(C1=NN=CN1)C=2C=CC=CC2)C3=CC(=CN3)S(=O)(=O)F
+Z4345086139,382.4099,C16H19FN4O4S,4-{[4-(1-methyl-1H-imidazol-5-yl)piperidine-1-carbonyl]amino}phenyl sulfurofluoridate,CN1C=NC=C1C2CCN(CC2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z3726889704,404.4154,C18H17FN4O4S,"4-(1-{[(2-phenoxyethyl)carbamoyl]methyl}-1H-1,2,3-triazol-4-yl)benzene-1-sulfonyl fluoride",O=C(CN1C=C(N=N1)C=2C=CC(=CC2)S(=O)(=O)F)NCCOC=3C=CC=CC3
+Z7758523033,401.2844,C13H19Cl2FN4O3S,"4-{1-[2-hydroxy-2-methyl-3-(methylamino)propyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride dihydrochloride",CNCC(C)(O)CN1C=C(N=N1)C=2C=CC(=CC2)S(=O)(=O)F
+Z56769542,346.4638,C13H15FN2O2S3,"2-({5-methyl-8-thia-4,6-diazatricyclo[7.4.0.0,2,7]trideca-1(9),2,4,6-tetraen-3-yl}sulfanyl)ethane-1-sulfonyl fluoride",CC1=NC(SCCS(=O)(=O)F)=C2C(=N1)SC=3CCCCC32
+Z4607533157,439.8883,C19H19ClFN3O4S,"4-[({[5-(2-chlorophenyl)-1,3,4-oxadiazol-2-yl]methyl}(propyl)amino)methyl]phenyl sulfurofluoridate",CCCN(CC1=NN=C(O1)C=2C=CC=CC2Cl)CC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262509225,331.3201,C12H14FN3O5S,"5-(3,4-dimethyl-5-oxopiperazine-1-carbonyl)pyridin-3-yl sulfurofluoridate",CC1CN(CC(=O)N1C)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4607533171,353.4084,C17H20FNO4S,4-({ethyl[1-(3-hydroxyphenyl)ethyl]amino}methyl)phenyl sulfurofluoridate,CCN(CC=1C=CC(=CC1)OS(=O)(=O)F)C(C)C2=CC=CC(O)=C2
+Z4129240958,370.4621,C16H19FN2O3S2,"4-{[methyl(2-methyl-4,5,6,7-tetrahydro-1,3-benzothiazol-7-yl)amino]methyl}phenyl sulfurofluoridate",CC1=NC=2CCCC(C2S1)N(C)CC=3C=CC(=CC3)OS(=O)(=O)F
+Z9387574731,493.469,C21H23F4NO6S,4-({2-[(4-hydroxyphenyl)methyl]piperidin-1-yl}methyl)phenyl sulfurofluoridate; trifluoroacetic acid,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCCCC2CC=3C=CC(O)=CC3
+Z4262552273,332.3479,C13H17FN2O5S,"5-(6-ethyl-1,4-oxazepane-4-carbonyl)pyridin-3-yl sulfurofluoridate",CCC1COCCN(C1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2509456814,477.529,C21H20FN3O5S2,4-({3-[benzyl(carbamoylmethyl)amino]phenyl}sulfamoyl)benzene-1-sulfonyl fluoride,NC(=O)CN(CC=1C=CC=CC1)C=2C=CC=C(C2)NS(=O)(=O)C=3C=CC(=CC3)S(=O)(=O)F
+Z4262563171,335.3103,C14H10FN3O4S,5-[(3-cyano-2-methylphenyl)carbamoyl]pyridin-3-yl sulfurofluoridate,CC=1C(C#N)=CC=CC1NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2509429038,464.4872,C20H17FN2O6S2,4-({3-[(phenylcarbamoyl)methoxy]phenyl}sulfamoyl)benzene-1-sulfonyl fluoride,O=C(COC=1C=CC=C(C1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F)NC=3C=CC=CC3
+Z3489903973,395.2102,C13H5Cl2FO5S2,"7-(2,4-dichlorophenyl)-2-oxo-2H-1,3-benzoxathiol-5-yl sulfurofluoridate",O=C1OC=2C(=CC(=CC2S1)OS(=O)(=O)F)C=3C=CC(Cl)=CC3Cl
+Z7801535583,415.2861,C14H18Cl2F2N4O2S,"4-{1-[(4-fluoropiperidin-4-yl)methyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)C2=CN(CC3(F)CCNCC3)N=N2
+Z4262475405,332.3479,C13H17FN2O5S,"5-{[(1S,2S)-2-methoxycyclohexyl]carbamoyl}pyridin-3-yl sulfurofluoridate",CO[C@H]1CCCC[C@@H]1NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4607528830,382.3635,C16H15FN2O6S,methyl 4-[2-({5-[(fluorosulfonyl)oxy]pyridin-3-yl}carbamoyl)ethyl]benzoate,COC(=O)C=1C=CC(=CC1)CCC(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z4262429098,332.3479,C13H17FN2O5S,"5-{[(2,2-dimethyloxolan-3-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC1(C)OCCC1CNC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4401863221,382.4066,C17H19FN2O5S,5-(2-{2-[(propan-2-yloxy)methyl]phenyl}acetamido)pyridin-3-yl sulfurofluoridate,CC(C)OCC=1C=CC=CC1CC(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z4607531356,394.4636,C18H23FN4O3S,"4-({3-cyclopentyl-8-methyl-5H,6H,7H,8H-[1,2,4]triazolo[4,3-a]pyrazin-7-yl}methyl)phenyl sulfurofluoridate",CC1C2=NN=C(C3CCCC3)N2CCN1CC=4C=CC(=CC4)OS(=O)(=O)F
+Z4345083578,346.3745,C14H19FN2O5S,4-{[2-(2-hydroxyethyl)piperidine-1-carbonyl]amino}phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCCCC2CCO
+Z4607533133,388.4557,C20H21FN2O3S,4-{[3-(1H-indol-3-yl)piperidin-1-yl]methyl}phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCCC(C2)C3=CNC=4C=CC=CC34
+Z4607533209,400.2626,C16H15BrFNO3S,"4-[(6-bromo-1,2,3,4-tetrahydroisoquinolin-2-yl)methyl]phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)CN2CCC=3C=C(Br)C=CC3C2
+Z4607531296,417.4177,C19H19F4NO3S,4-({4-[4-(trifluoromethyl)phenyl]piperidin-1-yl}methyl)phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCC(CC2)C=3C=CC(=CC3)C(F)(F)F
+Z4388343029,353.3686,C15H16FN3O4S,5-(6-tert-butylpyridine-3-amido)pyridin-3-yl sulfurofluoridate,CC(C)(C)C=1C=CC(=CN1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z4607531294,403.828,C17H16ClF2NO4S,4-{[2-(3-chloro-4-fluorophenyl)morpholin-4-yl]methyl}phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCOC(C2)C=3C=CC(F)=C(Cl)C3
+Z4262295722,355.3845,C15H18FN3O4S,4-(5-tert-butyl-1-methyl-1H-pyrazole-3-amido)phenyl sulfurofluoridate,CN1N=C(C=C1C(C)(C)C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4187611844,355.4474,C16H18FNO3S2,3-({[2-(methanesulfinylmethyl)phenyl]amino}methyl)-4-methylbenzene-1-sulfonyl fluoride,CC=1C=CC(=CC1CNC=2C=CC=CC2CS(C)=O)S(=O)(=O)F
+Z4607528911,367.3522,C15H14FN3O5S,5-[6-(cyclopropylmethoxy)pyridine-3-amido]pyridin-3-yl sulfurofluoridate,O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C=2C=CC(=NC2)OCC3CC3
+Z4608617636,356.3693,C15H17FN2O5S,"3-[(1-carbamoyl-1,2-dimethylpropyl)carbamoyl]-5-ethynylphenyl sulfurofluoridate",C#CC=1C=C(C=C(C1)C(=O)NC(C)(C(N)=O)C(C)C)OS(=O)(=O)F
+Z4607528841,397.3533,C16H13F2N3O5S,5-[1-(2-fluorophenyl)-5-oxopyrrolidine-3-amido]pyridin-3-yl sulfurofluoridate,O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C2CC(=O)N(C2)C3=CC=CC=C3F
+Z4262278984,342.3427,C14H15FN2O5S,"4-[2-(3,5-dimethyl-1,2-oxazol-4-yl)propanamido]phenyl sulfurofluoridate",CC1=NOC(C)=C1C(C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z7722885509,317.7669,C12H13ClFN3O2S,"4-{4H,5H,6H,7H-pyrazolo[1,5-a]pyrazin-3-yl}benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC(=CC1)C=2C=NN3CCNCC23
+Z3488641697,343.4169,C15H22FN3O3S,6-[(2S)-2-methyl-4-(oxan-4-yl)piperazin-1-yl]pyridine-3-sulfonyl fluoride,C[C@H]1CN(CCN1C=2C=CC(=CN2)S(=O)(=O)F)C3CCOCC3
+Z7786458176,389.8759,C15H21ClFN5O2S,"4-(4-{[(1-methylpiperidin-4-yl)amino]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride hydrochloride",CN1CCC(CC1)NCC2=CN(N=N2)C=3C=CC(=CC3)S(=O)(=O)F
+Z4262337606,344.3188,C12H13FN4O5S,"4-[2-(3,4-dimethyl-5-oxo-4,5-dihydro-1H-1,2,4-triazol-1-yl)acetamido]phenyl sulfurofluoridate",CC1=NN(CC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)C(=O)N1C
+Z7771564921,364.8234,C13H18ClFN4O3S,"3-(4-{2-[(2-methoxyethyl)amino]ethyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride hydrochloride",COCCNCCC1=CN(N=N1)C=2C=CC=C(C2)S(=O)(=O)F
+Z4262325314,347.7498,C12H11ClFN3O4S,4-[2-(4-chloro-1-methyl-1H-pyrazol-5-yl)acetamido]phenyl sulfurofluoridate,CN1N=CC(Cl)=C1CC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z7776670360,437.3595,C17H23Cl2FN4O2S,"4-[1-(2-{8-azabicyclo[3.2.1]octan-3-yl}ethyl)-1H-1,2,3-triazol-4-yl]benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)C2=CN(CCC3CC4CCC(C3)N4)N=N2
+Z3488543101,351.2735,C13H9F4NO4S,3-[5-methyl-2-(trifluoromethyl)furan-3-amido]benzene-1-sulfonyl fluoride,CC1=CC(C(=O)NC=2C=CC=C(C2)S(=O)(=O)F)=C(O1)C(F)(F)F
+Z4607533192,339.3818,C16H18FNO4S,4-({[1-(3-hydroxyphenyl)ethyl](methyl)amino}methyl)phenyl sulfurofluoridate,CC(C=1C=CC=C(O)C1)N(C)CC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262273067,332.3479,C13H17FN2O5S,4-[2-(morpholin-4-yl)propanamido]phenyl sulfurofluoridate,CC(C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCOCC2
+Z2768283187,419.4929,C19H18FN3O3S2,"4-({4-[4-(pyridin-3-yl)-1,3-thiazol-2-yl]butyl}carbamoyl)benzene-1-sulfonyl fluoride",O=C(NCCCCC1=NC(=CS1)C=2C=CC=NC2)C=3C=CC(=CC3)S(=O)(=O)F
+Z4332074558,340.3268,C14H13FN2O5S,4-{[(4-methoxyphenyl)carbamoyl]amino}phenyl sulfurofluoridate,COC=1C=CC(=CC1)NC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2768268901,391.3736,C17H14FN3O5S,"3-({3-[(2,5-dioxoimidazolidin-1-yl)methyl]phenyl}carbamoyl)benzene-1-sulfonyl fluoride",O=C(NC=1C=CC=C(C1)CN2C(=O)CNC2=O)C=3C=CC=C(C3)S(=O)(=O)F
+Z2156374967,359.3748,C17H14FN3O3S,3-[2-(1-phenyl-1H-pyrazol-3-yl)acetamido]benzene-1-sulfonyl fluoride,O=C(CC=1C=CN(N1)C=2C=CC=CC2)NC=3C=CC=C(C3)S(=O)(=O)F
+Z3489903945,324.3026,C14H10F2N2O3S,"3-(5-fluoro-1-methyl-1H-1,3-benzodiazol-2-yl)phenyl sulfurofluoridate",CN1C(=NC=2C=C(F)C=CC21)C=3C=CC=C(C3)OS(=O)(=O)F
+Z4607560644,421.4857,C20H24FN3O4S,4-({[(1-benzylpyrrolidin-3-yl)methyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate,CN(CC1CCN(CC=2C=CC=CC2)C1)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z4262324415,338.2861,C14H8F2N2O4S,4-(4-cyano-2-fluorobenzamido)phenyl sulfurofluoridate,N#CC=1C=CC(C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)=C(F)C1
+Z4344084855,311.3205,C12H16F3NO3S,"2-[(3,3-difluorocyclobutyl)[(4-methylfuran-2-yl)methyl]amino]ethane-1-sulfonyl fluoride",CC1=COC(=C1)CN(CCS(=O)(=O)F)C2CC(F)(F)C2
+Z4607533164,396.4083,C18H18F2N2O4S,4-({[1-(2-fluorophenyl)-2-oxopyrrolidin-3-yl](methyl)amino}methyl)phenyl sulfurofluoridate,CN(CC=1C=CC(=CC1)OS(=O)(=O)F)C2CCN(C2=O)C3=CC=CC=C3F
+Z4262531338,332.3479,C13H17FN2O5S,"5-{[(5,5-dimethyloxolan-2-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC1(C)CCC(CNC(=O)C2=CN=CC(=C2)OS(=O)(=O)F)O1
+Z2737057890,315.3405,C12H10FNO4S2,4-(phenylsulfamoyl)benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC=2C=CC=CC2
+Z2737372035,333.3591,C11H12FN3O4S2,2-[methyl(1-methyl-1H-pyrazol-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CN(C=1C=NN(C)C1)S(=O)(=O)C=2C=CC=CC2S(=O)(=O)F
+Z2156381372,397.4212,C17H20FN3O5S,"3-(2-{6-methyl-2,4-dioxo-1,3-diazaspiro[4.5]decan-3-yl}acetamido)benzene-1-sulfonyl fluoride",CC1CCCCC21NC(=O)N(CC(=O)NC=3C=CC=C(C3)S(=O)(=O)F)C2=O
+Z1672273226,319.3325,C10H10FN3O4S2,4-[(1-methyl-1H-pyrazol-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CN1C=CC(=N1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z1713569051,354.3286,C15H12F2N2O4S,3-(3-acetamido-4-fluorobenzamido)benzene-1-sulfonyl fluoride,CC(=O)NC=1C=C(C=CC1F)C(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z3071639985,332.3479,C13H17FN2O5S,3-{1-[4-(fluorosulfonyl)-1H-pyrrole-2-carbonyl]piperidin-3-yl}propanoic acid,O=C(O)CCC1CCCN(C1)C(=O)C2=CC(=CN2)S(=O)(=O)F
+Z3488542613,335.3501,C16H14FNO4S,"3-[2-(1,3-dihydro-2-benzofuran-5-yl)acetamido]benzene-1-sulfonyl fluoride",O=C(CC=1C=CC=2COCC2C1)NC=3C=CC=C(C3)S(=O)(=O)F
+Z2768307129,373.3221,C16H11F4NO3S,"3-[4-(trifluoromethyl)-2,3-dihydro-1H-indole-1-carbonyl]benzene-1-sulfonyl fluoride",O=C(C=1C=CC=C(C1)S(=O)(=O)F)N2CCC=3C(=CC=CC32)C(F)(F)F
+Z2759872396,351.3958,C16H18FN3O3S,3-[2-(1-methyl-1H-pyrazol-5-yl)piperidine-1-carbonyl]benzene-1-sulfonyl fluoride,CN1N=CC=C1C2CCCCN2C(=O)C=3C=CC=C(C3)S(=O)(=O)F
+Z4344242332,326.3897,C14H19FN4O2S,"2-{benzyl[(2-ethyl-2H-1,2,3-triazol-4-yl)methyl]amino}ethane-1-sulfonyl fluoride",CCN1N=CC(CN(CCS(=O)(=O)F)CC=2C=CC=CC2)=N1
+Z3295384783,346.3545,C12H11FN2O5S2,4-[(5-methoxypyridin-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,COC=1C=NC=C(C1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z1764386025,347.3857,C12H14FN3O4S2,3-{[1-(propan-2-yl)-1H-pyrazol-4-yl]sulfamoyl}benzene-1-sulfonyl fluoride,CC(C)N1C=C(C=N1)NS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z4262518901,327.2883,C12H10FN3O5S,5-[(2-hydroxy-6-methylpyridin-3-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,CC=1C=CC(NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F)=C(O)N1
+Z4607528783,407.416,C18H18FN3O5S,5-[3-(piperidine-1-carbonyl)benzamido]pyridin-3-yl sulfurofluoridate,O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C=2C=CC=C(C2)C(=O)N3CCCCC3
+Z4607560597,409.475,C19H24FN3O4S,4-{[({4-[(dimethylamino)methyl]phenyl}methyl)(ethyl)carbamoyl]amino}phenyl sulfurofluoridate,CCN(CC=1C=CC(=CC1)CN(C)C)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4246927640,339.3818,C16H18FNO4S,4-{[(2-propoxyphenyl)amino]methyl}phenyl sulfurofluoridate,CCCOC=1C=CC=CC1NCC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262503314,338.3142,C13H11FN4O4S,"5-{5H,6H,7H,8H-pyrido[4,3-d]pyrimidine-6-carbonyl}pyridin-3-yl sulfurofluoridate",O=C(C=1C=NC=C(C1)OS(=O)(=O)F)N2CCC=3N=CN=CC3C2
+Z2867515174,336.3829,C10H9FN2O4S3,"3-[(4-methyl-1,3-thiazol-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride",CC1=CSC(=N1)NS(=O)(=O)C2=CC=CC(=C2)S(=O)(=O)F
+Z4607531246,342.3858,C15H19FN2O4S,"4-({2-oxo-[1,3'-bipyrrolidin]-1'-yl}methyl)phenyl sulfurofluoridate",O=C1CCCN1C2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)C2
+Z4386044746,387.3056,C16H9F4NO4S,3-ethynyl-5-{[4-(trifluoromethyl)phenyl]carbamoyl}phenyl sulfurofluoridate,C#CC1=CC(=CC(=C1)OS(=O)(=O)F)C(=O)NC=2C=CC(=CC2)C(F)(F)F
+Z4607533172,355.3812,C16H18FNO5S,4-({[2-(4-hydroxyphenoxy)ethyl](methyl)amino}methyl)phenyl sulfurofluoridate,CN(CCOC=1C=CC(O)=CC1)CC=2C=CC(=CC2)OS(=O)(=O)F
+Z5102009155,363.3635,C16H14FN3O4S,"3-[3-(dimethylcarbamoyl)imidazo[1,5-a]pyridin-1-yl]phenyl sulfurofluoridate",CN(C)C(=O)C1=NC(C=2C=CC=C(C2)OS(=O)(=O)F)=C3C=CC=CN13
+Z7740061587,385.285,C13H19Cl2FN4O2S,"4-{4-[(tert-butylamino)methyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride dihydrochloride",CC(C)(C)NCC1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F
+Z55124567,378.441,C17H15FN2O3S2,"2-{[3-(4-methylphenyl)-4-oxo-3,4-dihydroquinazolin-2-yl]sulfanyl}ethane-1-sulfonyl fluoride",CC=1C=CC(=CC1)N2C(=O)C=3C=CC=CC3N=C2SCCS(=O)(=O)F
+Z4326791697,320.4233,C14H25FN2O3S,"2-{[2-(3,5-dimethyl-1,2-oxazol-4-yl)propyl](2-methylpropyl)amino}ethane-1-sulfonyl fluoride",CC1=NOC(C)=C1C(C)CN(CCS(=O)(=O)F)CC(C)C
+Z3488600132,335.3717,C12H14FNO5S2,4-({6-hydroxy-3-azabicyclo[3.2.0]heptan-3-yl}sulfonyl)benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)N2CC3CC(O)C3C2
+Z3210398377,508.5629,C21H17FN2O6S3,"3-{[(5-methoxythiophen-2-yl)methyl](1-oxo-1,2-dihydroisoquinolin-7-yl)sulfamoyl}benzene-1-sulfonyl fluoride",COC1=CC=C(CN(C=2C=CC=3C=CNC(=O)C3C2)S(=O)(=O)C4=CC=CC(=C4)S(=O)(=O)F)S1
+Z2759874747,391.3589,C12H13F4NO5S2,4-{[5-methyl-2-(trifluoromethyl)morpholin-4-yl]sulfonyl}benzene-1-sulfonyl fluoride,CC1COC(CN1S(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F)C(F)(F)F
+Z4607533156,414.8788,C18H20ClFN2O4S,4-({4-[(3-chloro-4-hydroxyphenyl)methyl]piperazin-1-yl}methyl)phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCN(CC3=CC=C(O)C(Cl)=C3)CC2
+Z4262407945,332.3048,C12H13FN2O6S,methyl (2R)-1-{5-[(fluorosulfonyl)oxy]pyridine-3-carbonyl}pyrrolidine-2-carboxylate,COC(=O)[C@H]1CCCN1C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4607531260,365.4191,C18H20FNO4S,4-{[3-(2-methoxyphenyl)pyrrolidin-1-yl]methyl}phenyl sulfurofluoridate,COC=1C=CC=CC1C2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)C2
+Z3292075471,361.3873,C18H16FNO4S,4-({[(2-methyl-1-benzofuran-3-yl)methyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride,CC=1OC=2C=CC=CC2C1CNC(=O)CC=3C=CC(=CC3)S(=O)(=O)F
+Z4209728439,314.3359,C12H15FN4O3S,"4-(4-{[(2-methoxyethyl)amino]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride",COCCNCC1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F
+Z1672273260,362.3572,C11H11FN4O5S2,4-[(3-carbamoyl-5-methyl-1H-pyrazol-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CC=1NN=C(C(N)=O)C1NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z7758523017,332.7816,C12H14ClFN4O2S,"4-{4-[(cyclopropylamino)methyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CNC3CC3)N=N2
+Z3488642389,350.3878,C15H11FN2O3S2,"4-{12-oxo-7-thia-9,11-diazatricyclo[6.4.0.0,2,6]dodeca-1(8),2(6),9-trien-10-yl}benzene-1-sulfonyl fluoride",O=C1NC(=NC=2SC=3CCCC3C12)C=4C=CC(=CC4)S(=O)(=O)F
+Z7755599427,375.2223,C11H14Cl2F2N4O2S,"4-(4-{[(2-fluoroethyl)amino]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CNCCF)N=N2
+Z2736752273,316.3286,C11H9FN2O4S2,4-[(pyridin-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC=2C=CC=CN2
+Z7758523019,376.8341,C14H18ClFN4O3S,"3-(4-{[(oxan-4-yl)amino]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC=C(C1)N2C=C(CNC3CCOCC3)N=N2
+Z2874215495,349.3799,C16H16FN3O3S,"4-{3-cyclopropyl-4H,5H,6H,7H-pyrazolo[1,5-a]pyrimidine-4-carbonyl}benzene-1-sulfonyl fluoride",O=C(C=1C=CC(=CC1)S(=O)(=O)F)N2CCCN3N=CC(=C23)C4CC4
+Z7758523015,376.8341,C14H18ClFN4O3S,"4-[4-({[(oxolan-2-yl)methyl]amino}methyl)-1H-1,2,3-triazol-1-yl]benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CNCC3CCCO3)N=N2
+Z4262230524,324.3274,C14H13FN2O4S,4-[2-(pyridin-3-yl)propanamido]phenyl sulfurofluoridate,CC(C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=NC2
+Z7758523021,346.8081,C13H16ClFN4O2S,"4-{4-[(2R)-2-methylpyrrolidin-2-yl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride hydrochloride",C[C@@]1(CCCN1)C2=CN(N=N2)C=3C=CC(=CC3)S(=O)(=O)F
+Z3488523591,330.3551,C12H11FN2O4S2,"3-[4-(methoxymethyl)-1,3-thiazole-5-amido]benzene-1-sulfonyl fluoride",COCC=1N=CSC1C(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z3919193650,329.3191,C14H13F2NO4S,2-{[(4-fluorophenyl)amino]methyl}-6-methoxyphenyl sulfurofluoridate,COC=1C=CC=C(CNC=2C=CC(F)=CC2)C1OS(=O)(=O)F
+Z4415175776,356.4554,C17H25FN2O3S,"4-{[(2,2,6,6-tetramethylpiperidin-4-yl)carbamoyl]methyl}benzene-1-sulfonyl fluoride",CC1(C)CC(CC(C)(C)N1)NC(=O)CC=2C=CC(=CC2)S(=O)(=O)F
+Z4607533168,367.3919,C17H18FNO5S,"4-[(6-hydroxy-7-methoxy-1,2,3,4-tetrahydroisoquinolin-2-yl)methyl]phenyl sulfurofluoridate",COC1=CC=2CN(CC=3C=CC(=CC3)OS(=O)(=O)F)CCC2C=C1O
+Z3488601430,348.3919,C17H17FN2O3S,"4-(5-methyl-2,3,4,5-tetrahydro-1H-1,5-benzodiazepine-1-carbonyl)benzene-1-sulfonyl fluoride",CN1CCCN(C(=O)C=2C=CC(=CC2)S(=O)(=O)F)C=3C=CC=CC31
+Z4332079668,359.4163,C15H22FN3O4S,4-{[3-(diethylamino)pyrrolidine-1-carbonyl]amino}phenyl sulfurofluoridate,CCN(CC)C1CCN(C1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4345084361,332.3479,C13H17FN2O5S,4-{[2-(2-hydroxyethyl)pyrrolidine-1-carbonyl]amino}phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCCC2CCO
+Z4262414501,332.3048,C12H13FN2O6S,methyl 1-{5-[(fluorosulfonyl)oxy]pyridine-3-carbonyl}pyrrolidine-2-carboxylate,COC(=O)C1CCCN1C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z3489903975,377.3339,C14H7F4NO3S2,"4-[5-(trifluoromethyl)-1,3-benzothiazol-2-yl]phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)C2=NC=3C=C(C=CC3S2)C(F)(F)F
+Z4262385209,325.3155,C13H12FN3O4S,"4-(4,6-dimethylpyrimidine-5-amido)phenyl sulfurofluoridate",CC1=NC=NC(C)=C1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4326792367,325.4016,C15H20FN3O2S,2-{[(1-methyl-1H-pyrazol-4-yl)methyl][(2-methylphenyl)methyl]amino}ethane-1-sulfonyl fluoride,CC=1C=CC=CC1CN(CCS(=O)(=O)F)CC=2C=NN(C)C2
+Z2275323710,347.3857,C12H14FN3O4S2,4-{[1-(propan-2-yl)-1H-pyrazol-3-yl]sulfamoyl}benzene-1-sulfonyl fluoride,CC(C)N1C=CC(=N1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z1900970594,389.1969,C13H10BrFN2O4S,3-[2-(3-bromo-2-hydroxypyridin-4-yl)acetamido]benzene-1-sulfonyl fluoride,O=C(CC=1C=CN=C(O)C1Br)NC=2C=CC=C(C2)S(=O)(=O)F
+Z2736752272,316.3286,C11H9FN2O4S2,4-[(pyridin-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC=2C=CN=CC2
+Z2509447322,346.3578,C11H11FN4O4S2,"4-{4H,5H,6H,7H-[1,2,4]triazolo[1,5-a]pyrimidine-4-sulfonyl}benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)N2CCCN3N=CN=C23
+Z7766220547,346.8081,C13H16ClFN4O2S,"4-{4-[(2S)-2-methylpyrrolidin-2-yl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride hydrochloride",C[C@]1(CCCN1)C2=CN(N=N2)C=3C=CC(=CC3)S(=O)(=O)F
+Z4661982952,369.3912,C14H12FN3O4S2,5-(1-methyl-1H-imidazole-4-sulfonamido)naphthalene-2-sulfonyl fluoride,CN1C=NC(=C1)S(=O)(=O)NC=2C=CC=C3C=C(C=CC23)S(=O)(=O)F
+Z7740072587,383.2691,C13H17Cl2FN4O2S,"3-{4-[2-(cyclopropylamino)ethyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC=C(C1)N2C=C(CCNC3CC3)N=N2
+Z4607527168,324.3274,C14H13FN2O4S,5-[2-(4-methylphenyl)acetamido]pyridin-3-yl sulfurofluoridate,CC=1C=CC(=CC1)CC(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z7758630779,336.7703,C11H14ClFN4O3S,"4-(4-{[(2-hydroxyethyl)amino]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CNCCO)N=N2
+Z4262304751,345.3036,C12H12FN3O6S,"4-[2-(3-methyl-2,4-dioxoimidazolidin-1-yl)acetamido]phenyl sulfurofluoridate",CN1C(=O)CN(CC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)C1=O
+Z7771564911,360.8347,C14H18ClFN4O2S,"4-{4-[2-(pyrrolidin-2-yl)ethyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CCC3CCCN3)N=N2
+Z2867517997,319.3325,C10H10FN3O4S2,3-[(1-methyl-1H-pyrazol-5-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CN1N=CC=C1NS(=O)(=O)C2=CC=CC(=C2)S(=O)(=O)F
+Z7771611772,383.2691,C13H17Cl2FN4O2S,"4-[4-(1-amino-2-cyclopropylethyl)-1H-1,2,3-triazol-1-yl]benzene-1-sulfonyl fluoride dihydrochloride",NC(CC1CC1)C2=CN(N=N2)C=3C=CC(=CC3)S(=O)(=O)F
+Z2752279673,382.2908,C12H10F4N4O4S,"(5-nitro-2-{[1-(2,2,2-trifluoroethyl)-1H-pyrazol-4-yl]amino}phenyl)methanesulfonyl fluoride",[O-][N+](=O)C=1C=CC(NC=2C=NN(C2)CC(F)(F)F)=C(C1)CS(=O)(=O)F
+Z7771611746,397.2957,C14H19Cl2FN4O2S,"4-{4-[(cyclopentylamino)methyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CNC3CCCC3)N=N2
+Z2736752262,346.3545,C12H11FN2O5S2,4-[(6-methoxypyridin-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,COC=1C=CC(=CN1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z7771564909,350.7968,C12H16ClFN4O3S,"4-(4-{[2-(methylamino)ethoxy]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride hydrochloride",CNCCOCC1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F
+Z1672279103,391.3952,C13H14FN3O6S2,ethyl 3-[4-(fluorosulfonyl)benzenesulfonamido]-1-methyl-1H-pyrazole-4-carboxylate,CCOC(=O)C1=CN(C)N=C1NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z7755504753,462.7978,C15H23Cl3FN5O2S,"4-{4-[4-(dimethylamino)piperidin-4-yl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride trihydrochloride",CN(C)C1(CCNCC1)C2=CN(N=N2)C=3C=CC(=CC3)S(=O)(=O)F
+Z2874897699,335.3981,C10H10FN3O3S3,"2-[2-(2-ethyl-1,3-thiazol-4-yl)acetamido]-1,3-thiazole-5-sulfonyl fluoride",CCC1=NC(=CS1)CC(=O)NC2=NC=C(S2)S(=O)(=O)F
+Z7772888877,334.7974,C12H16ClFN4O2S,"4-[4-(2-aminobutan-2-yl)-1H-1,2,3-triazol-1-yl]benzene-1-sulfonyl fluoride hydrochloride",CCC(C)(N)C1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F
+Z3488532139,337.2469,C12H7F4NO4S,3-[2-(trifluoromethyl)furan-3-amido]benzene-1-sulfonyl fluoride,O=C(NC=1C=CC=C(C1)S(=O)(=O)F)C=2C=COC2C(F)(F)F
+Z7773455499,385.7649,C13H12ClF4N3O2S,"4-[3-(trifluoromethyl)-5H,6H,7H,8H-imidazo[1,5-a]pyrazin-1-yl]benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC(=CC1)C=2N=C(N3CCNCC23)C(F)(F)F
+Z3071639989,318.3213,C12H15FN2O5S,4-[4-(fluorosulfonyl)-1H-pyrrole-2-amido]cyclohexane-1-carboxylic acid,O=C(O)C1CCC(CC1)NC(=O)C2=CC(=CN2)S(=O)(=O)F
+Z7754534345,336.7703,C11H14ClFN4O3S,"3-(4-{[(2-hydroxyethyl)amino]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC=C(C1)N2C=C(CNCCO)N=N2
+Z1688207185,337.3411,C16H13F2NO3S,4-[2-(4-fluorophenyl)cyclopropaneamido]benzene-1-sulfonyl fluoride,O=C(NC=1C=CC(=CC1)S(=O)(=O)F)C2CC2C=3C=CC(F)=CC3
+Z2474402431,365.4224,C17H20FN3O3S,"4-{2-[1-(cyclopropylmethyl)-3,5-dimethyl-1H-pyrazol-4-yl]acetamido}benzene-1-sulfonyl fluoride",CC1=NN(CC2CC2)C(C)=C1CC(=O)NC=3C=CC(=CC3)S(=O)(=O)F
+Z2737057891,321.3682,C10H8FNO4S3,4-[(thiophen-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC=2C=CSC2
+Z4344068737,327.3777,C13H18FN5O2S,2-{[(1-ethenyl-1H-pyrazol-4-yl)methyl](1-ethyl-1H-pyrazol-4-yl)amino}ethane-1-sulfonyl fluoride,C=CN1C=C(C=N1)CN(CCS(=O)(=O)F)C=2C=NN(C2)CC
+Z3488596517,319.3243,C13H15F2NO4S,3-[4-(fluoromethyl)oxane-4-amido]benzene-1-sulfonyl fluoride,O=C(NC=1C=CC=C(C1)S(=O)(=O)F)C2(CF)CCOCC2
+Z2848529516,348.3091,C14H9FN4O4S,"4-{4-oxo-3H,4H-pyrido[3,4-d]pyrimidine-6-amido}benzene-1-sulfonyl fluoride",O=C(NC=1C=CC(=CC1)S(=O)(=O)F)C=2C=C3C(=O)NC=NC3=CN2
+Z2156373130,333.2863,C12H10F3N3O3S,3-[3-(difluoromethyl)-1-methyl-1H-pyrazole-4-amido]benzene-1-sulfonyl fluoride,CN1C=C(C(=O)NC=2C=CC=C(C2)S(=O)(=O)F)C(=N1)C(F)F
+Z2768284941,432.4471,C15H17FN4O6S2,5-[(1-{[3-(methylsulfamoyl)phenyl]carbamoyl}ethyl)carbamoyl]-1H-pyrrole-3-sulfonyl fluoride,CNS(=O)(=O)C=1C=CC=C(C1)NC(=O)C(C)NC(=O)C2=CC(=CN2)S(=O)(=O)F
+Z1933299161,360.3595,C17H13FN2O4S,"3-[2-(1-oxo-1,2-dihydroisoquinolin-2-yl)acetamido]benzene-1-sulfonyl fluoride",O=C(CN1C=CC=2C=CC=CC2C1=O)NC=3C=CC=C(C3)S(=O)(=O)F
+Z2768290090,402.4211,C14H15FN4O5S2,4-{[1-(1-methyl-1H-pyrazol-4-yl)-2-oxopyrrolidin-3-yl]sulfamoyl}benzene-1-sulfonyl fluoride,CN1C=C(C=N1)N2CCC(NS(=O)(=O)C=3C=CC(=CC3)S(=O)(=O)F)C2=O
+Z1956740975,347.3857,C12H14FN3O4S2,3-{[1-(propan-2-yl)-1H-pyrazol-3-yl]sulfamoyl}benzene-1-sulfonyl fluoride,CC(C)N1C=CC(=N1)NS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z4607533141,371.3477,C14H17F4NO4S,"rac-4-{[(2R,3S)-3-(hydroxymethyl)-2-(trifluoromethyl)piperidin-1-yl]methyl}phenyl sulfurofluoridate","O=S(=O)(F)OC=1C=CC(=CC1)CN2CCC[C@@H](CO)[C@H]2C(F)(F)F |&1:16,19|"
+Z4608617610,404.4121,C19H17FN2O5S,"rac-3-ethynyl-5-{[(2R,4R)-2-(pyridin-2-yl)oxan-4-yl]carbamoyl}phenyl sulfurofluoridate","C#CC1=CC(=CC(=C1)OS(=O)(=O)F)C(=O)N[C@@H]2CCO[C@H](C2)C=3C=CC=CN3 |&1:16,20|"
+Z7771225266,383.2691,C13H17Cl2FN4O2S,"4-{4-[(S)-amino(cyclobutyl)methyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride dihydrochloride",N[C@H](C1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F)C3CCC3
+Z2509455553,341.338,C12H8FN3O4S2,3-[(4-cyanopyridin-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride,N#CC=1C=CN=C(C1)NS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z7771240687,427.3216,C15H21Cl2FN4O3S,"3-(4-{2-[(oxan-4-yl)amino]ethyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC=C(C1)N2C=C(CCNC3CCOCC3)N=N2
+Z4262276865,367.4151,C16H14FNO4S2,"4-(6-methyl-2,3-dihydro-1-benzothiophene-2-amido)phenyl sulfurofluoridate",CC=1C=CC=2CC(SC2C1)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z7775912453,399.2685,C13H17Cl2FN4O3S,"4-(4-{[(oxolan-3-yl)amino]methyl}-1H-1,2,3-triazol-1-yl)benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CNC3CCOC3)N=N2
+Z4344225242,314.3757,C14H19FN2O3S,2-{[(1H-indol-7-yl)methyl](2-methoxyethyl)amino}ethane-1-sulfonyl fluoride,COCCN(CCS(=O)(=O)F)CC=1C=CC=C2C=CNC12
+Z4246965254,361.3906,C17H16FN3O3S,4-[({[2-(1H-imidazol-1-yl)phenyl]methyl}amino)methyl]phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CNCC=2C=CC=CC2N3C=CN=C3
+Z4607533200,391.4133,C19H18FNO5S,4-({[(furan-2-yl)methyl][(2-hydroxyphenyl)methyl]amino}methyl)phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN(CC2=CC=CO2)CC3=CC=CC=C3O
+Z7771243533,385.285,C13H19Cl2FN4O2S,"4-[4-(1-amino-2,2-dimethylpropyl)-1H-1,2,3-triazol-1-yl]benzene-1-sulfonyl fluoride dihydrochloride",CC(C)(C)C(N)C1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F
+Z4607528880,341.3149,C13H12FN3O5S,"5-(2-cyclopropyl-4-methyl-1,3-oxazole-5-amido)pyridin-3-yl sulfurofluoridate",CC=1N=C(OC1C(=O)NC2=CN=CC(=C2)OS(=O)(=O)F)C3CC3
+Z7771226143,462.7978,C15H23Cl3FN5O2S,"4-{4-[1-(1,4-diazepan-1-yl)ethyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride trihydrochloride",CC(C1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F)N3CCCNCC3
+Z4607533210,353.4084,C17H20FNO4S,4-({[(2-hydroxyphenyl)methyl](propyl)amino}methyl)phenyl sulfurofluoridate,CCCN(CC=1C=CC(=CC1)OS(=O)(=O)F)CC=2C=CC=CC2O
+Z7776672125,411.3222,C15H21Cl2FN4O2S,"4-{1-[(2,2-dimethylpyrrolidin-3-yl)methyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride dihydrochloride",CC1(C)NCCC1CN2C=C(N=N2)C=3C=CC(=CC3)S(=O)(=O)F
+Z4607528837,400.3788,C16H17FN2O7S,"5-[2-(3,4,5-trimethoxyphenyl)acetamido]pyridin-3-yl sulfurofluoridate",COC1=CC(=CC(OC)=C1OC)CC(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z7772966905,427.3216,C15H21Cl2FN4O3S,"4-{1-[(5,5-dimethylmorpholin-2-yl)methyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride dihydrochloride",CC1(C)COC(CN2C=C(N=N2)C=3C=CC(=CC3)S(=O)(=O)F)CN1
+Z1723915632,347.3857,C12H14FN3O4S2,4-[(3-ethyl-1-methyl-1H-pyrazol-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CCC1=NN(C)C=C1NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4262522926,328.2764,C11H9FN4O5S,5-[(5-methoxypyrimidin-4-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,COC=1C=NC=NC1NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2895192376,383.1923,C14H8BrFN2O3S,"4-(6-bromo-4-oxo-3,4-dihydroquinazolin-2-yl)benzene-1-sulfonyl fluoride",O=C1NC(=NC=2C=CC(Br)=CC12)C=3C=CC(=CC3)S(=O)(=O)F
+Z4385628784,328.3194,C12H13FN4O4S,5-[4-(1H-pyrazol-1-yl)butanamido]pyridin-3-yl sulfurofluoridate,O=C(CCCN1C=CC=N1)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z2895192372,362.3323,C16H11FN2O5S,"methyl 2-[4-(fluorosulfonyl)phenyl]-4-oxo-3,4-dihydroquinazoline-7-carboxylate",COC(=O)C=1C=CC=2C(=O)NC(=NC2C1)C=3C=CC(=CC3)S(=O)(=O)F
+Z4317727295,407.4591,C19H22FN3O4S,4-({2-[3-(dimethylamino)phenyl]pyrrolidine-1-carbonyl}amino)phenyl sulfurofluoridate,CN(C)C=1C=CC=C(C1)C2CCCN2C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z2759776970,362.3754,C17H15FN2O4S,"3-(5-methyl-4-oxo-2,3,4,5-tetrahydro-1H-1,5-benzodiazepine-1-carbonyl)benzene-1-sulfonyl fluoride",CN1C(=O)CCN(C(=O)C=2C=CC=C(C2)S(=O)(=O)F)C=3C=CC=CC31
+Z7752962777,411.3222,C15H21Cl2FN4O2S,"4-{4-[2-(cyclopentylamino)ethyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(CCNC3CCCC3)N=N2
+Z3489903936,337.2469,C12H7F4NO4S,4-{[5-(trifluoromethyl)pyridin-2-yl]oxy}phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)OC=2C=CC(=CN2)C(F)(F)F
+Z4650039225,338.3028,C12H13F3N2O4S,"rac-5-[(1R,3S)-3-(difluoromethyl)-2,2-dimethylcyclopropaneamido]pyridin-3-yl sulfurofluoridate","CC1(C)[C@@H](C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F)[C@H]1C(F)F |&1:3,18|"
+Z4661982974,375.3925,C14H14FNO6S2,methyl 3-{[6-(fluorosulfonyl)naphthalen-1-yl]sulfamoyl}propanoate,COC(=O)CCS(=O)(=O)NC1=CC=CC=2C=C(C=CC12)S(=O)(=O)F
+Z3919173895,379.3165,C16H10FNO7S,"methyl 2-(1,3-dioxo-2,3-dihydro-1H-isoindol-2-yl)-5-[(fluorosulfonyl)oxy]benzoate",COC(=O)C=1C=C(C=CC1N2C(=O)C=3C=CC=CC3C2=O)OS(=O)(=O)F
+Z3488545066,334.3222,C15H11FN2O4S,"3-(2-methyl-1,3-benzoxazole-4-amido)benzene-1-sulfonyl fluoride",CC1=NC=2C(=CC=CC2O1)C(=O)NC=3C=CC=C(C3)S(=O)(=O)F
+Z4262231065,365.4191,C18H20FNO4S,4-[2-(4-tert-butylphenyl)acetamido]phenyl sulfurofluoridate,CC(C)(C)C=1C=CC(=CC1)CC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z1827892554,336.3597,C11H13FN2O5S2,"3-[(3-oxo-1,2,3,4-tetrahydroquinoxalin-1-yl)sulfonyl]propane-1-sulfonyl fluoride",O=C1CN(C=2C=CC=CC2N1)S(=O)(=O)CCCS(=O)(=O)F
+Z4345084335,344.3586,C14H17FN2O5S,"4-{[4-(methoxymethyl)-1,2,3,6-tetrahydropyridine-1-carbonyl]amino}phenyl sulfurofluoridate",COCC1=CCN(CC1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262484043,330.332,C13H15FN2O5S,5-{7-methoxy-5-azaspiro[2.4]heptane-5-carbonyl}pyridin-3-yl sulfurofluoridate,COC1CN(CC21CC2)C(=O)C=3C=NC=C(C3)OS(=O)(=O)F
+Z4607533174,439.4761,C20H23F2N3O4S,4-{[3-({[(3-fluorophenyl)carbamoyl]amino}methyl)piperidin-1-yl]methyl}phenyl sulfurofluoridate,O=C(NCC1CCCN(CC=2C=CC(=CC2)OS(=O)(=O)F)C1)NC=3C=CC=C(F)C3
+Z2736752264,319.3325,C10H10FN3O4S2,4-[(1-methyl-1H-pyrazol-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CN1C=C(C=N1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4607560783,395.4053,C17H18FN3O5S,4-{[benzyl(2-carbamoylethyl)carbamoyl]amino}phenyl sulfurofluoridate,NC(=O)CCN(CC=1C=CC=CC1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z1713569822,369.3647,C16H16FNO6S,"3-(2,4,5-trimethoxybenzamido)benzene-1-sulfonyl fluoride",COC1=CC(OC)=C(C=C1C(=O)NC=2C=CC=C(C2)S(=O)(=O)F)OC
+Z7772313216,401.2595,C13H16Cl2F2N4O2S,"4-{1-[(3-fluoropyrrolidin-3-yl)methyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)C2=CN(CC3(F)CCNC3)N=N2
+Z1737948533,363.3569,C13H11F2NO5S2,2-[(3-fluoro-4-methoxyphenyl)sulfamoyl]benzene-1-sulfonyl fluoride,COC=1C=CC(=CC1F)NS(=O)(=O)C=2C=CC=CC2S(=O)(=O)F
+Z7771702880,411.3222,C15H21Cl2FN4O2S,"4-{1-[(5-methylpiperidin-3-yl)methyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride dihydrochloride",CC1CNCC(CN2C=C(N=N2)C=3C=CC(=CC3)S(=O)(=O)F)C1
+Z1721317214,424.4432,C19H21FN2O6S,3-(3-methoxy-4-{[(propan-2-yl)carbamoyl]methoxy}benzamido)benzene-1-sulfonyl fluoride,COC=1C=C(C=CC1OCC(=O)NC(C)C)C(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z4332082170,368.3552,C16H14F2N2O4S,"4-[(5-fluoro-1,2,3,4-tetrahydroisoquinoline-2-carbonyl)amino]phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCC3=C(F)C=CC=C3C2
+Z4262532495,374.3646,C13H11FN2O6S2,methyl 5-{5-[(fluorosulfonyl)oxy]pyridine-3-amido}-3-methylthiophene-2-carboxylate,COC(=O)C=1SC(=CC1C)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z7776666032,399.2685,C13H17Cl2FN4O3S,"4-{1-[(3-hydroxypyrrolidin-3-yl)methyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)C2=CN(CC3(O)CCNC3)N=N2
+Z4262482665,334.3207,C12H15FN2O6S,"rac-5-{[(3R,4R)-4-methoxyoxan-3-yl]carbamoyl}pyridin-3-yl sulfurofluoridate","CO[C@@H]1CCOC[C@H]1NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F |&1:2,7|"
+Z7782491595,385.2419,C12H15Cl2FN4O3S,"3-[4-(3-hydroxypyrrolidin-3-yl)-1H-1,2,3-triazol-1-yl]benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC=C(C1)N2C=C(N=N2)C3(O)CCNC3
+Z2752279674,372.372,C14H17FN4O5S,(2-{[1-(3-methoxypropyl)-1H-pyrazol-3-yl]amino}-5-nitrophenyl)methanesulfonyl fluoride,COCCCN1C=CC(=N1)NC=2C=CC(=CC2CS(=O)(=O)F)[N+]([O-])=O
+Z1764294102,358.3652,C13H11FN2O5S2,3-(phenylformohydrazido)sulfonylbenzene-1-sulfonyl fluoride,O=C(NNS(=O)(=O)C=1C=CC=C(C1)S(=O)(=O)F)C=2C=CC=CC2
+Z2156382164,323.3394,C15H14FNO4S,3-[(2R)-2-methoxy-2-phenylacetamido]benzene-1-sulfonyl fluoride,CO[C@@H](C(=O)NC=1C=CC=C(C1)S(=O)(=O)F)C=2C=CC=CC2
+Z4317037550,384.8098,C16H14ClFN2O4S,"4-[(8-chloro-1,2,3,4-tetrahydroisoquinoline-2-carbonyl)amino]phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCC3=CC=CC(Cl)=C3C2
+Z2867517744,317.3166,C10H8FN3O4S2,3-[(pyrimidin-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NC=2N=CC=CN2
+Z4607528922,354.3567,C14H15FN4O4S,5-[2-(2-methylpropyl)pyrimidine-4-amido]pyridin-3-yl sulfurofluoridate,CC(C)CC=1N=CC=C(N1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z1713568630,345.777,C13H13ClFN3O3S,"3-[2-(4-chloro-3,5-dimethyl-1H-pyrazol-1-yl)acetamido]benzene-1-sulfonyl fluoride",CC1=NN(CC(=O)NC2=CC=CC(=C2)S(=O)(=O)F)C(C)=C1Cl
+Z3489903966,370.7368,C15H8ClFO6S,3-(4-chlorophenoxy)-4-oxo-4H-chromen-7-yl sulfurofluoridate,O=C1C(=COC=2C=C(C=CC12)OS(=O)(=O)F)OC=3C=CC(Cl)=CC3
+Z3488544063,333.3375,C15H12FN3O3S,3-[2-(1H-indazol-1-yl)acetamido]benzene-1-sulfonyl fluoride,O=C(CN1N=CC=2C=CC=CC21)NC=3C=CC=C(C3)S(=O)(=O)F
+Z4607528858,353.3256,C14H12FN3O5S,"5-(1-cyclopropyl-6-oxo-1,6-dihydropyridine-3-amido)pyridin-3-yl sulfurofluoridate",O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C=2C=CC(=O)N(C2)C3CC3
+Z2509447210,316.3286,C11H9FN2O4S2,3-[(pyridin-4-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NC=2C=CN=CC2
+Z4607528897,337.3262,C14H12FN3O4S,5-(5-cyclopropylpyridine-3-amido)pyridin-3-yl sulfurofluoridate,O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C=2C=NC=C(C2)C3CC3
+Z2768309288,405.3672,C16H15F4N3O3S,"4-({[2-(trifluoromethyl)-5H,6H,7H,8H-imidazo[1,2-a]pyridin-6-yl]methyl}carbamoyl)benzene-1-sulfonyl fluoride",O=C(NCC1CCC2=NC(=CN2C1)C(F)(F)F)C=3C=CC(=CC3)S(=O)(=O)F
+Z4607528914,363.3204,C15H10FN3O5S,"5-(3-phenyl-1,2-oxazole-4-amido)pyridin-3-yl sulfurofluoridate",O=C(NC=1C=NC=C(C1)OS(=O)(=O)F)C2=CON=C2C=3C=CC=CC3
+Z2936916680,325.3585,C14H16FN3O3S,"4-({[(1,5-dimethyl-1H-pyrazol-4-yl)methyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride",CC1=C(C=NN1C)CNC(=O)CC=2C=CC(=CC2)S(=O)(=O)F
+Z4386044779,433.45,C21H20FNO6S,"3-(6,7-dimethoxy-1-methyl-1,2,3,4-tetrahydroisoquinoline-2-carbonyl)-5-ethynylphenyl sulfurofluoridate",C#CC1=CC(=CC(=C1)OS(=O)(=O)F)C(=O)N2CCC=3C=C(OC)C(=CC3C2C)OC
+Z2936916679,343.4136,C16H22FNO4S,4-({[1-(oxan-4-yl)propyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride,CCC(NC(=O)CC=1C=CC(=CC1)S(=O)(=O)F)C2CCOCC2
+Z4332078076,364.3913,C17H17FN2O4S,"4-[(5-methyl-1,2,3,4-tetrahydroisoquinoline-2-carbonyl)amino]phenyl sulfurofluoridate",CC=1C=CC=C2CN(CCC12)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z1763534568,349.4413,C14H20FNO4S2,4-[(3-ethylcyclohexyl)sulfamoyl]benzene-1-sulfonyl fluoride,CCC1CCCC(C1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z1688206495,405.4001,C18H16FN3O5S,"4-{3-[3-(4-methoxyphenyl)-1,2,4-oxadiazol-5-yl]propanamido}benzene-1-sulfonyl fluoride",COC=1C=CC(=CC1)C2=NOC(CCC(=O)NC=3C=CC(=CC3)S(=O)(=O)F)=N2
+Z3386495120,507.9423,C21H15ClFN3O5S2,"3-{[(2-chloropyridin-4-yl)methyl](1-oxo-1,2-dihydroisoquinolin-7-yl)sulfamoyl}benzene-1-sulfonyl fluoride",O=C1NC=CC=2C=CC(=CC12)N(CC=3C=CN=C(Cl)C3)S(=O)(=O)C=4C=CC=C(C4)S(=O)(=O)F
+Z1708249515,417.4291,C16H16FNO7S2,"2-(3-{[3-(fluorosulfonyl)phenyl]sulfamoyl}-2,6-dimethylphenoxy)acetic acid",CC=1C=CC(=C(C)C1OCC(=O)O)S(=O)(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z56797148,381.4218,C17H20FN3O4S,4-(2-{4-[bis(2-hydroxyethyl)amino]-2-methylphenyl}diazen-1-yl)benzene-1-sulfonyl fluoride,CC=1C=C(C=CC1N=NC=2C=CC(=CC2)S(=O)(=O)F)N(CCO)CCO
+Z1713568601,435.4261,C19H18FN3O6S,"3-{2-[4-(4-methoxyphenyl)-4-methyl-2,5-dioxoimidazolidin-1-yl]acetamido}benzene-1-sulfonyl fluoride",COC=1C=CC(=CC1)C2(C)NC(=O)N(CC(=O)NC3=CC=CC(=C3)S(=O)(=O)F)C2=O
+Z2734670510,334.3222,C15H11FN2O4S,"4-[5-(2-methoxyphenyl)-1,3,4-oxadiazol-2-yl]benzene-1-sulfonyl fluoride",COC=1C=CC=CC1C2=NN=C(O2)C=3C=CC(=CC3)S(=O)(=O)F
+Z1713569703,434.4828,C15H15FN2O6S3,3-[3-(morpholine-4-sulfonyl)thiophene-2-amido]benzene-1-sulfonyl fluoride,O=C(NC=1C=CC=C(C1)S(=O)(=O)F)C=2SC=CC2S(=O)(=O)N3CCOCC3
+Z3271968282,318.3213,C12H15FN2O5S,2-{1-[4-(fluorosulfonyl)-1H-pyrrole-2-amido]cyclopentyl}acetic acid,O=C(O)CC1(CCCC1)NC(=O)C2=CC(=CN2)S(=O)(=O)F
+Z7797494321,385.2419,C12H15Cl2FN4O3S,"4-[4-(3-hydroxypyrrolidin-3-yl)-1H-1,2,3-triazol-1-yl]benzene-1-sulfonyl fluoride dihydrochloride",O=S(=O)(F)C=1C=CC(=CC1)N2C=C(N=N2)C3(O)CCNC3
+Z4262492108,325.3155,C13H12FN3O4S,5-{[2-(pyridin-4-yl)ethyl]carbamoyl}pyridin-3-yl sulfurofluoridate,O=C(NCCC=1C=CN=CC1)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4607560762,348.3473,C13H17FN2O6S,"4-{[(2S,4R)-4-hydroxy-2-(methoxymethyl)pyrrolidine-1-carbonyl]amino}phenyl sulfurofluoridate",COC[C@@H]1C[C@@H](O)CN1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4607567214,402.4178,C15H15FN2O6S2,4-[2-(dimethylsulfamoyl)benzamido]phenyl sulfurofluoridate,CN(C)S(=O)(=O)C=1C=CC=CC1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2768276635,420.4545,C20H21FN2O5S,3-{[(3-{[(oxolan-2-yl)methyl]carbamoyl}phenyl)methyl]carbamoyl}benzene-1-sulfonyl fluoride,O=C(NCC=1C=CC=C(C1)C(=O)NCC2CCCO2)C=3C=CC=C(C3)S(=O)(=O)F
+Z4607531379,378.4609,C19H23FN2O3S,"4-{[4-(2,3-dimethylphenyl)piperazin-1-yl]methyl}phenyl sulfurofluoridate",CC=1C=CC=C(C1C)N2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z1688206972,337.3659,C16H16FNO4S,4-(4-phenoxybutanamido)benzene-1-sulfonyl fluoride,O=C(CCCOC=1C=CC=CC1)NC=2C=CC(=CC2)S(=O)(=O)F
+Z3190516423,378.4179,C18H19FN2O4S,5-{3-hydroxy-3-phenyl-8-azabicyclo[3.2.1]octane-8-carbonyl}-1H-pyrrole-3-sulfonyl fluoride,O=C(C1=CC(=CN1)S(=O)(=O)F)N2C3CCC2CC(O)(C3)C=4C=CC=CC4
+Z4332079586,352.3806,C16H17FN2O4S,4-{[(2-phenylpropyl)carbamoyl]amino}phenyl sulfurofluoridate,CC(CNC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=CC2
+Z2768291972,406.428,C19H19FN2O5S,3-{[5-oxo-1-(2-phenoxyethyl)pyrrolidin-3-yl]carbamoyl}benzene-1-sulfonyl fluoride,O=C(NC1CC(=O)N(CCOC=2C=CC=CC2)C1)C3=CC=CC(=C3)S(=O)(=O)F
+Z4262299417,381.4185,C18H20FNO5S,4-{3-[2-(propan-2-yl)phenoxy]propanamido}phenyl sulfurofluoridate,CC(C)C=1C=CC=CC1OCCC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z1672278931,319.3325,C10H10FN3O4S2,4-[(1-methyl-1H-pyrazol-5-yl)sulfamoyl]benzene-1-sulfonyl fluoride,CN1N=CC=C1NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4607528801,372.7991,C15H14ClFN2O4S,5-[4-(3-chlorophenyl)butanamido]pyridin-3-yl sulfurofluoridate,O=C(CCCC=1C=CC=C(Cl)C1)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z3462947342,315.3604,C14H18FNO4S,3-[1-(methoxymethyl)cyclopentaneamido]benzene-1-sulfonyl fluoride,COCC1(CCCC1)C(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z4607533233,408.419,C19H18F2N2O4S,"4-{[4-(6-fluoro-1,2-benzoxazol-3-yl)piperidin-1-yl]methyl}phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)CN2CCC(CC2)C3=NOC=4C=C(F)C=CC34
+Z2736955437,339.3851,C15H18FN3O3S,3-(1-tert-butyl-5-methyl-1H-pyrazole-3-amido)benzene-1-sulfonyl fluoride,CC1=CC(=NN1C(C)(C)C)C(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z4607533186,447.308,C18H17Cl2FN2O4S,"4-({2-[(3,5-dichlorophenyl)carbamoyl]pyrrolidin-1-yl}methyl)phenyl sulfurofluoridate",O=C(NC=1C=C(Cl)C=C(Cl)C1)C2CCCN2CC=3C=CC(=CC3)OS(=O)(=O)F
+Z3488545238,335.3501,C16H14FNO4S,"3-[2-(2,3-dihydro-1-benzofuran-5-yl)acetamido]benzene-1-sulfonyl fluoride",O=C(CC=1C=CC=2OCCC2C1)NC=3C=CC=C(C3)S(=O)(=O)F
+Z4607533191,412.8629,C18H18ClFN2O4S,4-{[4-(4-chlorobenzoyl)piperazin-1-yl]methyl}phenyl sulfurofluoridate,O=C(C=1C=CC(Cl)=CC1)N2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z3492770076,353.3719,C14H16FN5O3S,"{1-[3-phenyl-3-(1H-1,2,3,4-tetrazol-1-yl)propanoyl]azetidin-3-yl}methanesulfonyl fluoride",O=C(CC(C=1C=CC=CC1)N2C=NN=N2)N3CC(CS(=O)(=O)F)C3
+Z4607533187,447.308,C18H17Cl2FN2O4S,"4-({2-[(2,5-dichlorophenyl)carbamoyl]pyrrolidin-1-yl}methyl)phenyl sulfurofluoridate",O=C(NC=1C=C(Cl)C=CC1Cl)C2CCCN2CC=3C=CC(=CC3)OS(=O)(=O)F
+Z4208814614,356.3924,C14H13FN2O4S2,"3-{[2-(morpholin-4-yl)-4-oxo-4,5-dihydro-1,3-thiazol-5-ylidene]methyl}benzene-1-sulfonyl fluoride",O=C1N=C(SC1=CC=2C=CC=C(C2)S(=O)(=O)F)N3CCOCC3
+Z4607533230,366.4072,C17H19FN2O4S,4-{[4-(2-hydroxyphenyl)piperazin-1-yl]methyl}phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN2CCN(CC2)C3=CC=CC=C3O
+Z4343904311,326.3897,C14H19FN4O2S,2-[(1-propyl-1H-pyrazol-4-yl)[(pyridin-4-yl)methyl]amino]ethane-1-sulfonyl fluoride,CCCN1C=C(C=N1)N(CCS(=O)(=O)F)CC=2C=CN=CC2
+Z2768269189,402.3962,C19H15FN2O5S,3-({[3-(furan-2-amido)phenyl]methyl}carbamoyl)benzene-1-sulfonyl fluoride,O=C(NC=1C=CC=C(C1)CNC(=O)C=2C=CC=C(C2)S(=O)(=O)F)C3=CC=CO3
+Z2759893305,397.4046,C14H12FN5O4S2,"3-({[2-(1H-1,2,4-triazol-1-yl)pyridin-4-yl]methyl}sulfamoyl)benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NCC=2C=CN=C(C2)N3C=NC=N3
+Z2768289008,435.5089,C22H26FNO5S,"3-({[1-(3,4-dimethoxyphenyl)cyclohexyl]methyl}carbamoyl)benzene-1-sulfonyl fluoride",COC=1C=CC(=CC1OC)C2(CNC(=O)C=3C=CC=C(C3)S(=O)(=O)F)CCCCC2
+Z4209727865,341.3579,C14H16FN3O4S,"methyl 2-({1-[4-(fluorosulfonyl)phenyl]-1H-1,2,3-triazol-4-yl}methyl)butanoate",CCC(CC1=CN(N=N1)C=2C=CC(=CC2)S(=O)(=O)F)C(=O)OC
+Z1713568645,418.3956,C19H15FN2O6S,3-{2-[3-(furan-2-amido)phenoxy]acetamido}benzene-1-sulfonyl fluoride,O=C(COC=1C=CC=C(C1)NC(=O)C2=CC=CO2)NC=3C=CC=C(C3)S(=O)(=O)F
+Z4343711679,328.4022,C15H21FN2O3S,2-[(1-cyanopropan-2-yl)({[3-(methoxymethyl)phenyl]methyl})amino]ethane-1-sulfonyl fluoride,COCC=1C=CC=C(C1)CN(CCS(=O)(=O)F)C(C)CC#N
+Z2149310865,379.4026,C18H18FNO5S,3-[2-(cyclopropylmethoxy)-4-methoxybenzamido]benzene-1-sulfonyl fluoride,COC=1C=CC(C(=O)NC=2C=CC=C(C2)S(=O)(=O)F)=C(C1)OCC3CC3
+Z3292075322,397.8483,C18H17ClFNO4S,"4-{2-[(8-chloro-3,4-dihydro-2H-1-benzopyran-4-yl)carbamoyl]ethyl}benzene-1-sulfonyl fluoride",O=C(CCC=1C=CC(=CC1)S(=O)(=O)F)NC2CCOC3=C(Cl)C=CC=C32
+Z1764356387,396.4165,C15H13FN4O4S2,"3-{[3-(5-methyl-1H-1,2,4-triazol-3-yl)phenyl]sulfamoyl}benzene-1-sulfonyl fluoride",CC1=NC(=NN1)C=2C=CC=C(C2)NS(=O)(=O)C=3C=CC=C(C3)S(=O)(=O)F
+Z4317037556,378.4179,C18H19FN2O4S,"4-{[methyl(1,2,3,4-tetrahydronaphthalen-1-yl)carbamoyl]amino}phenyl sulfurofluoridate",CN(C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C2CCCC3=CC=CC=C32
+Z1764353819,423.4386,C17H14FN3O5S2,"3-({3-[(2-oxo-1,2-dihydropyrimidin-1-yl)methyl]phenyl}sulfamoyl)benzene-1-sulfonyl fluoride",O=C1N=CC=CN1CC=2C=CC=C(C2)NS(=O)(=O)C3=CC=CC(=C3)S(=O)(=O)F
+Z3919195103,345.3665,C13H12FNO5S2,4-(N-methylbenzenesulfonamido)phenyl sulfurofluoridate,CN(C=1C=CC(=CC1)OS(=O)(=O)F)S(=O)(=O)C=2C=CC=CC2
+Z2768271431,480.5958,C21H21FN2O4S3,"3-[(2-phenyl-2-{4H,5H,6H,7H-thieno[3,2-c]pyridin-5-yl}ethyl)sulfamoyl]benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NCC(C=2C=CC=CC2)N3CCC=4SC=CC4C3
+Z2874866112,381.4218,C17H20FN3O4S,"rac-4-{[(2R,3R)-2-[1-(propan-2-yl)-1H-pyrazol-5-yl]oxolan-3-yl]carbamoyl}benzene-1-sulfonyl fluoride","CC(C)N1N=CC=C1[C@@H]2OCC[C@H]2NC(=O)C=3C=CC(=CC3)S(=O)(=O)F |&1:8,12|"
+Z1764322479,423.4419,C16H14FN5O4S2,"3-{[3-(1-cyclopropyl-1H-1,2,3,4-tetrazol-5-yl)phenyl]sulfamoyl}benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NC=2C=CC=C(C2)C3=NN=NN3C4CC4
+Z2907410177,323.361,C11H14FNO5S2,4-methyl-3-(morpholine-4-sulfonyl)benzene-1-sulfonyl fluoride,CC=1C=CC(=CC1S(=O)(=O)N2CCOCC2)S(=O)(=O)F
+Z4607533173,397.4212,C17H20FN3O5S,"4-{[4-(5-methyl-1,2-oxazole-3-amido)piperidin-1-yl]methyl}phenyl sulfurofluoridate",CC1=CC(=NO1)C(=O)NC2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z2156377897,433.518,C17H24FN3O5S2,3-[1-(piperidine-1-sulfonyl)piperidine-4-amido]benzene-1-sulfonyl fluoride,O=C(NC=1C=CC=C(C1)S(=O)(=O)F)C2CCN(CC2)S(=O)(=O)N3CCCCC3
+Z4607528879,340.3268,C14H13FN2O5S,5-[4-(methoxymethyl)benzamido]pyridin-3-yl sulfurofluoridate,COCC=1C=CC(=CC1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z2660578359,359.4626,C13H14FN3O2S3,"4-({[5-(pyrrolidin-1-yl)-1,3,4-thiadiazol-2-yl]sulfanyl}methyl)benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC(=CC1)CSC2=NN=C(S2)N3CCCC3
+Z4607560655,475.4571,C20H21F4N3O4S,"4-[(4-{[4-(trifluoromethyl)phenyl]methyl}-1,4-diazepane-1-carbonyl)amino]phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCCN(CC=3C=CC(=CC3)C(F)(F)F)CC2
+Z3282943709,394.4636,C18H23FN4O3S,"rac-[(1R,3S)-3-{2-[5-methyl-1-(4-methylphenyl)-1H-1,2,3-triazol-4-yl]acetamido}cyclopentyl]methanesulfonyl fluoride","CC1=C(CC(=O)N[C@@H]2CC[C@H](CS(=O)(=O)F)C2)N=NN1C=3C=CC(C)=CC3 |&1:7,10|"
+Z4607533201,415.4778,C22H22FNO4S,4-({[(2-hydroxyphenyl)methyl](1-phenylethyl)amino}methyl)phenyl sulfurofluoridate,CC(C=1C=CC=CC1)N(CC=2C=CC(=CC2)OS(=O)(=O)F)CC3=CC=CC=C3O
+Z3085329370,343.397,C13H14FN3O3S2,"4-({[(5-ethyl-1,3,4-thiadiazol-2-yl)methyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride",CCC1=NN=C(CNC(=O)CC=2C=CC(=CC2)S(=O)(=O)F)S1
+Z4344046478,315.3637,C13H18FN3O3S,"2-{[(2,5-dimethylfuran-3-yl)methyl](1-methyl-1H-pyrazol-3-yl)amino}ethane-1-sulfonyl fluoride",CC1=CC(CN(CCS(=O)(=O)F)C=2C=CN(C)N2)=C(C)O1
+Z2759075582,352.3127,C15H10F2N2O4S,"4-[2-(5-fluoro-1,2-benzoxazol-3-yl)acetamido]benzene-1-sulfonyl fluoride",O=C(CC1=NOC=2C=CC(F)=CC12)NC=3C=CC(=CC3)S(=O)(=O)F
+Z4262329659,355.4044,C15H14FNO4S2,4-[2-(ethylsulfanyl)benzamido]phenyl sulfurofluoridate,CCSC=1C=CC=CC1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z3482535152,344.3586,C14H17FN2O5S,"rac-[(1R,3S)-3-[2-(3-nitrophenyl)acetamido]cyclopentyl]methanesulfonyl fluoride","[O-][N+](=O)C=1C=CC=C(C1)CC(=O)N[C@@H]2CC[C@H](CS(=O)(=O)F)C2 |&1:13,16|"
+Z4607528864,379.3629,C16H14FN3O5S,5-[2-(4-cyanophenoxy)-2-methylpropanamido]pyridin-3-yl sulfurofluoridate,CC(C)(OC=1C=CC(C#N)=CC1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z1708249073,336.3829,C10H9FN2O4S3,"3-(2-methyl-1,3-thiazole-5-sulfonamido)benzene-1-sulfonyl fluoride",CC1=NC=C(S1)S(=O)(=O)NC2=CC=CC(=C2)S(=O)(=O)F
+Z4607528904,368.3369,C15H13FN2O6S,"5-[2-(2,3-dihydro-1,4-benzodioxin-2-yl)acetamido]pyridin-3-yl sulfurofluoridate",O=C(CC1COC=2C=CC=CC2O1)NC=3C=NC=C(C3)OS(=O)(=O)F
+Z3488602034,325.3983,C16H20FNO3S,"4-(3-{6,6-dimethyl-3-azabicyclo[3.1.0]hexan-3-yl}-3-oxopropyl)benzene-1-sulfonyl fluoride",CC1(C)C2CN(CC21)C(=O)CCC=3C=CC(=CC3)S(=O)(=O)F
+Z1737263456,376.3589,C17H13FN2O5S,"4-[2-(5-methyl-1,3-dioxo-2,3-dihydro-1H-isoindol-2-yl)acetamido]benzene-1-sulfonyl fluoride",CC=1C=CC=2C(=O)N(CC(=O)NC=3C=CC(=CC3)S(=O)(=O)F)C(=O)C2C1
+Z3083883144,368.4661,C18H25FN2O3S,"4-(3-{8-methyl-1,8-diazaspiro[4.5]decan-1-yl}-3-oxopropyl)benzene-1-sulfonyl fluoride",CN1CCC2(CCCN2C(=O)CCC=3C=CC(=CC3)S(=O)(=O)F)CC1
+Z1764327650,388.3912,C14H13FN2O6S2,3-{[3-(carbamoylmethoxy)phenyl]sulfamoyl}benzene-1-sulfonyl fluoride,NC(=O)COC=1C=CC=C(C1)NS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z4262530925,332.3479,C13H17FN2O5S,5-{methyl[(2-methyloxolan-2-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate,CN(CC1(C)CCCO1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z1688207171,364.3913,C17H17FN2O4S,4-[4-(phenylformamido)butanamido]benzene-1-sulfonyl fluoride,O=C(CCCNC(=O)C=1C=CC=CC1)NC=2C=CC(=CC2)S(=O)(=O)F
+Z4344334893,329.4301,C16H24FNO3S,2-{[(2-methylphenyl)methyl](oxepan-4-yl)amino}ethane-1-sulfonyl fluoride,CC=1C=CC=CC1CN(CCS(=O)(=O)F)C2CCCOCC2
+Z1737264814,359.3748,C17H14FN3O3S,4-[2-(1-phenyl-1H-pyrazol-3-yl)acetamido]benzene-1-sulfonyl fluoride,O=C(CC=1C=CN(N1)C=2C=CC=CC2)NC=3C=CC(=CC3)S(=O)(=O)F
+Z4262576388,332.3479,C13H17FN2O5S,5-{[2-(oxolan-2-yl)propan-2-yl]carbamoyl}pyridin-3-yl sulfurofluoridate,CC(C)(NC(=O)C1=CN=CC(=C1)OS(=O)(=O)F)C2CCCO2
+Z2759894026,363.3386,C16H11F2N3O3S,4-{[1-(4-fluorophenyl)-1H-pyrazol-5-yl]carbamoyl}benzene-1-sulfonyl fluoride,O=C(NC1=CC=NN1C=2C=CC(F)=CC2)C=3C=CC(=CC3)S(=O)(=O)F
+Z4343912732,329.3655,C14H17F2N3O2S,"2-[(1,5-dimethyl-1H-pyrazol-4-yl)[(4-fluorophenyl)methyl]amino]ethane-1-sulfonyl fluoride",CC1=C(C=NN1C)N(CCS(=O)(=O)F)CC=2C=CC(F)=CC2
+Z2768290941,431.4805,C21H22FN3O4S,"5-{2-[4-phenyl-5-(propan-2-yl)-1,3-oxazol-2-yl]pyrrolidine-1-carbonyl}-1H-pyrrole-3-sulfonyl fluoride",CC(C)C=1OC(=NC1C=2C=CC=CC2)C3CCCN3C(=O)C4=CC(=CN4)S(=O)(=O)F
+Z4262489062,334.3207,C12H15FN2O6S,"5-{[(2-methyl-1,4-dioxan-2-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC1(CNC(=O)C2=CN=CC(=C2)OS(=O)(=O)F)COCCO1
+Z2509427373,563.6398,C21H26FN3O8S3,4-{[5-(morpholine-4-sulfonyl)-2-{[(oxolan-2-yl)methyl]amino}phenyl]sulfamoyl}benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC=2C=C(C=CC2NCC3CCCO3)S(=O)(=O)N4CCOCC4
+Z4344308745,313.3478,C13H16FN3O3S,2-[(5-cyano-6-methoxypyridin-3-yl)(cyclopropylmethyl)amino]ethane-1-sulfonyl fluoride,COC=1N=CC(=CC1C#N)N(CCS(=O)(=O)F)CC2CC2
+Z2156389063,419.4267,C19H18FN3O5S,"3-{1-[(3,4-dimethoxyphenyl)methyl]-1H-pyrazole-4-amido}benzene-1-sulfonyl fluoride",COC=1C=CC(=CC1OC)CN2C=C(C=N2)C(=O)NC=3C=CC=C(C3)S(=O)(=O)F
+Z1708250316,383.378,C13H10FN5O4S2,"3-[4-(1H-1,2,3,4-tetrazol-1-yl)benzenesulfonamido]benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC=C(C1)NS(=O)(=O)C=2C=CC(=CC2)N3C=NN=N3
+Z4607533199,381.4185,C18H20FNO5S,"4-[(6-hydroxy-7-methoxy-1-methyl-1,2,3,4-tetrahydroisoquinolin-2-yl)methyl]phenyl sulfurofluoridate",COC=1C=C2C(=CC1O)CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)C2C
+Z3482529807,446.2913,C16H17BrFN3O4S,"(1-{3-[3-(3-bromophenyl)-1,2,4-oxadiazol-5-yl]propanoyl}pyrrolidin-3-yl)methanesulfonyl fluoride",O=C(CCC1=NC(=NO1)C=2C=CC=C(Br)C2)N3CCC(CS(=O)(=O)F)C3
+Z4607560668,331.3631,C13H18FN3O4S,4-[({2-[cyclopropyl(methyl)amino]ethyl}carbamoyl)amino]phenyl sulfurofluoridate,CN(CCNC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C2CC2
+Z3482544469,405.5112,C15H24FN5O3S2,"2-(1-{2-[(1-cyclopentyl-1H-1,2,3,4-tetrazol-5-yl)sulfanyl]acetyl}piperidin-2-yl)ethane-1-sulfonyl fluoride",O=C(CSC1=NN=NN1C2CCCC2)N3CCCCC3CCS(=O)(=O)F
+Z4262561554,334.3207,C12H15FN2O6S,5-[(3-methoxyoxan-4-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,COC1COCCC1NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4266002191,380.437,C17H21FN4O3S,"6-{[2-(5-cyclobutyl-1,3,4-oxadiazol-2-yl)piperidin-1-yl]methyl}pyridine-2-sulfonyl fluoride",O=S(=O)(F)C=1C=CC=C(CN2CCCCC2C3=NN=C(O3)C4CCC4)N1
+Z4246903467,370.4389,C17H23FN2O4S,4-{[(1-cyclopentanecarbonylpyrrolidin-3-yl)amino]methyl}phenyl sulfurofluoridate,O=C(C1CCCC1)N2CCC(C2)NCC=3C=CC(=CC3)OS(=O)(=O)F
+Z3282964171,326.3433,C14H15FN2O4S,"3-[2-(1-oxo-1,2-dihydroisoquinolin-2-yl)acetamido]propane-1-sulfonyl fluoride",O=C(CN1C=CC2=CC=CC=C2C1=O)NCCCS(=O)(=O)F
+Z4262358285,357.3573,C14H16FN3O5S,4-[1-(3-methoxypropyl)-1H-pyrazole-4-amido]phenyl sulfurofluoridate,COCCCN1C=C(C=N1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z3071639981,318.3213,C12H15FN2O5S,1-[4-(fluorosulfonyl)-1H-pyrrole-2-carbonyl]-5-methylpiperidine-3-carboxylic acid,CC1CC(CN(C1)C(=O)C2=CC(=CN2)S(=O)(=O)F)C(=O)O
+Z4332074573,366.3641,C16H15FN2O5S,4-[(3-phenoxyazetidine-1-carbonyl)amino]phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CC(C2)OC=3C=CC=CC3
+Z2901994713,341.785,C15H13ClFNO3S,4-{2-[(2-chlorophenyl)carbamoyl]ethyl}benzene-1-sulfonyl fluoride,O=C(CCC=1C=CC(=CC1)S(=O)(=O)F)NC=2C=CC=CC2Cl
+Z4262246334,361.2964,C13H10F3N3O4S,"4-[1-(2,2-difluorocyclopropyl)-1H-pyrazole-4-amido]phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=NN(C2)C3CC3(F)F
+Z3488601099,327.3314,C13H14FN3O4S,"4-({[1-(3-methyl-1,2,4-oxadiazol-5-yl)ethyl]carbamoyl}methyl)benzene-1-sulfonyl fluoride",CC1=NOC(=N1)C(C)NC(=O)CC=2C=CC(=CC2)S(=O)(=O)F
+Z4317483437,345.3698,C12H12FN3O4S2,"5-{[2-(4-methyl-1,3-thiazol-2-yl)ethyl]carbamoyl}pyridin-3-yl sulfurofluoridate",CC1=CSC(CCNC(=O)C2=CN=CC(=C2)OS(=O)(=O)F)=N1
+Z4262428218,332.3479,C13H17FN2O5S,5-[ethyl(oxan-3-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,CCN(C(=O)C=1C=NC=C(C1)OS(=O)(=O)F)C2CCCOC2
+Z2759837468,353.3869,C12H16FNO6S2,4-{[2-(hydroxymethyl)-5-methylmorpholin-4-yl]sulfonyl}benzene-1-sulfonyl fluoride,CC1COC(CO)CN1S(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z3333540660,313.2686,C11H11F4NO3S,"4-[3-(2,2,2-trifluoroacetamido)propyl]benzene-1-sulfonyl fluoride",O=C(NCCCC=1C=CC(=CC1)S(=O)(=O)F)C(F)(F)F
+Z4332076670,372.7991,C15H14ClFN2O4S,4-({[(2-chlorophenyl)methyl](methyl)carbamoyl}amino)phenyl sulfurofluoridate,CN(CC=1C=CC=CC1Cl)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2736752276,320.3206,C9H9FN4O4S2,"4-[(1-methyl-1H-1,2,4-triazol-5-yl)sulfamoyl]benzene-1-sulfonyl fluoride",CN1N=CN=C1NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z8808559843,437.3627,C17H15F4NO6S,"4-[(5-hydroxy-2,3-dihydro-1H-isoindol-2-yl)methyl]phenyl sulfurofluoridate; trifluoroacetic acid",O=S(=O)(F)OC=1C=CC(=CC1)CN2CC=3C=CC(O)=CC3C2
+Z1672273345,360.3844,C12H13FN4O4S2,4-{[2-(dimethylamino)pyrimidin-5-yl]sulfamoyl}benzene-1-sulfonyl fluoride,CN(C)C=1N=CC(=CN1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4317483460,326.3035,C12H11FN4O4S,5-{methyl[(pyrazin-2-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate,CN(CC=1C=NC=CN1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z3489903985,373.4196,C15H16FNO5S2,"4-(N-methyl-2,5-dimethylbenzenesulfonamido)phenyl sulfurofluoridate",CC=1C=CC(C)=C(C1)S(=O)(=O)N(C)C=2C=CC(=CC2)OS(=O)(=O)F
+Z3919190962,333.3326,C13H16FNO6S,ethyl (2S)-2-acetamido-3-{4-[(fluorosulfonyl)oxy]phenyl}propanoate,CCOC(=O)[C@H](CC=1C=CC(=CC1)OS(=O)(=O)F)NC(C)=O
+Z3919174055,340.2838,C13H9FN2O6S,4-(3-nitrobenzamido)phenyl sulfurofluoridate,[O-][N+](=O)C=1C=CC=C(C1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262398328,328.3592,C14H17FN2O4S,5-{octahydro-1H-cyclopenta[b]pyridine-1-carbonyl}pyridin-3-yl sulfurofluoridate,O=C(C=1C=NC=C(C1)OS(=O)(=O)F)N2CCCC3CCCC32
+Z3489904014,357.7844,C15H13ClFNO4S,4-{2-[(4-chlorophenyl)formamido]ethyl}phenyl sulfurofluoridate,O=C(NCCC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC(Cl)=CC2
+Z4262254229,377.3867,C18H16FNO5S,"4-(3,4,7-trimethyl-1-benzofuran-2-amido)phenyl sulfurofluoridate",CC1=C(OC=2C(C)=CC=C(C)C12)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z3481404145,327.2984,C11H13F4N3O2S,1-[4-methyl-6-(trifluoromethyl)pyrimidin-2-yl]piperidine-4-sulfonyl fluoride,CC=1C=C(N=C(N1)N2CCC(CC2)S(=O)(=O)F)C(F)(F)F
+Z4332075108,360.401,C15H21FN2O5S,4-{[2-(ethoxymethyl)piperidine-1-carbonyl]amino}phenyl sulfurofluoridate,CCOCC1CCCCN1C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z3489903987,377.3867,C18H16FNO5S,ethyl 5-[(fluorosulfonyl)oxy]-2-methyl-1-phenyl-1H-indole-3-carboxylate,CCOC(=O)C1=C(C)N(C=2C=CC=CC2)C=3C=CC(=CC13)OS(=O)(=O)F
+Z4607567311,366.2732,C11H9F3N4O5S,"4-[1-(1,1-difluoro-2-hydroxyethyl)-1H-1,2,3-triazole-4-amido]phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C2=CN(N=N2)C(F)(F)CO
+Z1713569806,396.4563,C17H17FN2O4S2,"3-(4-oxo-4-{4H,5H,6H,7H-thieno[3,2-c]pyridin-5-yl}butanamido)benzene-1-sulfonyl fluoride",O=C(CCC(=O)N1CCC=2SC=CC2C1)NC=3C=CC=C(C3)S(=O)(=O)F
+Z4607528770,358.4282,C16H23FN2O4S,5-(4-tert-butylcyclohexaneamido)pyridin-3-yl sulfurofluoridate,CC(C)(C)C1CCC(CC1)C(=O)NC=2C=NC=C(C2)OS(=O)(=O)F
+Z2768280760,476.5625,C18H21FN2O6S3,3-({[3-(piperidine-1-sulfonyl)phenyl]methyl}sulfamoyl)benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC=C(C1)S(=O)(=O)NCC=2C=CC=C(C2)S(=O)(=O)N3CCCCC3
+Z4262508048,334.3207,C12H15FN2O6S,"rac-5-{[(3R,4S)-3-methoxyoxan-4-yl]carbamoyl}pyridin-3-yl sulfurofluoridate","CO[C@@H]1COCC[C@H]1NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F |&1:2,7|"
+Z3282891884,317.3763,C14H20FNO4S,{1-[3-(furan-2-yl)butanoyl]piperidin-4-yl}methanesulfonyl fluoride,CC(CC(=O)N1CCC(CS(=O)(=O)F)CC1)C2=CC=CO2
+Z4262449898,325.3155,C13H12FN3O4S,5-[methyl(4-methylpyridin-3-yl)carbamoyl]pyridin-3-yl sulfurofluoridate,CC=1C=CN=CC1N(C)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4366116734,329.387,C15H20FNO4S,"4-[2-(3,3-dimethyl-1,4-oxazepan-4-yl)-2-oxoethyl]benzene-1-sulfonyl fluoride",CC1(C)COCCCN1C(=O)CC=2C=CC(=CC2)S(=O)(=O)F
+Z4316185184,335.3103,C14H10FN3O4S,"4-{1H-pyrrolo[2,3-b]pyridine-5-amido}phenyl sulfurofluoridate",O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=NC=3NC=CC3C2
+Z2768273525,477.529,C21H20FN3O5S2,3-{[(3-{[(3-methylphenyl)carbamoyl]amino}phenyl)methyl]sulfamoyl}benzene-1-sulfonyl fluoride,CC=1C=CC=C(C1)NC(=O)NC=2C=CC=C(C2)CNS(=O)(=O)C3=CC=CC(=C3)S(=O)(=O)F
+Z4262411831,331.3201,C12H14FN3O5S,5-{[(2-oxopiperidin-4-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate,O=C(NCC1CCNC(=O)C1)C=2C=NC=C(C2)OS(=O)(=O)F
+Z3482537317,486.9646,C20H20ClFN2O5S2,"1-[2-chloro-5-(1,2,3,4-tetrahydroisoquinoline-2-sulfonyl)benzoyl]pyrrolidine-3-sulfonyl fluoride",O=C(C=1C=C(C=CC1Cl)S(=O)(=O)N2CCC=3C=CC=CC3C2)N4CCC(C4)S(=O)(=O)F
+Z4607567245,331.3598,C14H18FNO5S,4-(3-cyclopentyl-3-hydroxypropanamido)phenyl sulfurofluoridate,O=C(CC(O)C1CCCC1)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2509453948,389.3861,C13H15F4NO4S2,"4-[(1-cyclopentyl-2,2,2-trifluoroethyl)sulfamoyl]benzene-1-sulfonyl fluoride",O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC(C2CCCC2)C(F)(F)F
+Z4332078735,392.4444,C19H21FN2O4S,"4-{[2-(3,5-dimethylphenyl)pyrrolidine-1-carbonyl]amino}phenyl sulfurofluoridate",CC1=CC(C)=CC(=C1)C2CCCN2C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z2936916686,347.4023,C15H22FNO5S,4-{2-[bis(2-methoxyethyl)carbamoyl]ethyl}benzene-1-sulfonyl fluoride,COCCN(CCOC)C(=O)CCC=1C=CC(=CC1)S(=O)(=O)F
+Z4262474929,348.3488,C16H13FN2O4S,"5-(2,3-dihydro-1H-1-benzazepine-1-carbonyl)pyridin-3-yl sulfurofluoridate",O=C(C=1C=NC=C(C1)OS(=O)(=O)F)N2CCC=CC3=CC=CC=C32
+Z3489903977,377.3108,C15H11F4NO4S,2-methyl-5-{[3-(trifluoromethyl)phenyl]carbamoyl}phenyl sulfurofluoridate,CC=1C=CC(=CC1OS(=O)(=O)F)C(=O)NC=2C=CC=C(C2)C(F)(F)F
+Z4607567284,420.4545,C20H21FN2O5S,4-(1-benzoyl-3-methylpiperidine-3-amido)phenyl sulfurofluoridate,CC1(CCCN(C1)C(=O)C=2C=CC=CC2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z3481435562,346.7289,C11H11ClF4N2O2S,1-[3-chloro-5-(trifluoromethyl)pyridin-2-yl]piperidine-4-sulfonyl fluoride,O=S(=O)(F)C1CCN(CC1)C=2N=CC(=CC2Cl)C(F)(F)F
+Z4262548954,332.3479,C13H17FN2O5S,5-{[(2-methyloxan-2-yl)methyl]carbamoyl}pyridin-3-yl sulfurofluoridate,CC1(CNC(=O)C2=CN=CC(=C2)OS(=O)(=O)F)CCCCO1
+Z2936916681,341.3579,C14H16FN3O4S,"4-(2-{[1-(3-methyl-1,2,4-oxadiazol-5-yl)ethyl]carbamoyl}ethyl)benzene-1-sulfonyl fluoride",CC1=NOC(=N1)C(C)NC(=O)CCC=2C=CC(=CC2)S(=O)(=O)F
+Z4262310632,337.3659,C16H16FNO4S,4-(2-methyl-2-phenylpropanamido)phenyl sulfurofluoridate,CC(C)(C(=O)NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=CC2
+Z2768303444,367.8223,C17H15ClFNO3S,3-({[1-(2-chlorophenyl)cyclopropyl]methyl}carbamoyl)benzene-1-sulfonyl fluoride,O=C(NCC1(CC1)C=2C=CC=CC2Cl)C=3C=CC=C(C3)S(=O)(=O)F
+Z4607560793,383.4162,C12H18FN3O6S2,4-{[(1-methanesulfonamido-2-methylpropan-2-yl)carbamoyl]amino}phenyl sulfurofluoridate,CC(C)(CNS(C)(=O)=O)NC(=O)NC=1C=CC(=CC1)OS(=O)(=O)F
+Z1713569836,341.3298,C15H13F2NO4S,3-[2-(3-fluorophenoxy)propanamido]benzene-1-sulfonyl fluoride,CC(OC=1C=CC=C(F)C1)C(=O)NC=2C=CC=C(C2)S(=O)(=O)F
+Z4317727283,371.427,C16H22FN3O4S,4-({2-[(pyrrolidin-1-yl)methyl]pyrrolidine-1-carbonyl}amino)phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)N2CCCC2CN3CCCC3
+Z3919180417,344.7459,C13H10ClFN2O4S,2-chloro-4-{[(pyridin-3-yl)methyl]carbamoyl}phenyl sulfurofluoridate,O=C(NCC=1C=CC=NC1)C=2C=CC(OS(=O)(=O)F)=C(Cl)C2
+Z4262360215,392.4444,C19H21FN2O4S,4-[2-cyclopentyl-3-(pyridin-3-yl)propanamido]phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C(CC=2C=CC=NC2)C3CCCC3
+Z2759689699,351.3677,C17H15F2NO3S,3-({[1-(4-fluorophenyl)cyclopropyl]methyl}carbamoyl)benzene-1-sulfonyl fluoride,O=C(NCC1(CC1)C=2C=CC(F)=CC2)C=3C=CC=C(C3)S(=O)(=O)F
+Z4262250290,335.3501,C16H14FNO4S,4-[3-(4-methylphenyl)prop-2-enamido]phenyl sulfurofluoridate,CC=1C=CC(C=CC(=O)NC=2C=CC(=CC2)OS(=O)(=O)F)=CC1
+Z2509454285,350.7736,C11H8ClFN2O4S2,4-[(6-chloropyridin-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride,O=S(=O)(F)C=1C=CC(=CC1)S(=O)(=O)NC=2C=CC=C(Cl)N2
+Z4607560699,438.4698,C20H23FN2O6S,"4-{[4-(3,5-dimethoxyphenyl)piperidine-1-carbonyl]amino}phenyl sulfurofluoridate",COC1=CC(=CC(=C1)C2CCN(CC2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F)OC
+Z2874898599,335.375,C11H14FN3O4S2,"2-(1-propanoylpyrrolidine-3-amido)-1,3-thiazole-5-sulfonyl fluoride",CCC(=O)N1CCC(C1)C(=O)NC2=NC=C(S2)S(=O)(=O)F
+Z4262314353,339.3421,C14H14FN3O4S,4-[2-(dimethylamino)pyridine-4-amido]phenyl sulfurofluoridate,CN(C)C=1C=C(C=CN1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z2936916676,311.3717,C15H18FNO3S,"4-(2-{6,6-dimethyl-3-azabicyclo[3.1.0]hexan-3-yl}-2-oxoethyl)benzene-1-sulfonyl fluoride",CC1(C)C2CN(CC21)C(=O)CC=3C=CC(=CC3)S(=O)(=O)F
+Z4262456934,332.3479,C13H17FN2O5S,5-(4-methoxyazepane-1-carbonyl)pyridin-3-yl sulfurofluoridate,COC1CCCN(CC1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z3271890272,422.4737,C19H23FN4O4S,5-({1-[(4-acetamidophenyl)methyl]piperidin-4-yl}carbamoyl)-1H-pyrrole-3-sulfonyl fluoride,CC(=O)NC=1C=CC(=CC1)CN2CCC(CC2)NC(=O)C3=CC(=CN3)S(=O)(=O)F
+Z4607533218,394.4173,C18H19FN2O5S,4-{[4-(4-hydroxybenzoyl)piperazin-1-yl]methyl}phenyl sulfurofluoridate,O=C(C=1C=CC(O)=CC1)N2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z4249641531,354.1529,C9H9BrFN3O4S,1-(5-bromo-6-nitropyridin-3-yl)pyrrolidine-3-sulfonyl fluoride,[O-][N+](=O)C=1N=CC(=CC1Br)N2CCC(C2)S(=O)(=O)F
+Z4607533194,337.3659,C16H16FNO4S,"4-[(5-hydroxy-1,2,3,4-tetrahydroisoquinolin-2-yl)methyl]phenyl sulfurofluoridate",O=S(=O)(F)OC=1C=CC(=CC1)CN2CCC=3C(O)=CC=CC3C2
+Z3950503884,350.7935,C13H16ClFN2O4S,4-chloro-2-(4-ethylpiperazine-1-carbonyl)phenyl sulfurofluoridate,CCN1CCN(CC1)C(=O)C2=CC(Cl)=CC=C2OS(=O)(=O)F
+Z4344341510,327.3777,C13H18FN5O2S,"2-{[(2-methyl-2H-1,2,3,4-tetrazol-5-yl)methyl](1-phenylethyl)amino}ethane-1-sulfonyl fluoride",CC(C=1C=CC=CC1)N(CCS(=O)(=O)F)CC=2N=NN(C)N2
+Z2759892870,353.3405,C16H13F2NO4S,"3-(8-fluoro-2,3,4,5-tetrahydro-1,4-benzoxazepine-4-carbonyl)benzene-1-sulfonyl fluoride",O=C(C=1C=CC=C(C1)S(=O)(=O)F)N2CCOC=3C=C(F)C=CC3C2
+Z4262407787,330.3751,C14H19FN2O4S,"rac-5-[(3R,5S)-3,5-dimethylazepane-1-carbonyl]pyridin-3-yl sulfurofluoridate","C[C@@H]1CCN(C[C@H](C)C1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F |&1:1,6|"
+Z2759703451,325.3188,C12H12FN5O3S,5-{[1-(2-cyanoethyl)-3-methyl-1H-pyrazol-5-yl]carbamoyl}-1H-pyrrole-3-sulfonyl fluoride,CC=1C=C(NC(=O)C2=CC(=CN2)S(=O)(=O)F)N(CCC#N)N1
+Z4262550902,332.3479,C13H17FN2O5S,"5-(4-methoxy-3,3-dimethylpyrrolidine-1-carbonyl)pyridin-3-yl sulfurofluoridate",COC1CN(CC1(C)C)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4343899703,321.4312,C13H20FNO3S2,2-{[(2-methylfuran-3-yl)methyl][(thiolan-3-yl)methyl]amino}ethane-1-sulfonyl fluoride,CC=1OC=CC1CN(CCS(=O)(=O)F)CC2CCSC2
+Z4607533167,331.4029,C15H22FNO4S,4-{[3-(hydroxymethyl)-3-(propan-2-yl)pyrrolidin-1-yl]methyl}phenyl sulfurofluoridate,CC(C)C1(CO)CCN(CC=2C=CC(=CC2)OS(=O)(=O)F)C1
+Z4344145618,321.4081,C14H24FNO4S,"2-[(2,2-dimethylpropyl)[2-(furan-2-yl)-2-hydroxypropyl]amino]ethane-1-sulfonyl fluoride",CC(C)(C)CN(CCS(=O)(=O)F)CC(C)(O)C1=CC=CO1
+Z4262293408,335.3501,C16H14FNO4S,4-(2-cyclopropylbenzamido)phenyl sulfurofluoridate,O=C(NC=1C=CC(=CC1)OS(=O)(=O)F)C=2C=CC=CC2C3CC3
+Z4344284410,326.3897,C14H19FN4O2S,2-[(1-ethyl-1H-pyrazol-4-yl)[(5-methylpyridin-2-yl)methyl]amino]ethane-1-sulfonyl fluoride,CCN1C=C(C=N1)N(CCS(=O)(=O)F)CC=2C=CC(C)=CN2
+Z4262428889,330.3751,C14H19FN2O4S,"rac-5-[(2R,5R)-5-ethyl-2-methylpiperidine-1-carbonyl]pyridin-3-yl sulfurofluoridate","CC[C@H]1CC[C@H](C)N(C1)C(=O)C=2C=NC=C(C2)OS(=O)(=O)F |&1:2,5|"
+Z4607560690,374.3879,C14H19FN4O5S,4-({4-[(methylcarbamoyl)amino]piperidine-1-carbonyl}amino)phenyl sulfurofluoridate,CNC(=O)NC1CCN(CC1)C(=O)NC=2C=CC(=CC2)OS(=O)(=O)F
+Z4262554036,332.3479,C13H17FN2O5S,"5-[(2-methoxy-3,3-dimethylcyclobutyl)carbamoyl]pyridin-3-yl sulfurofluoridate",COC1C(CC1(C)C)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z4607533137,351.3925,C17H18FNO4S,"4-[(6-hydroxy-7-methyl-1,2,3,4-tetrahydroisoquinolin-2-yl)methyl]phenyl sulfurofluoridate",CC=1C=C2CN(CC=3C=CC(=CC3)OS(=O)(=O)F)CCC2=CC1O
+Z7776745240,424.3706,C15H16F4N4O4S,"4-{1-[(3-methylazetidin-3-yl)methyl]-1H-1,2,3-triazol-4-yl}benzene-1-sulfonyl fluoride; trifluoroacetic acid",CC1(CN2C=C(N=N2)C=3C=CC(=CC3)S(=O)(=O)F)CNC1
+Z4235768300,328.3161,C13H13FN2O5S,"3-{[2,4,5-trioxo-3-(propan-2-yl)imidazolidin-1-yl]methyl}benzene-1-sulfonyl fluoride",CC(C)N1C(=O)C(=O)N(CC2=CC=CC(=C2)S(=O)(=O)F)C1=O
+Z7773674819,448.7712,C14H21Cl3FN5O2S,"3-{4-[1-(piperazin-1-yl)ethyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride trihydrochloride",CC(C1=CN(N=N1)C=2C=CC=C(C2)S(=O)(=O)F)N3CCNCC3
+Z4607533193,395.4451,C19H22FNO5S,4-({[(2-hydroxyphenyl)methyl][(oxolan-2-yl)methyl]amino}methyl)phenyl sulfurofluoridate,O=S(=O)(F)OC=1C=CC(=CC1)CN(CC=2C=CC=CC2O)CC3CCCO3
+Z7797697453,385.8806,C18H21ClFNO3S,"3'-{[(oxan-4-yl)amino]methyl}-[1,1'-biphenyl]-2-sulfonyl fluoride hydrochloride",O=S(=O)(F)C=1C=CC=CC1C=2C=CC=C(C2)CNC3CCOCC3
+Z4235729521,315.3869,C12H14FN3O2S2,"3-({[4-(propan-2-yl)-4H-1,2,4-triazol-3-yl]sulfanyl}methyl)benzene-1-sulfonyl fluoride",CC(C)N1C=NN=C1SCC2=CC=CC(=C2)S(=O)(=O)F
+Z7758524159,462.7978,C15H23Cl3FN5O2S,"3-{4-[1-(1,4-diazepan-1-yl)ethyl]-1H-1,2,3-triazol-1-yl}benzene-1-sulfonyl fluoride trihydrochloride",CC(C1=CN(N=N1)C=2C=CC=C(C2)S(=O)(=O)F)N3CCCNCC3
+Z8808559917,471.4635,C19H25F4NO6S,4-({cyclopentyl[(oxolan-2-yl)methyl]amino}methyl)phenyl sulfurofluoridate; trifluoroacetic acid,O=S(=O)(F)OC=1C=CC(=CC1)CN(CC2CCCO2)C3CCCC3
+Z4262563825,332.3479,C13H17FN2O5S,5-[(3-methoxycyclohexyl)carbamoyl]pyridin-3-yl sulfurofluoridate,COC1CCCC(C1)NC(=O)C=2C=NC=C(C2)OS(=O)(=O)F
+Z2732437173,336.3812,C16H17FN2O3S,4-[(propan-2-yl)[(pyridin-2-yl)methyl]carbamoyl]benzene-1-sulfonyl fluoride,CC(C)N(CC=1C=CC=CN1)C(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4607560599,412.4358,C17H21FN4O5S,4-({3-[hydroxy(1-methyl-1H-imidazol-2-yl)methyl]piperidine-1-carbonyl}amino)phenyl sulfurofluoridate,CN1C=CN=C1C(O)C2CCCN(C2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z2867527690,316.3286,C11H9FN2O4S2,"2-(2-cyclopropylfuran-3-amido)-1,3-thiazole-5-sulfonyl fluoride",O=C(NC1=NC=C(S1)S(=O)(=O)F)C=2C=COC2C3CC3
+Z4607533165,407.4591,C19H22FN3O4S,4-({4-[(3-methylpyridin-2-yl)carbamoyl]piperidin-1-yl}methyl)phenyl sulfurofluoridate,CC=1C=CC=NC1NC(=O)C2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z2867517748,349.3585,C11H12FN3O5S2,"4-[(5-propyl-1,3,4-oxadiazol-2-yl)sulfamoyl]benzene-1-sulfonyl fluoride",CCCC1=NN=C(NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F)O1
+Z4343860139,321.4147,C12H24FN5O2S,"2-[(butan-2-yl)[(2-tert-butyl-2H-1,2,3,4-tetrazol-5-yl)methyl]amino]ethane-1-sulfonyl fluoride",CCC(C)N(CCS(=O)(=O)F)CC=1N=NN(N1)C(C)(C)C
+Z1713569418,311.332,C13H14FN3O3S,"3-[2-(3,5-dimethyl-1H-pyrazol-1-yl)acetamido]benzene-1-sulfonyl fluoride",CC1=CC(C)=NN1CC(=O)NC2=CC=CC(=C2)S(=O)(=O)F
+Z4607560720,421.4857,C20H24FN3O4S,4-({3-[methyl(2-phenylethyl)amino]pyrrolidine-1-carbonyl}amino)phenyl sulfurofluoridate,CN(CCC=1C=CC=CC1)C2CCN(C2)C(=O)NC=3C=CC(=CC3)OS(=O)(=O)F
+Z1723913871,346.3545,C12H11FN2O5S2,4-[(2-methoxypyridin-3-yl)sulfamoyl]benzene-1-sulfonyl fluoride,COC=1N=CC=CC1NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z4607528765,449.4974,C15H16FN3O6S3,5-{1-[(5-methylthiophen-2-yl)sulfonyl]pyrrolidine-2-amido}pyridin-3-yl sulfurofluoridate,CC1=CC=C(S1)S(=O)(=O)N2CCCC2C(=O)NC3=CN=CC(=C3)OS(=O)(=O)F
+Z1723914687,347.3857,C12H14FN3O4S2,4-{[1-(propan-2-yl)-1H-pyrazol-4-yl]sulfamoyl}benzene-1-sulfonyl fluoride,CC(C)N1C=C(C=N1)NS(=O)(=O)C=2C=CC(=CC2)S(=O)(=O)F
+Z2759782445,400.445,C16H17FN2O5S2,3-({2-[3-(methylcarbamoyl)phenyl]ethyl}sulfamoyl)benzene-1-sulfonyl fluoride,CNC(=O)C=1C=CC=C(C1)CCNS(=O)(=O)C=2C=CC=C(C2)S(=O)(=O)F
+Z1713569658,363.3386,C16H11F2N3O3S,3-[1-(4-fluorophenyl)-1H-pyrazole-3-amido]benzene-1-sulfonyl fluoride,O=C(NC=1C=CC=C(C1)S(=O)(=O)F)C=2C=CN(N2)C=3C=CC(F)=CC3
+Z4607533169,408.4438,C19H21FN2O5S,4-({4-[(2-hydroxyphenyl)carbamoyl]piperidin-1-yl}methyl)phenyl sulfurofluoridate,O=C(NC=1C=CC=CC1O)C2CCN(CC=3C=CC(=CC3)OS(=O)(=O)F)CC2
+Z4410120804,380.2596,C15H14BrN3O2S,"1-(4-bromo-2,5-dimethylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=C(C)C(Br)=CC3C
+Z199511078,366.233,C14H12BrN3O2S,"1-(4-bromo-2,5-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC1=CC(Br)=C(C)C=C1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z4449008241,342.2005,C13H9Cl2N3O2S,"1-(2,4-dichlorobenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=CC(Cl)=CC3Cl
+Z5528363608,373.4692,C19H23N3O3S,"1-(5-tert-butyl-2-propoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",CCCOC=1C=CC(=CC1S(=O)(=O)N2N=NC=3C=CC=CC32)C(C)(C)C
+Z1723556389,331.3895,C16H17N3O3S,"1-(4-ethoxy-2,5-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=C(C)C(=CC1C)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511262,342.2005,C13H9Cl2N3O2S,"1-(2,4-dichloro-5-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=C(C(Cl)=CC1Cl)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199510416,339.3684,C17H13N3O3S,"1-[(4-methoxynaphthalen-1-yl)sulfonyl]-1H-1,2,3-benzotriazole",COC=1C=CC(=C2C=CC=CC12)S(=O)(=O)N3N=NC4=CC=CC=C43
+Z199510268,301.3635,C15H15N3O2S,"1-(2,4,6-trimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=C(C)C(=C(C)C1)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199510988,301.3635,C15H15N3O2S,"1-(2,4,5-trimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC1=CC(C)=C(C)C=C1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z4238675508,335.8086,C15H14ClN3O2S,"1-(4-chloro-2,5-dimethylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=C(C)C(Cl)=CC3C
+Z1536634718,328.1739,C12H7Cl2N3O2S,"1-(2,4-dichlorobenzenesulfonyl)-1H-1,2,3-benzotriazole",O=S(=O)(C=1C=CC(Cl)=CC1Cl)N2N=NC=3C=CC=CC32
+Z1532943558,398.2318,C14H12BrN3O4S,"1-(4-bromo-2,5-dimethoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC1=CC(Br)=C(C=C1S(=O)(=O)N2N=NC=3C=CC=CC32)OC
+Z2217101825,273.6961,C9H8ClN3O3S,"1-(5-chloro-2-methoxybenzenesulfonyl)-1H-1,2,4-triazole",COC=1C=CC(Cl)=CC1S(=O)(=O)N2C=NC=N2
+Z1532943635,289.3097,C13H11N3O3S,"1-(4-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(=CC1)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z2216795524,301.7493,C11H12ClN3O3S,"1-(5-chloro-2-ethoxy-4-methylbenzenesulfonyl)-1H-1,2,4-triazole",CCOC=1C=C(C)C(Cl)=CC1S(=O)(=O)N2C=NC=N2
+Z1551429569,317.3198,C14H11N3O4S,"1-(2,3-dihydro-1,4-benzodioxine-6-sulfonyl)-1H-1,2,3-benzotriazole",O=S(=O)(C=1C=CC=2OCCOC2C1)N3N=NC=4C=CC=CC43
+Z199511126,388.2385,C16H10BrN3O2S,"1-[(4-bromonaphthalen-1-yl)sulfonyl]-1H-1,2,3-benzotriazole",O=S(=O)(C=1C=CC(Br)=C2C=CC=CC12)N3N=NC=4C=CC=CC43
+Z199510290,301.3635,C15H15N3O2S,"1-(2,3,4-trimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=CC(=C(C)C1C)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511020,351.808,C15H14ClN3O3S,"1-(5-chloro-2-ethoxy-4-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=C(C)C(Cl)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511042,323.7548,C13H10ClN3O3S,"1-(5-chloro-2-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(Cl)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z57705171,317.3629,C15H15N3O3S,"1-(4-methoxy-2,3-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(=C(C)C1C)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511098,358.1999,C13H9Cl2N3O3S,"1-(2,5-dichloro-4-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=C(Cl)C(=CC1Cl)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511210,366.233,C14H12BrN3O2S,"1-(2-bromo-4,5-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=C(Br)C(=CC1C)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511224,323.7548,C13H10ClN3O3S,"1-(4-chloro-2-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=C(Cl)C=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511176,317.3629,C15H15N3O3S,"1-(2-methoxy-4,5-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=C(C)C(C)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511186,317.3629,C15H15N3O3S,"1-(4-methoxy-2,5-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=C(C)C(=CC1C)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z2734696868,259.3054,C8H9N3O3S2,"3-(furan-2-yl)-1-methanesulfonyl-5-(methylsulfanyl)-1H-1,2,4-triazole",CSC1=NC(=NN1S(C)(=O)=O)C2=CC=CO2
+Z2737261581,239.2511,C9H9N3O3S,"1-(4-methoxybenzenesulfonyl)-1H-1,2,4-triazole",COC=1C=CC(=CC1)S(=O)(=O)N2C=NC=N2
+Z57705167,337.7814,C14H12ClN3O3S,"1-(5-chloro-2-ethoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=CC(Cl)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z9532255127,323.7548,C13H10ClN3O3S,"5-chloro-1-(4-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(=CC1)S(=O)(=O)N2N=NC=3C=C(Cl)C=CC32
+Z2350125446,218.2767,C7H14N4O2S,"1-(3-methylbutanesulfonyl)-1H-1,2,4-triazol-3-amine",CC(C)CCS(=O)(=O)N1C=NC(N)=N1
+Z2803366403,230.2674,C6H6N4O2S2,"1-(thiophene-3-sulfonyl)-1H-1,2,4-triazol-3-amine",NC=1N=CN(N1)S(=O)(=O)C=2C=CSC2
+Z4444806917,359.4426,C18H21N3O3S,"1-[2-methoxy-4-methyl-5-(propan-2-yl)benzenesulfonyl]-5-methyl-1H-1,2,3-benzotriazole",COC=1C=C(C)C(=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32)C(C)C
+Z57705588,368.2058,C13H10BrN3O3S,"1-(4-bromo-3-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=C(C=CC1Br)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z1532943653,342.2005,C13H9Cl2N3O2S,"1-(2,4-dichloro-3-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C(Cl)=CC=C(C1Cl)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z1532943646,359.4426,C18H21N3O3S,"1-(5-tert-butyl-2-ethoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=CC(=CC1S(=O)(=O)N2N=NC=3C=CC=CC32)C(C)(C)C
+Z1551429519,366.233,C14H12BrN3O2S,"1-(5-bromo-2,4-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC1=CC(C)=C(Br)C=C1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z1551630015,365.8345,C16H16ClN3O3S,"1-(5-chloro-4-methyl-2-propoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",CCCOC=1C=C(C)C(Cl)=CC1S(=O)(=O)N2N=NC3=CC=CC=C32
+Z1551629980,352.2064,C13H10BrN3O2S,"1-(5-bromo-2-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=CC(Br)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z2737261583,283.3036,C11H13N3O4S,"1-(2,5-dimethoxy-4-methylbenzenesulfonyl)-1H-1,2,4-triazole",COC1=CC(C)=C(C=C1S(=O)(=O)N2C=NC=N2)OC
+Z3396257997,345.4161,C17H19N3O3S,"1-[2-methoxy-5-(propan-2-yl)benzenesulfonyl]-5-methyl-1H-1,2,3-benzotriazole",COC=1C=CC(=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32)C(C)C
+Z57705168,307.3002,C13H10FN3O3S,"1-(5-fluoro-2-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(F)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z3681431952,373.4692,C19H23N3O3S,"1-[2-ethoxy-4-methyl-5-(propan-2-yl)benzenesulfonyl]-5-methyl-1H-1,2,3-benzotriazole",CCOC=1C=C(C)C(=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32)C(C)C
+Z3681224200,345.4161,C17H19N3O3S,"1-(4-ethoxy-2,5-dimethylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CCOC=1C=C(C)C(=CC1C)S(=O)(=O)N2N=NC3=CC(C)=CC=C32
+Z3485389321,351.4637,C17H25N3O3S,"1-[5-tert-butyl-2-(pentyloxy)benzenesulfonyl]-1H-1,2,4-triazole",CCCCCOC1=CC=C(C=C1S(=O)(=O)N2C=NC=N2)C(C)(C)C
+Z3484301353,407.0699,C12H6BrCl2N3O2S,"1-(2-bromo-4,5-dichlorobenzenesulfonyl)-1H-1,2,3-benzotriazole",O=S(=O)(C=1C=C(Cl)C(Cl)=CC1Br)N2N=NC=3C=CC=CC32
+Z3681224184,382.2324,C14H12BrN3O3S,"1-(4-bromo-3-methoxybenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",COC=1C=C(C=CC1Br)S(=O)(=O)N2N=NC=3C=C(C)C=CC32
+Z199511198,287.3369,C14H13N3O2S,"1-(2,4-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=CC(=C(C)C1)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z1532943596,382.2324,C14H12BrN3O3S,"1-(5-bromo-2-methoxy-4-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=C(C)C(Br)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z3389120476,382.2324,C14H12BrN3O3S,"1-(5-bromo-2-methoxybenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",COC=1C=CC(Br)=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32
+Z3681799971,317.3629,C15H15N3O3S,"1-(2-methoxy-5-methylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",COC=1C=CC(C)=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32
+Z2235824663,318.1471,C9H8BrN3O3S,"1-(4-bromo-2-methoxybenzenesulfonyl)-1H-1,2,4-triazole",COC=1C=C(Br)C=CC1S(=O)(=O)N2C=NC=N2
+Z992283030,356.227,C14H11Cl2N3O2S,"1-(2,4-dichloro-3-methylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=CC(Cl)=C(C)C3Cl
+Z4218994121,351.808,C15H14ClN3O3S,"5-chloro-1-(2-ethoxy-5-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=CC(C)=CC1S(=O)(=O)N2N=NC=3C=C(Cl)C=CC32
+Z4238435801,396.259,C15H14BrN3O3S,"1-(5-bromo-2-ethoxybenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CCOC=1C=CC(Br)=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32
+Z1532943537,331.3895,C16H17N3O3S,"1-(2-ethoxy-4,5-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=C(C)C(C)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z1532943536,347.3889,C16H17N3O4S,"1-(2,4-diethoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=CC(=C(C1)OCC)S(=O)(=O)N2N=NC3=CC=CC=C32
+Z2934452094,311.3568,C13H17N3O4S,"1-(2,5-diethoxy-4-methylbenzenesulfonyl)-1H-1,2,4-triazole",CCOC1=CC(C)=C(C=C1S(=O)(=O)N2C=NC=N2)OCC
+Z2737261622,309.384,C14H19N3O3S,"1-[2-ethoxy-4-methyl-5-(propan-2-yl)benzenesulfonyl]-1H-1,2,4-triazole",CCOC=1C=C(C)C(=CC1S(=O)(=O)N2C=NC=N2)C(C)C
+Z2216302589,287.7227,C10H10ClN3O3S,"1-(5-chloro-2-ethoxybenzenesulfonyl)-1H-1,2,4-triazole",CCOC=1C=CC(Cl)=CC1S(=O)(=O)N2C=NC=N2
+Z199510710,358.1999,C13H9Cl2N3O3S,"1-(3,4-dichloro-2-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C(Cl)=C(Cl)C=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z57705585,337.7814,C14H12ClN3O3S,"1-(5-chloro-2-methoxy-4-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=C(C)C(Cl)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z2216302598,295.3574,C13H17N3O3S,"1-[2-methoxy-4-methyl-5-(propan-2-yl)benzenesulfonyl]-1H-1,2,4-triazole",COC=1C=C(C)C(=CC1S(=O)(=O)N2C=NC=N2)C(C)C
+Z2216314767,332.1737,C10H10BrN3O3S,"1-(5-bromo-2-ethoxybenzenesulfonyl)-1H-1,2,4-triazole",CCOC=1C=CC(Br)=CC1S(=O)(=O)N2C=NC=N2
+Z2216314751,281.3308,C12H15N3O3S,"1-[2-methoxy-5-(propan-2-yl)benzenesulfonyl]-1H-1,2,4-triazole",COC=1C=CC(=CC1S(=O)(=O)N2C=NC=N2)C(C)C
+Z2216314726,318.1471,C9H8BrN3O3S,"1-(5-bromo-2-methoxybenzenesulfonyl)-1H-1,2,4-triazole",COC=1C=CC(Br)=CC1S(=O)(=O)N2C=NC=N2
+Z2216314729,253.2776,C10H11N3O3S,"1-(2-methoxy-5-methylbenzenesulfonyl)-1H-1,2,4-triazole",COC=1C=CC(C)=CC1S(=O)(=O)N2C=NC=N2
+Z2216314744,267.3042,C11H13N3O3S,"1-(2-ethoxy-5-methylbenzenesulfonyl)-1H-1,2,4-triazole",CCOC=1C=CC(C)=CC1S(=O)(=O)N2C=NC=N2
+Z2216314719,287.7227,C10H10ClN3O3S,"1-(5-chloro-2-methoxy-4-methylbenzenesulfonyl)-1H-1,2,4-triazole",COC=1C=C(C)C(Cl)=CC1S(=O)(=O)N2C=NC=N2
+Z2235824665,295.3574,C13H17N3O3S,"1-(2-butoxy-5-methylbenzenesulfonyl)-1H-1,2,4-triazole",CCCCOC1=CC=C(C)C=C1S(=O)(=O)N2C=NC=N2
+Z199511054,303.3363,C14H13N3O3S,"1-(4-methoxy-3-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(=CC1C)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z8976791436,337.7814,C14H12ClN3O3S,"5-chloro-1-(4-methoxy-3-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(=CC1C)S(=O)(=O)N2N=NC=3C=C(Cl)C=CC32
+Z8976791435,351.808,C15H14ClN3O3S,"5-chloro-1-(4-methoxy-2,3-dimethylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(=C(C)C1C)S(=O)(=O)N2N=NC=3C=C(Cl)C=CC32
+Z199511260,303.3363,C14H13N3O3S,"1-(4-ethoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=CC(=CC1)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z57069952,304.2813,C12H8N4O4S,"1-(4-nitrobenzenesulfonyl)-1H-1,2,3-benzotriazole",[O-][N+](=O)C=1C=CC(=CC1)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z2895325974,308.1412,C9H7Cl2N3O3S,"1-(2,5-dichloro-4-methoxybenzenesulfonyl)-1H-1,2,4-triazole",COC=1C=C(Cl)C(=CC1Cl)S(=O)(=O)N2C=NC=N2
+Z275365240,315.3901,C16H17N3O2S,"1-(4-tert-butylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CC(C)(C)C=1C=CC(=CC1)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z3223578185,337.7814,C14H12ClN3O3S,"1-(5-chloro-2-methoxybenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",COC=1C=CC(Cl)=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32
+Z57151955,224.2397,C8H8N4O2S,"1-(benzenesulfonyl)-1H-1,2,4-triazol-3-amine",NC=1N=CN(N1)S(=O)(=O)C=2C=CC=CC2
+Z4449008284,356.227,C14H11Cl2N3O2S,"1-(4,5-dichloro-2-methylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=C(Cl)C(Cl)=CC3C
+Z1347692368,387.4958,C20H25N3O3S,"1-(2-butoxy-5-tert-butylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCCCOC=1C=CC(=CC1S(=O)(=O)N2N=NC=3C=CC=CC32)C(C)(C)C
+Z992283032,353.395,C18H15N3O3S,"1-[(4-methoxynaphthalen-1-yl)sulfonyl]-5-methyl-1H-1,2,3-benzotriazole",COC=1C=CC(=C2C=CC=CC12)S(=O)(=O)N3N=NC=4C=C(C)C=CC43
+Z199510984,333.3623,C15H15N3O4S,"1-(2,5-dimethoxy-4-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",COC1=CC(C)=C(C=C1S(=O)(=O)N2N=NC=3C=CC=CC32)OC
+Z199510672,372.2264,C14H11Cl2N3O3S,"1-(2,5-dichloro-4-ethoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC=1C=C(Cl)C(=CC1Cl)S(=O)(=O)N2N=NC=3C=CC=CC32
+Z1551429520,393.8877,C18H20ClN3O3S,"1-[5-chloro-4-methyl-2-(pentyloxy)benzenesulfonyl]-1H-1,2,3-benzotriazole",CCCCCOC=1C=C(C)C(Cl)=CC1S(=O)(=O)N2N=NC3=CC=CC=C32
+Z1557399928,379.8611,C17H18ClN3O3S,"1-(2-butoxy-5-chloro-4-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCCCOC=1C=C(C)C(Cl)=CC1S(=O)(=O)N2N=NC=3C=CC=CC32
+Z199511238,345.4161,C17H19N3O3S,"1-(3-tert-butyl-4-methoxybenzenesulfonyl)-1H-1,2,3-benzotriazole",COC=1C=CC(=CC1C(C)(C)C)S(=O)(=O)N2N=NC3=CC=CC=C32
+Z223119964,306.2643,C10H9F3N4O2S,"1-(4-methylbenzenesulfonyl)-3-(trifluoromethyl)-1H-1,2,4-triazol-5-amine",CC=1C=CC(=CC1)S(=O)(=O)N2N=C(N=C2N)C(F)(F)F
+Z56767037,337.2352,C9H6F3N5O4S,"1-(4-nitrobenzenesulfonyl)-3-(trifluoromethyl)-1H-1,2,4-triazol-5-amine",NC1=NC(=NN1S(=O)(=O)C=2C=CC(=CC2)[N+]([O-])=O)C(F)(F)F
+Z2350125218,225.2278,C7H7N5O2S,"1-(pyridine-3-sulfonyl)-1H-1,2,4-triazol-3-amine",NC=1N=CN(N1)S(=O)(=O)C=2C=CC=NC2
+Z4444806923,560.6042,C26H20N6O5S2,"5-methyl-1-(4-{4-[(5-methyl-1H-1,2,3-benzotriazol-1-yl)sulfonyl]phenoxy}benzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=CC(=CC3)OC=4C=CC(=CC4)S(=O)(=O)N5N=NC=6C=C(C)C=CC65
+Z2735398319,329.4167,C17H19N3O2S,"1-(4-tert-butylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=CC(=CC3)C(C)(C)C
+Z2511542049,368.8385,C15H17ClN4O3S,"1-[(7-chloro-2-methyl-2,3-dihydro-1-benzofuran-5-yl)sulfonyl]-5-cyclobutyl-1H-1,2,4-triazol-3-amine",CC1CC=2C=C(C=C(Cl)C2O1)S(=O)(=O)N3N=C(N)N=C3C4CCC4
+Z4410120797,375.442,C18H21N3O4S,"1-(2,5-diethoxy-4-methylbenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CCOC1=CC(C)=C(C=C1S(=O)(=O)N2N=NC3=CC(C)=CC=C32)OCC
+Z4221385318,373.4692,C19H23N3O3S,"1-(5-tert-butyl-2-ethoxybenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CCOC=1C=CC(=CC1S(=O)(=O)N2N=NC=3C=C(C)C=CC32)C(C)(C)C
+Z3223577842,318.3079,C13H10N4O4S,"5-methyl-1-(2-nitrobenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=CC=CC3[N+]([O-])=O
+Z4410120958,421.0965,C13H8BrCl2N3O2S,"1-(2-bromo-4,5-dichlorobenzenesulfonyl)-5-methyl-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=C(Cl)C(Cl)=CC3Br
+Z4444806975,376.6455,C13H8Cl3N3O2S,"5-methyl-1-(2,4,5-trichlorobenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=C(Cl)C(Cl)=CC3Cl
+Z5015141764,361.4155,C17H19N3O4S,"1-(2,5-diethoxy-4-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC1=CC(C)=C(C=C1S(=O)(=O)N2N=NC=3C=CC=CC32)OCC
+Z1464110544,364.4177,C15H13FN4O2S2,"3-(benzylsulfanyl)-1-(3-fluorobenzenesulfonyl)-1H-1,2,4-triazol-5-amine",NC1=NC(=NN1S(=O)(=O)C=2C=CC=C(F)C2)SCC=3C=CC=CC3

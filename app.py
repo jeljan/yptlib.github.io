@@ -1,32 +1,40 @@
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import plotly.express as px
 from shiny import App, ui, render
 from shinywidgets import output_widget, render_widget
-import pandas as pd
-import numpy as np
-import plotly.express as px
 
-# --- 1. Mock Data Setup (Replace with your actual 'test' and 'drugs' data) ---
-np.random.seed(42)
-drugs = ['DrugA', 'DrugB', 'DrugC', 'DrugD', 'DrugE', 'DrugF', 'DrugG']
-n_sites = 300
+# --- NEW IMPORTS FOR RDKIT ---
+from rdkit import Chem
+from rdkit.Chem import Draw
+import base64
+from io import BytesIO
 
-test = pd.DataFrame({
-    'Labels': [f'GENE_{i}' for i in range(n_sites)],
-    'Protein Id': [f'P{i:04d}' for i in range(n_sites)]
-})
+# 1. Get the directory where app.py is currently running
+app_dir = Path(__file__).parent
 
-# Generate dummy columns for each drug to mimic your dataset
-for drug in drugs:
-    test[f'log2 {drug} R'] = np.random.normal(0.5, 1.2, n_sites)
-    test[f'-log10 {drug} p'] = np.random.uniform(0, 3, n_sites)
+# --- 1. Data Setup ---
+df = pd.read_csv(app_dir/"drug_R.csv")
+drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
+
+ypt_lib = pd.read_csv(app_dir/'ypt_library.csv')
+smiles_dict = dict(zip(ypt_lib['Catalog ID'], ypt_lib['Smiles']))
 
 # --- 2. Shiny UI ---
 app_ui = ui.page_fluid(
     ui.h2("Site-Level Significance Plot"),
     ui.layout_sidebar(
         ui.sidebar(
-            ui.input_select("data_type", "Select Drug:", choices=drugs, selected=drugs[6]),
+            ui.input_select("data_type", "Select Drug:", choices=drugs, selected=drugs[0]),
             ui.input_numeric("threshold", "Log2 R Threshold:", value=2.0, step=0.5),
             ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
+            
+            # --- NEW UI BOX FOR STRUCTURE ---
+            ui.hr(),
+            ui.h5("Chemical Structure"),
+            ui.output_ui("molecule_ui"), # Outputs the HTML image
+            
             width=300
         ),
         ui.card(
@@ -39,13 +47,38 @@ app_ui = ui.page_fluid(
 # --- 3. Shiny Server ---
 def server(input, output, session):
     
+    # --- NEW SERVER FUNCTION FOR STRUCTURE ---
+    @render.ui
+    def molecule_ui():
+        data_type = input.data_type()
+        
+        # Get the SMILES string (fallback to a default if not in dict)
+        smiles = smiles_dict.get(data_type, "") 
+        
+        if not smiles:
+            return ui.p("No SMILES available for this drug.", style="color: gray; font-style: italic;")
+
+        # Convert SMILES to an image
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            return ui.p("Invalid SMILES string.", style="color: red;")
+            
+        img = Draw.MolToImage(mol, size=(250, 250))
+        
+        # Convert image to Base64 to render directly in HTML
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        img_uri = f"data:image/png;base64,{img_str}"
+        
+        return ui.HTML(f'<img src="{img_uri}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px;">')
+
     @render_widget
     def site_plot():
         # Get reactive inputs
         data_type = input.data_type()
         threshold = input.threshold()
         n_labels = input.n_labels()
-        df = test 
 
         # Create DataFrame for plotting
         plot_df = pd.DataFrame({
@@ -84,7 +117,7 @@ def server(input, output, session):
         )
 
         # Add thresholds
-        fig.add_hline(y=1, line_width=1, line_dash='dash')
+        fig.add_hline(y=threshold, line_width=1, line_dash='dash')
 
         # Formatting
         fig.update_traces(
