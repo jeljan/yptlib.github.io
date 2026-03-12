@@ -253,7 +253,7 @@ def server(input, output, session):
 
         # Extract UniProt ID and Site position
         row = df[df['Labels'] == target].iloc[0]
-        uniprot_raw = str(row['Protein Id'])
+        uniprot_raw = row['Protein Id'].split('|')[1]
         site_pos = str(row['Site Position'])
         
         # Clean the UniProt ID (AlphaFold URLs don't take isoforms like P04637-2)
