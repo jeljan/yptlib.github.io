@@ -24,7 +24,7 @@ for file_path in all_files:
 
 df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence']] = df['Info'].str.split('+', expand=True)
 df.drop(columns='Info', inplace=True)
-df['Labels'] = df['gene_symbol'] + f"_Y" + df['Site Position'].astype(str)
+df['Labels'] = df['Gene Symbol'] + f"_Y" + df['Site Position'].astype(str)
 
 drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
 
