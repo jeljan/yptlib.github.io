@@ -37,7 +37,7 @@ app_ui = ui.page_fluid(
     ui.layout_sidebar(
         ui.sidebar(
             ui.input_select("data_type", "Select Drug:", choices=drugs, selected=drugs[0]),
-            ui.input_numeric("threshold", "Log2 R Threshold:", value=2.0, step=0.5),
+            ui.input_numeric("threshold", "R Threshold:", value=2.0, step=0.5),
             ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
             
             # --- NEW UI BOX FOR STRUCTURE ---
@@ -109,7 +109,7 @@ def server(input, output, session):
         pos_count = min(n_labels, sum(plot_df['color'] == 'high'))
         
         if pos_count > 0:
-            top_positive = sig_genes.nlargest(pos_count, 'log2 R').index
+            top_positive = sig_genes.nlargest(pos_count, 'R').index
             indices_to_label = top_positive
             plot_df.loc[indices_to_label, 'label'] = plot_df.loc[indices_to_label, 'Label']
 
