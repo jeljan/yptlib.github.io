@@ -8,9 +8,24 @@ from shinywidgets import output_widget, render_widget
 
 # 1. Get the directory where app.py is currently running
 app_dir = Path(__file__).parent
+data_dir = app_dir / "data"
 
-# --- 1. Data Setup ---
-df = pd.read_csv(app_dir/"drug_R.csv")
+# 2. Find all CSV files in that folder
+all_files = data_dir.glob("*.csv")
+
+# 3. Read them into a list and combine them
+df = None
+for file_path in all_files:
+    if df is None:
+        df = pd.read_csv(file_path)
+    else:
+        temp_df = pd.read_csv(file_path)
+        df = pd.merge(df, temp_df, on='Info', how='outer')
+
+df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence']] = df['Info'].str.split('+', expand=True)
+df.drop(columns='Info', inplace=True)
+df['Labels'] = df['gene_symbol'] + f"_Y" + df['Site Position'].astype(str)
+
 drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
 
 ypt_lib = pd.read_csv(app_dir/'ypt_library.csv')
