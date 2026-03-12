@@ -87,15 +87,19 @@ def server(input, output, session):
         # Create DataFrame for plotting
         plot_df = pd.DataFrame({
             'Site': np.arange(len(df[f'log2 {data_type} R'])),
-            'log2 R': df[f'log2 {data_type} R'],
-            '-log10 p': df[f'-log10 {data_type} p'],
+            'R': 2**df[f'log2 {data_type} R'],
+            'p': 10**-df[f'-log10 {data_type} p'],
             'Label': df['Labels'],
             'ID': df['Protein Id'] + '|' + df['Labels'].str.split('_', expand=True).iloc[:, 1]
         })
+        
+        plot_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        plot_df.dropna(subset=['R', 'p'], inplace=True)
 
         # Define Significance Colors
         plot_df['color'] = 'non-significant'
-        plot_df.loc[(plot_df['log2 R'] > np.log2(threshold)) & (plot_df['-log10 p'] > -np.log10(0.05)), 'color'] = 'high'
+        plot_df.loc[(plot_df['R'] > threshold) & (plot_df['p'] < 0.05), 'color'] = 'high'
 
         # Labeling Logic
         plot_df['label'] = '' # Initialize with empty strings
@@ -113,11 +117,11 @@ def server(input, output, session):
         fig = px.scatter(
             plot_df,
             x='Site',
-            y='log2 R',
+            y='R',
             color='color',
             color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD', 'low': '#B95756'},
             text='label',  
-            hover_data=['ID', 'log2 R', '-log10 p']
+            hover_data=['ID', 'R', 'p']
         )
 
         # Add thresholds
