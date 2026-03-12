@@ -260,7 +260,7 @@ def server(input, output, session):
         uniprot = uniprot_raw.split('-')[0]
 
         # Fetch PDB from AlphaFold Database
-        url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v4.pdb"
+        url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.pdb"
         try:
             req = urllib.request.urlopen(url)
             pdb_data = req.read().decode('utf-8')
