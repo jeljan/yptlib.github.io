@@ -5,6 +5,7 @@ from pathlib import Path
 import plotly.express as px
 from shiny import App, ui, render
 from shinywidgets import output_widget, render_widget
+from functools import reduce
 
 # 1. Setup Paths
 app_dir = Path(__file__).parent
@@ -14,18 +15,22 @@ data_dir = app_dir / "data"
 all_files = list(data_dir.glob("*.csv"))
 df = None
 
-df_list = [pd.read_csv(f) for f in all_files]
-from functools import reduce
-df = reduce(lambda left, right: pd.merge(left, right, on='Info', how='outer'), df_list)
+if len(all_files) > 0:
+    df_list = [pd.read_csv(f) for f in all_files]
+    df = reduce(lambda left, right: pd.merge(left, right, on='Info', how='outer'), df_list)
 
-df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence']] = df['Info'].str.split('+', expand=True)
+    if 'Info' in df.columns:
+        df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence']] = df['Info'].str.split('+', expand=True)
+        df.drop(columns='Info', inplace=True)
+        df['Site Position'] = df['Site Position'].fillna('Unknown')
+        df['Labels'] = df['Gene Symbol'] + "_Y" + df['Site Position'].astype(str)
 
-df.drop(columns='Info', inplace=True)
-df['Labels'] = df['Gene Symbol'] + "_Y" + df['Site Position'].astype(str)
+    drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
+else:
+    df = pd.DataFrame()
+    drugs = ["No Data Found"]
 
-drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
-
-# 3. Safely load the Smiles dictionary
+# 3. Safely load the Smiles dictionary & Cancer List
 ypt_lib_path = app_dir / 'ypt_library.csv'
 if ypt_lib_path.exists():
     ypt_lib = pd.read_csv(ypt_lib_path)
@@ -33,7 +38,11 @@ if ypt_lib_path.exists():
 else:
     smiles_dict = {}
     
-cancer = pd.read_csv(app_dir/'cancer_gene_shortlist.csv')
+cancer_path = app_dir / 'cancer_gene_shortlist.csv'
+if cancer_path.exists():
+    cancer = pd.read_csv(cancer_path)
+else:
+    cancer = pd.DataFrame(columns=['Gene']) # Empty fallback
 
 # --- 2. Shiny UI ---
 app_ui = ui.page_fluid(
@@ -44,14 +53,12 @@ app_ui = ui.page_fluid(
             ui.input_numeric("threshold", "R Threshold:", value=2.0, step=0.5),
             ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
             
-            # --- NEW UI BOX FOR COLORING OPTIONS ---
+            # --- COLORING OPTIONS ---
             ui.hr(),
-            ui.h5("Plot Styling"),
             ui.input_select(
                 "color_mode", "Color Points By:", 
                 choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Highlight Custom List"]
             ),
-            # This text box is used when "Highlight Custom List" is selected
             ui.input_text("custom_list", "Genes to Highlight (comma-separated):", placeholder="e.g. MAPK1, EGFR"),
             
             # --- STRUCTURE UI ---
@@ -105,8 +112,7 @@ def server(input, output, session):
         plot_df.replace([np.inf, -np.inf], np.nan, inplace=True)
         plot_df.dropna(subset=['R', 'p'], inplace=True)
 
-        # --- NEW COLORING & LABELING LOGIC ---
-        plot_df['label'] = ''
+        # --- COLORING LOGIC ---
         plot_df['color'] = 'non-significant'
 
         if color_mode == "Above Threshold":
@@ -115,15 +121,14 @@ def server(input, output, session):
             
             fig = px.scatter(
                 plot_df, x='Site', y='R', color='color',
-                color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD', 'low': '#B95756'},
+                color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD'},
                 hover_data=['ID', 'R', 'p']
             )
+            fig.update_traces(marker=dict(opacity=0.2), selector=dict(name='non-significant'))
+            fig.update_traces(marker=dict(opacity=0.9), selector=dict(name='high'))
 
         elif color_mode == "Highlight Custom List":
-            # Parse the text box into a list of genes, stripping whitespace
             custom_genes = [g.strip() for g in custom_list_text.split(',') if g.strip()]
-            
-            # Check if the text matches the specific Label OR the general Gene Symbol
             mask = plot_df['Gene Symbol'].isin(custom_genes)
             plot_df.loc[mask, 'color'] = 'highlight'
             sig_genes = plot_df[plot_df['color'] == 'highlight']
@@ -133,9 +138,10 @@ def server(input, output, session):
                 color_discrete_map={'non-significant': '#dddddd', 'highlight': '#D62728'},
                 hover_data=['ID', 'R', 'p']
             )
+            fig.update_traces(marker=dict(opacity=0.15), selector=dict(name='non-significant'))
+            fig.update_traces(marker=dict(opacity=1.0), selector=dict(name='highlight'))
             
         elif color_mode == "Cancer-Driver List":          
-            # Check if the text matches the specific Label OR the general Gene Symbol
             mask = plot_df['Gene Symbol'].isin(cancer['Gene'])
             plot_df.loc[mask, 'color'] = 'highlight'
             sig_genes = plot_df[plot_df['color'] == 'highlight']
@@ -145,35 +151,51 @@ def server(input, output, session):
                 color_discrete_map={'non-significant': '#dddddd', 'highlight': '#D62728'},
                 hover_data=['ID', 'R', 'p']
             )
+            fig.update_traces(marker=dict(opacity=0.15), selector=dict(name='non-significant'))
+            fig.update_traces(marker=dict(opacity=1.0), selector=dict(name='highlight'))
 
         else: # P-Value Gradient
             plot_df.loc[(plot_df['R'] > threshold), 'color'] = 'high'
             sig_genes = plot_df[plot_df['color'] == 'high']
+            plot_df['alpha'] = np.where(plot_df['R'] > threshold, 1.0, 0.2)
+            
             fig = px.scatter(
                 plot_df, x='Site', y='R', color='p',
-                color_continuous_scale='Viridis', # You can change this to 'Plasma', 'Blues', etc.
+                color_continuous_scale='Viridis', 
                 hover_data=['ID', 'R', 'p']
             )
+            fig.update_traces(marker=dict(opacity=plot_df['alpha']))
 
-        # Apply Top N Labels based on whichever subset was defined above
+
+        # --- ANNOTATION (LABELING) LOGIC ---
         pos_count = min(n_labels, len(sig_genes))
         if pos_count > 0:
             top_positive = sig_genes.nlargest(pos_count, 'R').index
             valid_indices = [idx for idx in top_positive if idx in plot_df.index]
-            plot_df.loc[valid_indices, 'label'] = plot_df.loc[valid_indices, 'Label']
+            
+            for idx in valid_indices:
+                row = plot_df.loc[idx]
+                fig.add_annotation(
+                    x=row['Site'], y=row['R'],
+                    text=row['Label'],
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowsize=1,
+                    arrowwidth=1.5,
+                    arrowcolor="#444",
+                    ax=20,  # Shifts the label 20 pixels to the right
+                    ay=-30, # Shifts the label 30 pixels up
+                    font=dict(size=10, color="black"),
+                    bgcolor="white",
+                    bordercolor="#c7c7c7",
+                    borderwidth=1,
+                    borderpad=3
+                )
 
-        # Add labels to the figure traces (since we generated fig dynamically)
-        fig.update_traces(text=plot_df['label'])
-
-        # Add thresholds
+        # --- FORMATTING ---
         fig.add_hline(y=threshold, line_width=1, line_dash='dash')
 
-        # Formatting
-        fig.update_traces(
-            marker=dict(size=6),
-            textposition='top center',
-            textfont=dict(size=10, color='black')
-        )
+        fig.update_traces(marker=dict(size=6))
 
         fig.update_layout(
             plot_bgcolor='white',
