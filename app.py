@@ -209,7 +209,6 @@ def server(input, output, session):
             sites = gene_to_sites[gene]
             ui.update_selectize("target_site_pos", choices=sites, selected=sites[0] if sites else None)
 
-    # --- PDB DROPDOWN LOGIC ---
     @reactive.Calc
     def available_pdbs():
         gene = input.target_gene()
@@ -224,8 +223,7 @@ def server(input, output, session):
 
         row = matching_rows.iloc[0]
         protein_string = str(row['Protein Id'])
-        uniprot_raw = protein_string.split('|')[1] if '|' in protein_string else protein_string
-        uniprot = uniprot_raw.split('-')[0]
+        uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
 
         try:
             uniprot_url = f"https://rest.uniprot.org/uniprotkb/{uniprot}.json"
@@ -235,39 +233,62 @@ def server(input, output, session):
             pdb_list = []
             site_num = int(site_str) if str(site_str).isdigit() else -1
 
+            # 1. Parse and extract metadata
             for ref in data.get('uniProtKBCrossReferences', []):
                 if ref['database'] == 'PDB':
                     pdb_id = ref['id']
                     method = "Unknown"
-                    resolution = ""
+                    res_val = 999.0  # Default for sorting (worse than any real resolution)
                     has_site = False
                     coverage = 0
                     
                     for prop in ref.get('properties', []):
-                        if prop['key'] == 'Method': method = prop['value']
-                        elif prop['key'] == 'Resolution': resolution = prop['value']
+                        if prop['key'] == 'Method': 
+                            method = prop['value']
+                        elif prop['key'] == 'Resolution' and prop['value'] != '-':
+                            try:
+                                res_val = float(prop['value'].replace('A', '').strip())
+                            except: pass
                         elif prop['key'] == 'Chains' and '=' in prop['value']:
-                            ranges_part = prop['value'].split('=', 1)[1]
-                            for r in ranges_part.split(','):
+                            ranges = prop['value'].split('=', 1)[1]
+                            for r in ranges.split(','):
                                 bounds = r.strip().split('-')
-                                if len(bounds) == 2 and bounds[0].isdigit() and bounds[1].isdigit():
-                                    start, end = int(bounds[0]), int(bounds[1])
+                                if len(bounds) >= 2 and bounds[0].isdigit() and bounds[-1].isdigit():
+                                    start, end = int(bounds[0]), int(bounds[-1])
                                     coverage += (end - start + 1)
                                     if site_num != -1 and start <= site_num <= end:
                                         has_site = True
+                    
+                    # 2. Assign Method Score (Lower is better for sorting)
+                    method_score = 4 # Default
+                    if 'ELECTRON MICROSCOPY' in method.upper(): method_score = 1
+                    elif 'X-RAY' in method.upper(): method_score = 2
+                    elif 'NMR' in method.upper(): method_score = 3
                                         
                     pdb_list.append({
-                        'id': pdb_id, 'has_site': has_site, 'coverage': coverage,
-                        'method': method, 'resolution': resolution
+                        'id': pdb_id,
+                        'has_site': has_site,
+                        'method_score': method_score,
+                        'res_val': res_val,
+                        'coverage': coverage,
+                        'method_label': method,
+                        'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"
                     })
             
-            pdb_list.sort(key=lambda x: (x['has_site'], x['coverage']), reverse=True)
+            # 3. Master Sort Logic
+            # Sort keys: Site (True first), Method (Low score first), Resolution (Low first), Length (High first)
+            pdb_list.sort(key=lambda x: (
+                not x['has_site'],   # True (0) comes before False (1)
+                x['method_score'],   # 1 (EM) comes before 2 (X-Ray)
+                x['res_val'],        # 2.0 comes before 3.5
+                -x['coverage']       # High coverage comes before low
+            ))
             
+            # 4. Format Labels for Dropdown
             pdb_choices = {}
             for p in pdb_list:
-                site_tag = "★ Contains Site" if p['has_site'] else "No Site"
-                res_tag = f", {p['resolution']}" if p['resolution'] and p['resolution'] != '-' else ""
-                label = f"{p['id']} ({site_tag} | {p['coverage']} aa | {p['method']}{res_tag})"
+                site_tag = "Site Present" if p['has_site'] else "Site Absent"
+                label = f"{site_tag} {p['id']}|{p['method_label']}|{p['res_label']}|{p['coverage']}aa"
                 pdb_choices[p['id']] = label
                 
             return pdb_choices
