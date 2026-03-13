@@ -216,17 +216,20 @@ def server(input, output, session):
             'Site': np.arange(len(df[f'log2 {data_type} R'])),
             'R_plot': 2**df[f'log2 {data_type} R'],
             'R': 2**df[f'log2 {data_type} R'],
-            'p': 10**-df[f'-log10 {data_type} p'],
+            'P-value': 10**-df[f'-log10 {data_type} p'],
             'log2 R': df[f'log2 {data_type} R'],
             '-log10 p': df[f'-log10 {data_type} p'],
             'Label': df['Labels'],
             'Gene Symbol': df['Gene Symbol'],
             'ID': df['Protein Id'],
-            'Description': df['Description']
+            'Description': df['Description'],
         })
         
         plot_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-        plot_df.dropna(subset=['R', 'p', 'log2 R', '-log10 p'], inplace=True)
+        plot_df.dropna(subset=['R', 'P-value', 'log2 R', '-log10 p'], inplace=True)
+        
+        plot_df['Site Rank'] = plot_df['R'].rank(ascending=False).astype(int).astype(str)+'/'+str(len(plot_df))
+        plot_df['% Site Rank'] = plot_df['R'].rank(ascending=False)/len(plot_df)
 
         plot_df['color'] = 'non-significant'
 
@@ -258,7 +261,8 @@ def server(input, output, session):
     hover_dict = {
         'Site': False, 'color': False, 'R_plot': False,
         'ID': True, 'Label': True, 'Description': True,     
-        'R': ':.3f', 'p': ':.4f'
+        'log2 R': False, '-log10 p': False, 'R': ':.3f', 'P-value': ':.4f',
+        'Site Rank': True, '% Site Rank': True
     }
 
     # --- TAB 1: PLOT 1 (ENGAGEMENT PLOT) ---
@@ -288,7 +292,7 @@ def server(input, output, session):
 
         else: # P-Value Gradient
             fig = px.scatter(
-                plot_df, x='Site', y='R_plot', color='p',
+                plot_df, x='Site', y='R_plot', color='P-value',
                 color_continuous_scale='Viridis_r', 
                 hover_data=hover_dict
             )
@@ -361,7 +365,7 @@ def server(input, output, session):
             sig_df = volcano_df[volcano_df['color'] == 'high']
             if not sig_df.empty:
                 fig2 = px.scatter(
-                    sig_df, x='log2 R', y='-log10 p', color='p', 
+                    sig_df, x='log2 R', y='-log10 p', color='P-value', 
                     color_continuous_scale='Viridis_r', hover_data=hover_dict
                 )
                 for trace in fig2.data:
@@ -430,16 +434,16 @@ def server(input, output, session):
             log_col = f'log2 {d} R'
             if log_col in df.columns:
                 r_val = 2**row[log_col]
-                drug_data.append({'Drug': d, 'R Value': r_val})
+                drug_data.append({'Drug': d, 'R': r_val})
                 
         bar_df = pd.DataFrame(drug_data).dropna()
-        bar_df = bar_df.sort_values('R Value', ascending=False)
+        bar_df = bar_df.sort_values('R', ascending=False)
         
         fig = px.bar(
-            bar_df, x='Drug', y='R Value', 
-            title=f"Engagement Profile: {target}", 
-            color='R Value', color_continuous_scale='Reds'
-        )
+            bar_df, x='Drug', y='R',
+            color='R', color_continuous_scale='Reds',
+            hover_dict = {'Drug': True, 'R': ':.3f'}
+            )
         
         fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red', annotation_text="Threshold")
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), coloraxis_showscale=False)
