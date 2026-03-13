@@ -3,6 +3,7 @@ import pandas as pd
 import urllib.parse
 import urllib.request
 import html
+import json  # <-- NEW: Required for the UniProt API
 import py3Dmol
 from pathlib import Path
 import plotly.express as px
@@ -129,7 +130,6 @@ app_ui = ui.page_fluid(
                 ui.div(
                     ui.card(
                         ui.h5("Compound Engagement Profile"),
-                        # --- NEW: Side-by-side Dropdowns ---
                         ui.layout_columns(
                             ui.input_selectize("target_gene", "Gene:", choices=gene_choices, selected=default_gene),
                             ui.input_selectize("target_site_pos", "Site:", choices=default_site_choices, selected=default_site),
@@ -142,11 +142,23 @@ app_ui = ui.page_fluid(
                         ui.output_ui("molecule_ui_site")
                     )
                 ),
-                # Right Column: 3D Structure
-                ui.card(
-                    ui.h5("AlphaFold 3D Structure"),
-                    ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                    ui.output_ui("alphafold_viewer")
+                # --- NEW: Right Column uses a Navset for AlphaFold vs PDB ---
+                ui.navset_card_tab(
+                    ui.nav_panel(
+                        "AlphaFold 3D",
+                        ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                        ui.output_ui("alphafold_viewer")
+                    ),
+                    ui.nav_panel(
+                        "Experimental PDB",
+                        ui.div(
+                            ui.p("Selected site is highlighted in red. (PDBs may be partial).", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                            ui.input_select("pdb_selector", None, choices=["Loading..."], width="160px"),
+                            style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
+                        ),
+                        ui.output_ui("pdb_viewer")
+                    ),
+                    id="structure_tabs"
                 ),
                 col_widths=(5, 7) 
             ),
@@ -181,6 +193,77 @@ def server(input, output, session):
         if gene and gene in gene_to_sites:
             sites = gene_to_sites[gene]
             ui.update_selectize("target_site_pos", choices=sites, selected=sites[0] if sites else None)
+
+    # --- NEW: PDB DROPDOWN LOGIC ---
+    @reactive.Calc
+    def available_pdbs():
+        gene = input.target_gene()
+        site_str = input.target_site_pos()
+        if not gene or not site_str or gene == "No Data Found" or df is None or df.empty:
+            return {}
+
+        target = f"{gene}_Y{site_str}"
+        matching_rows = df[df['Labels'] == target]
+        if matching_rows.empty:
+            return {}
+
+        row = matching_rows.iloc[0]
+        protein_string = str(row['Protein Id'])
+        uniprot_raw = protein_string.split('|')[1] if '|' in protein_string else protein_string
+        uniprot = uniprot_raw.split('-')[0]
+
+        try:
+            uniprot_url = f"https://rest.uniprot.org/uniprotkb/{uniprot}.json"
+            req = urllib.request.urlopen(uniprot_url)
+            data = json.loads(req.read().decode('utf-8'))
+            
+            pdb_choices = {}
+            contains_site = []
+            others = []
+            
+            # Safely get the integer value of the site
+            site_num = int(site_str) if str(site_str).isdigit() else -1
+
+            # Loop through PDBs and check their residue coverage ranges
+            for ref in data.get('uniProtKBCrossReferences', []):
+                if ref['database'] == 'PDB':
+                    pdb_id = ref['id']
+                    
+                    has_site = False
+                    if site_num != -1:
+                        for prop in ref.get('properties', []):
+                            if prop['key'] == 'Chains' and '=' in prop['value']:
+                                ranges_part = prop['value'].split('=', 1)[1]
+                                for r in ranges_part.split(','):
+                                    bounds = r.strip().split('-')
+                                    if len(bounds) == 2 and bounds[0].isdigit() and bounds[1].isdigit():
+                                        if int(bounds[0]) <= site_num <= int(bounds[1]):
+                                            has_site = True
+                                            break
+                                            
+                    if has_site:
+                        contains_site.append((pdb_id, f"{pdb_id} (Contains Site)"))
+                    else:
+                        others.append((pdb_id, pdb_id))
+            
+            # Build the final dictionary: 'Good' ones first!
+            for pid, label in contains_site:
+                pdb_choices[pid] = label
+            for pid, label in others:
+                pdb_choices[pid] = label
+                
+            return pdb_choices
+        except Exception:
+            return {}
+
+    @reactive.Effect
+    def update_pdb_dropdown():
+        pdb_dict = available_pdbs()
+        if pdb_dict:
+            first_key = list(pdb_dict.keys())[0]
+            ui.update_select("pdb_selector", choices=pdb_dict, selected=first_key)
+        else:
+            ui.update_select("pdb_selector", choices={"none": "No PDBs Found"}, selected="none")
 
     # --- SHARED CHEMICAL HTML GENERATOR ---
     def generate_molecule_html(drug):
@@ -229,7 +312,7 @@ def server(input, output, session):
         plot_df.dropna(subset=['R', 'P-value', 'log2 R', '-log10 p'], inplace=True)
         
         plot_df['Site Rank'] = plot_df['R'].rank(ascending=False).astype(int).astype(str)+'/'+str(len(plot_df))
-        plot_df['% Site Rank'] = plot_df['R'].rank(ascending=False)/len(plot_df)
+        plot_df['% Site Rank'] = plot_df['R'].rank(ascending=False)/len(plot_df)*100
 
         plot_df['color'] = 'non-significant'
 
@@ -262,7 +345,7 @@ def server(input, output, session):
         'Site': False, 'color': False, 'R_plot': False,
         'ID': True, 'Label': True, 'Description': True,     
         'log2 R': False, '-log10 p': False, 'R': ':.3f', 'P-value': ':.4f',
-        'Site Rank': True, '% Site Rank': True
+        'Site Rank': True, '% Site Rank': ':.5f'
     }
 
     # --- TAB 1: PLOT 1 (ENGAGEMENT PLOT) ---
@@ -398,8 +481,8 @@ def server(input, output, session):
         fig.update_traces(marker=dict(size=6))
         
         fig.update_layout(
-            xaxis_title="Log2 Fold Change",
-            yaxis_title="-Log10 P-Value",
+            xaxis_title="log<sub>2</sub> Fold Change",
+            yaxis_title="-log<sub>10</sub> P-Value",
             plot_bgcolor='white', paper_bgcolor='white', showlegend=False, margin=dict(l=40, r=40, t=10, b=40)
         )
 
@@ -412,17 +495,14 @@ def server(input, output, session):
     # --- TAB 2: SITE PROFILING (BAR CHART WITH CLICKS) ---
     @render_widget
     def site_profile_plot():
-        # --- NEW: Safely read both Gene and Site inputs ---
         gene = input.target_gene()
         site = input.target_site_pos()
         
         if not gene or not site or gene == "No Data Found" or df.empty:
             return go.FigureWidget(px.bar(title="No Site Selected"))
 
-        # Reconstruct the target label string dynamically
         target = f"{gene}_Y{site}"
         
-        # Check if row exists to prevent mid-update crashes
         matching_rows = df[df['Labels'] == target]
         if matching_rows.empty:
              return go.FigureWidget(px.bar(title="Loading..."))
@@ -442,7 +522,7 @@ def server(input, output, session):
         fig = px.bar(
             bar_df, x='Drug', y='R',
             color='R', color_continuous_scale='Reds',
-            hover_dict = {'Drug': True, 'R': ':.3f'}
+            hover_data = {'Drug': True, 'R': ':.3f'}
             )
         
         fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red', annotation_text="Threshold")
@@ -464,7 +544,6 @@ def server(input, output, session):
     # --- TAB 2: ALPHAFOLD VIEWER ---
     @render.ui
     def alphafold_viewer():
-        # --- NEW: Safely read both Gene and Site inputs ---
         gene = input.target_gene()
         site = input.target_site_pos()
         
@@ -503,6 +582,50 @@ def server(input, output, session):
         
         viewer_html = html.escape(view._make_html())
         iframe = f'<iframe srcdoc="{viewer_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>'
+        
+        return ui.HTML(iframe)
+
+    # --- NEW: PDB VIEWER ---
+    @render.ui
+    def pdb_viewer():
+        pdb_id = input.pdb_selector()
+        
+        if not pdb_id or pdb_id in ["Loading...", "none"]:
+            return ui.HTML("<div style='color:orange; padding:20px;'><b>Note:</b> No experimental PDB structures found for this target.</div>")
+            
+        if pdb_id not in available_pdbs(): 
+            return ui.p("Syncing structures...")
+
+        gene = input.target_gene()
+        site = input.target_site_pos()
+        target = f"{gene}_Y{site}"
+        
+        matching_rows = df[df['Labels'] == target]
+        if matching_rows.empty: return ui.p("")
+
+        site_pos = str(matching_rows.iloc[0]['Site Position'])
+
+        url = f"https://files.rcsb.org/download/{pdb_id}.pdb"
+        try:
+            req = urllib.request.urlopen(url)
+            pdb_data = req.read().decode('utf-8')
+        except Exception:
+            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id} from the RCSB database.</div>")
+
+        view = py3Dmol.view(width="100%", height=500)
+        view.addModel(pdb_data, "pdb")
+        view.setStyle({'cartoon': {'color': 'spectrum'}})
+        view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+        view.zoomTo({'resi': site_pos})
+        
+        viewer_html = html.escape(view._make_html())
+        
+        iframe = f'''
+        <div style="margin-bottom: 5px; font-size: 0.9em;">
+            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b> 
+        </div>
+        <iframe srcdoc="{viewer_html}" style="width: 100%; height: 470px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        '''
         
         return ui.HTML(iframe)
 
