@@ -1,4 +1,3 @@
-import math
 import numpy as np
 import pandas as pd
 import urllib.parse
@@ -6,7 +5,6 @@ import urllib.request
 import html
 import base64
 import json
-import ssl
 import py3Dmol
 from pathlib import Path
 import plotly.express as px
@@ -21,6 +19,13 @@ data_dir = app_dir / "data"
 
 all_files = list(data_dir.glob("*.csv"))
 df = None
+
+# --- NEW: Load the pre-calculated PPI database ---
+ppi_db_path = app_dir / "ppi_reference.csv"
+if ppi_db_path.exists():
+    ppi_df = pd.read_csv(ppi_db_path)
+else:
+    ppi_df = pd.DataFrame(columns=['Target', 'PDB_ID', 'Min_Distance'])
 
 # Safely load the Smiles dictionary & Cancer List
 ypt_lib_path = app_dir / 'ypt_library.csv'
@@ -50,7 +55,6 @@ if len(all_files) > 0:
 
     raw_drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
     
-    # Promiscuity Calculation
     drug_promiscuity = {}
     for d in raw_drugs:
         log_col = f'log2 {d} R'
@@ -67,7 +71,6 @@ if len(all_files) > 0:
     drug_choices = {d: f"{d} ({type_dict.get(d, 'Unknown')}, {drug_promiscuity[d]:.2f}%)" for d in sorted_drugs}
     default_drug = sorted_drugs[0] if sorted_drugs else None
     
-    # --- Gene to Site Mapping ---
     gene_to_sites = df.dropna(subset=['Gene Symbol', 'Site Position']).groupby('Gene Symbol')['Site Position'].apply(lambda x: sorted(list(set(x)))).to_dict()
     gene_choices = sorted(list(gene_to_sites.keys()))
     default_gene = gene_choices[0] if gene_choices else None
@@ -87,12 +90,10 @@ else:
 app_ui = ui.page_fluid(
     ui.h2("Tyrosine Library Screening"),
     
-    # --- TABBED LAYOUT (No Sidebar) ---
     ui.navset_card_tab(
         ui.nav_panel(
             "Compound View", 
             ui.layout_columns(
-                # Left Column: Inputs & Structure
                 ui.div(
                     ui.card(
                         ui.h5("Settings"),
@@ -111,7 +112,6 @@ app_ui = ui.page_fluid(
                         ui.output_ui("molecule_ui_compound")
                     )
                 ),
-                # Right Column: Plots
                 ui.div(
                     ui.card(
                         ui.h5("Proteome Engagement Profile"),
@@ -129,7 +129,6 @@ app_ui = ui.page_fluid(
         ui.nav_panel(
             "Site View",
             ui.layout_columns(
-                # Left Column: Bar Chart & Structure
                 ui.div(
                     ui.card(
                         ui.h5("Compound Engagement Profile"),
@@ -145,13 +144,12 @@ app_ui = ui.page_fluid(
                         ui.output_ui("molecule_ui_site")
                     )
                 ),
-                # Right Column: Main Viewers + New PPI Viewer
                 ui.div(
                     ui.navset_card_tab(
                         ui.nav_panel(
                             "Experimental Structure",
                             ui.div(
-                                ui.p("Selected site is highlighted in red. (PDBs may be partial).", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                                ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                                 ui.input_select("pdb_selector", None, choices=["Loading..."], width="160px"),
                                 style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
                             ),
@@ -165,18 +163,14 @@ app_ui = ui.page_fluid(
                         id="structure_tabs"
                     ),
                     
-                    # --- NEW: PPI INTERFACE VIEWER CARD ---
+                    # --- NEW: Instant PPI Viewer using pre-calculated CSV ---
                     ui.card(
-                        ui.h5("Protein-Protein Interface (PPI) Search"),
-                        ui.p("Scans available PDBs for structures where a different protein chain physically interacts within the specified distance of your target residue.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
+                        ui.h5("Protein-Protein Interface (PPI)"),
+                        ui.p("Pre-calculated interfaces where another chain is physically encroaching on the target site.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
                         ui.layout_columns(
                             ui.input_numeric("ppi_distance", "Max Distance (Å):", value=5.0, min=2.0, max=15.0, step=1.0),
-                            ui.div(
-                                ui.input_action_button("search_ppi", "Search Interfaces", class_="btn-primary"),
-                                style="margin-top: 30px;"
-                            ),
-                            ui.input_select("ppi_selector", "Select PPI Structure:", choices=["Click Search..."]),
-                            col_widths=(3, 3, 6)
+                            ui.input_select("ppi_selector", "Select Interface:", choices=["Loading..."]),
+                            col_widths=(4, 8)
                         ),
                         ui.output_ui("ppi_viewer")
                     )
@@ -188,56 +182,6 @@ app_ui = ui.page_fluid(
         id="main_tabs"
     )
 )
-
-# --- LIGHTWEIGHT PDB DISTANCE PARSER ---
-def get_pdb_interface_status(pdb_text, target_resi, cutoff):
-    target_atoms = []
-    other_atoms = []
-    target_chains = set()
-
-    # 1. Find all chains that contain the target residue
-    for line in pdb_text.splitlines():
-        if line.startswith("ATOM"):
-            try:
-                resi = int(line[22:26].strip())
-                chain = line[21]
-                if resi == int(target_resi):
-                    target_chains.add(chain)
-            except ValueError:
-                continue
-
-    if not target_chains:
-        return False
-
-    # 2. Extract atomic coordinates, sorting them by target vs other chains
-    for line in pdb_text.splitlines():
-        if line.startswith("ATOM"):
-            try:
-                x = float(line[30:38].strip())
-                y = float(line[38:46].strip())
-                z = float(line[46:54].strip())
-                chain = line[21]
-                resi = int(line[22:26].strip())
-
-                if chain in target_chains and resi == int(target_resi):
-                    target_atoms.append((x, y, z))
-                elif chain not in target_chains:
-                    other_atoms.append((x, y, z))
-            except ValueError:
-                continue
-
-    if not target_atoms or not other_atoms:
-        return False
-
-    # 3. Mathematically check for interaction within the cutoff
-    cutoff_sq = cutoff * cutoff
-    for tx, ty, tz in target_atoms:
-        for ox, oy, oz in other_atoms:
-            dist_sq = (tx-ox)**2 + (ty-oy)**2 + (tz-oz)**2
-            if dist_sq <= cutoff_sq:
-                return True
-                
-    return False
 
 # --- 3. Shiny Server ---
 def server(input, output, session):
@@ -339,78 +283,37 @@ def server(input, output, session):
         else:
             ui.update_select("pdb_selector", choices={"none": "No PDBs Found"}, selected="none")
 
-
-    # --- NEW: PPI REACTIVE LOGIC ---
-    ppi_choices_val = reactive.Value({"none": "Click Search..."})
-    ppi_cached_texts = reactive.Value({})
-
+    # --- INSTANT PPI DROPDOWN LOGIC ---
     @reactive.Effect
-    def reset_ppi():
-        # Clears the PPI dropdown if the user switches genes/sites
-        input.target_gene()
-        input.target_site_pos()
-        ppi_choices_val.set({"none": "Click Search..."})
-        ppi_cached_texts.set({})
-
-    @reactive.Effect
-    @reactive.event(input.search_ppi)
-    def perform_ppi_search():
-        cutoff = input.ppi_distance()
+    def update_ppi_dropdown():
+        gene = input.target_gene()
         site_str = input.target_site_pos()
-        pdb_dict = available_pdbs()
-        
-        # Only scan PDBs that are physically known to possess the target site
-        candidates = [pid for pid, label in pdb_dict.items() if "★ Contains Site" in label]
+        cutoff = input.ppi_distance()
 
-        if not candidates:
-            ppi_choices_val.set({"none": "No PDBs contain this site"})
+        if not gene or not site_str or ppi_df.empty:
+            ui.update_select("ppi_selector", choices={"none": "Database Missing or Empty"}, selected="none")
             return
 
-        ctx = ssl._create_unverified_context() if hasattr(ssl, '_create_unverified_context') else None
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        found_ppis = {}
-        cached_texts = {}
-
-        notif_id = ui.notification_show("Downloading & scanning PDBs...", duration=None, type="message")
-
-        try:
-            for pid in candidates:
-                url = f"https://files.rcsb.org/download/{pid}.pdb"
-                try:
-                    req = urllib.request.Request(url, headers=headers)
-                    pdb_data = urllib.request.urlopen(req, context=ctx).read().decode('utf-8')
-                    pdb_data_sanitized = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-
-                    if get_pdb_interface_status(pdb_data_sanitized, site_str, cutoff):
-                        found_ppis[pid] = f"{pid} (Interface Found)"
-                        cached_texts[pid] = pdb_data_sanitized
-                except Exception:
-                    continue
-        finally:
-            ui.notification_remove(notif_id)
-
-        if found_ppis:
-            ppi_choices_val.set(found_ppis)
-            ppi_cached_texts.set(cached_texts)
+        target = f"{gene}_Y{site_str}"
+        
+        # Instantly filter the offline database!
+        valid_ppis = ppi_df[(ppi_df['Target'] == target) & (ppi_df['Min_Distance'] <= cutoff)]
+        
+        if valid_ppis.empty:
+            ui.update_select("ppi_selector", choices={"none": f"No interfaces < {cutoff}Å"}, selected="none")
         else:
-            ppi_choices_val.set({"none": "No interfaces found within range"})
-
-    @reactive.Effect
-    def update_ppi_ui():
-        choices = ppi_choices_val.get()
-        first_key = list(choices.keys())[0] if choices else "none"
-        ui.update_select("ppi_selector", choices=choices, selected=first_key)
-
+            valid_ppis = valid_ppis.sort_values('Min_Distance')
+            choices = {row['PDB_ID']: f"{row['PDB_ID']} (Distance: {row['Min_Distance']:.1f}Å)" for _, row in valid_ppis.iterrows()}
+            first_key = list(choices.keys())[0]
+            ui.update_select("ppi_selector", choices=choices, selected=first_key)
 
     # --- SHARED CHEMICAL HTML GENERATOR ---
     def generate_molecule_html(drug):
         if not drug:
             return ui.p("Select a drug or click a bar to view structure.", style="color: gray; font-style: italic;")
-
         smiles = smiles_dict.get(drug, "") 
         if not smiles:
             return ui.p("No SMILES available for this drug.", style="color: gray; font-style: italic;")
-
         safe_smiles = urllib.parse.quote(smiles)
         img_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{safe_smiles}/PNG"
         return ui.HTML(f'<div style="text-align: center;"><img src="{img_url}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px;" alt="Chemical Structure"></div>')
@@ -500,7 +403,6 @@ def server(input, output, session):
             )
             fig.update_traces(marker=dict(opacity=0.2), selector=dict(name='non-significant'))
             fig.update_traces(marker=dict(opacity=0.9), selector=dict(name='high'))
-
         elif color_mode in ["Highlight Custom List", "Cancer-Driver List"]:
             fig = px.scatter(
                 plot_df, x='Site', y='R_plot', color='color',
@@ -509,7 +411,6 @@ def server(input, output, session):
             )
             fig.update_traces(marker=dict(opacity=0.15), selector=dict(name='non-significant'))
             fig.update_traces(marker=dict(opacity=1.0), selector=dict(name='highlight'))
-
         else: # P-Value Gradient
             fig = px.scatter(
                 plot_df, x='Site', y='R_plot', color='P-value',
@@ -530,15 +431,11 @@ def server(input, output, session):
 
         fig.add_hline(y=threshold, line_width=1, line_dash='dash')
         fig.update_traces(marker=dict(size=6))
-        fig.update_layout(
-            yaxis_title="R",
-            plot_bgcolor='white', paper_bgcolor='white', showlegend=False, margin=dict(l=40, r=40, t=10, b=40)
-        )
+        fig.update_layout(yaxis_title="R", plot_bgcolor='white', paper_bgcolor='white', showlegend=False, margin=dict(l=40, r=40, t=10, b=40))
 
         widget = go.FigureWidget(fig)
         current_config = widget._config or {}
         widget._config = {**current_config, 'edits': {'annotationTail': True}}
-
         return widget
 
     # --- VOLCANO PLOT ---
@@ -558,11 +455,9 @@ def server(input, output, session):
             custom_genes = [g.strip().upper() for g in input.custom_list().split(',') if g.strip()]
             mask = volcano_df['Gene Symbol'].str.upper().isin(custom_genes)
             volcano_df.loc[sig_mask & mask, 'color'] = 'highlight'
-            
         elif color_mode == "Cancer-Driver List":
             mask = volcano_df['Gene Symbol'].isin(cancer['Gene'])
             volcano_df.loc[sig_mask & mask, 'color'] = 'highlight'
-            
         else: 
             volcano_df.loc[sig_mask, 'color'] = 'high'
 
@@ -577,8 +472,7 @@ def server(input, output, session):
         if color_mode == "P-Value Gradient":
             fig = px.scatter(
                 volcano_df[volcano_df['color'] == 'non-significant'], 
-                x='log2 R', y='-log10 p', color_discrete_sequence=['#dddddd'], 
-                hover_data=hover_dict
+                x='log2 R', y='-log10 p', color_discrete_sequence=['#dddddd'], hover_data=hover_dict
             )
             fig.update_traces(marker=dict(opacity=0.2), hovertemplate=None)
             
@@ -588,10 +482,8 @@ def server(input, output, session):
                     sig_df, x='log2 R', y='-log10 p', color='P-value', 
                     color_continuous_scale='Viridis_r', hover_data=hover_dict
                 )
-                for trace in fig2.data:
-                    fig.add_trace(trace)
+                for trace in fig2.data: fig.add_trace(trace)
                 fig.layout.coloraxis = fig2.layout.coloraxis
-                
         else:
             fig = px.scatter(
                 volcano_df, x='log2 R', y='-log10 p', color='color',
@@ -606,27 +498,18 @@ def server(input, output, session):
             row = volcano_df.loc[idx]
             fig.add_annotation(
                 x=row['log2 R'], y=row['-log10 p'], text=row['Label'],
-                showarrow=True, arrowsize=1, arrowwidth=1,
-                arrowcolor="#444", ax=20, ay=-30,
-                font=dict(size=10, color="black"), bgcolor="white",
-                bordercolor="#c7c7c7", borderwidth=1, borderpad=3
+                showarrow=True, arrowsize=1, arrowwidth=1, arrowcolor="#444", ax=20, ay=-30,
+                font=dict(size=10, color="black"), bgcolor="white", bordercolor="#c7c7c7", borderwidth=1, borderpad=3
             )
 
         fig.add_vline(x=np.log2(safe_thresh), line_width=1, line_dash='dash')
         fig.add_hline(y=-np.log10(0.05), line_width=1, line_dash='dash')
-        
         fig.update_traces(marker=dict(size=6))
-        
-        fig.update_layout(
-            xaxis_title="log<sub>2</sub> Fold Change",
-            yaxis_title="-log<sub>10</sub> P-Value",
-            plot_bgcolor='white', paper_bgcolor='white', showlegend=False, margin=dict(l=40, r=40, t=10, b=40)
-        )
+        fig.update_layout(xaxis_title="log<sub>2</sub> Fold Change", yaxis_title="-log<sub>10</sub> P-Value", plot_bgcolor='white', paper_bgcolor='white', showlegend=False, margin=dict(l=40, r=40, t=10, b=40))
 
         widget = go.FigureWidget(fig)
         current_config = widget._config or {}
         widget._config = {**current_config, 'edits': {'annotationTail': True}}
-
         return widget
 
     # --- SITE PROFILING ---
@@ -639,10 +522,8 @@ def server(input, output, session):
             return go.FigureWidget(px.bar(title="No Site Selected"))
 
         target = f"{gene}_Y{site}"
-        
         matching_rows = df[df['Labels'] == target]
-        if matching_rows.empty:
-             return go.FigureWidget(px.bar(title="Loading..."))
+        if matching_rows.empty: return go.FigureWidget(px.bar(title="Loading..."))
              
         row = matching_rows.iloc[0]
         
@@ -653,15 +534,8 @@ def server(input, output, session):
                 r_val = 2**row[log_col]
                 drug_data.append({'Drug': d, 'R': r_val})
                 
-        bar_df = pd.DataFrame(drug_data).dropna()
-        bar_df = bar_df.sort_values('R', ascending=False)
-        
-        fig = px.bar(
-            bar_df, x='Drug', y='R',
-            color='R', color_continuous_scale='Reds',
-            hover_data = {'Drug': True, 'R': ':.3f'}
-            )
-        
+        bar_df = pd.DataFrame(drug_data).dropna().sort_values('R', ascending=False)
+        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data = {'Drug': True, 'R': ':.3f'})
         fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red', annotation_text="Threshold")
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), coloraxis_showscale=False)
         
@@ -673,9 +547,7 @@ def server(input, output, session):
                 clicked_drug = trace.x[idx]
                 active_drug.set(clicked_drug)
                 
-        if widget.data:
-            widget.data[0].on_click(handle_bar_click)
-            
+        if widget.data: widget.data[0].on_click(handle_bar_click)
         return widget
 
     # --- ALPHAFOLD VIEWER ---
@@ -683,125 +555,96 @@ def server(input, output, session):
     def alphafold_viewer():
         gene = input.target_gene()
         site = input.target_site_pos()
-        
-        if not gene or not site or gene == "No Data Found" or df.empty:
-            return ui.p("Please select a Gene and Site from the dropdowns.")
+        if not gene or not site or gene == "No Data Found" or df.empty: return ui.p("Please select a Gene and Site.")
 
         target = f"{gene}_Y{site}"
-        
         matching_rows = df[df['Labels'] == target]
-        if matching_rows.empty:
-             return ui.p("Loading structure...")
+        if matching_rows.empty: return ui.p("Loading structure...")
 
         row = matching_rows.iloc[0]
-        
         protein_string = str(row['Protein Id'])
-        if '|' in protein_string:
-            uniprot_raw = protein_string.split('|')[1]
-        else:
-            uniprot_raw = protein_string
-            
+        uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
         site_pos = str(row['Site Position'])
-        uniprot = uniprot_raw.split('-')[0]
 
-        url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.pdb"
+        url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif"
         try:
-            req = urllib.request.urlopen(url)
-            pdb_data = req.read().decode('utf-8')
+            pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
             pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-            
         except Exception:
             return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve structure for {uniprot}.</div>")
 
         view = py3Dmol.view(width="100%", height=500)
-        view.addModel(pdb_data, "pdb")
+        view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
-        view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+        view.addStyle(
+            {'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
+            {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
+        )
         view.zoomTo({'resi': site_pos})
 
-        raw_html = view._make_html()
-        b64_html = base64.b64encode(raw_html.encode('utf-8')).decode('utf-8')
-        
-        iframe = f'<iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>'
-        
-        return ui.HTML(iframe)
+        b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
+        return ui.HTML(f'<iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>')
     
     # --- PDB VIEWER ---
     @render.ui
     def pdb_viewer():
         pdb_id = input.pdb_selector()
-        
-        if not pdb_id or pdb_id in ["Loading...", "none"]:
-            return ui.HTML("<div style='color:orange; padding:20px;'><b>Note:</b> No experimental PDB structures found for this target.</div>")
-            
-        if pdb_id not in available_pdbs(): 
-            return ui.p("Syncing structures...")
+        if not pdb_id or pdb_id in ["Loading...", "none"]: return ui.HTML("<div style='color:orange; padding:20px;'><b>Note:</b> No experimental PDBs found.</div>")
+        if pdb_id not in available_pdbs(): return ui.p("Syncing...")
 
         gene = input.target_gene()
         site = input.target_site_pos()
         target = f"{gene}_Y{site}"
-        
         matching_rows = df[df['Labels'] == target]
         if matching_rows.empty: return ui.p("")
-
         site_pos = str(matching_rows.iloc[0]['Site Position'])
 
-        pdb_title = "Description not available."
+        url = f"https://files.rcsb.org/download/{pdb_id}.cif"
         try:
-            rcsb_url = f"https://data.rcsb.org/rest/v1/core/entry/{pdb_id}"
-            rcsb_req = urllib.request.urlopen(rcsb_url)
-            rcsb_data = json.loads(rcsb_req.read().decode('utf-8'))
-            pdb_title = rcsb_data.get("struct", {}).get("title", "Description not available.")
-        except Exception:
-            pass 
-
-        url = f"https://files.rcsb.org/download/{pdb_id}.pdb"
-        try:
-            req = urllib.request.urlopen(url)
-            pdb_data = req.read().decode('utf-8')
+            pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
             pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-            
         except Exception:
-            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id} from the RCSB database.</div>")
+            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id}.</div>")
 
         view = py3Dmol.view(width="100%", height=480)
-        view.addModel(pdb_data, "pdb")
+        view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
-        view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+        view.addStyle(
+            {'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
+            {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
+        )
         view.zoomTo({'resi': site_pos})
         
-        raw_html = view._make_html()
-        b64_html = base64.b64encode(raw_html.encode('utf-8')).decode('utf-8')
-        
-        iframe = f'''
+        b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
+        return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
-            <span style="color: #444;"><i>{pdb_title}</i></span>
+            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
-        '''
-        
-        return ui.HTML(iframe)
+        ''')
 
-    # --- NEW: PPI VIEWER ---
+    # --- ON-DEMAND PPI VIEWER ---
     @render.ui
     def ppi_viewer():
         pdb_id = input.ppi_selector()
-        if not pdb_id or pdb_id in ["none", "Click Search..."]:
-            return ui.HTML("<div style='color:gray; padding:20px; font-style: italic;'>Click 'Search Interfaces' above to scan structural databases for physical interactions.</div>")
+        if not pdb_id or pdb_id in ["none", "Loading..."]:
+            return ui.HTML("<div style='color:gray; padding:20px; font-style: italic;'>No interfaces found within this distance. Try increasing the Max Distance.</div>")
 
-        cached = ppi_cached_texts.get()
-        if pdb_id not in cached:
-            return ui.HTML("<div style='color:red; padding:20px;'>Structure data missing. Please search again.</div>")
-
-        pdb_data = cached[pdb_id]
         site_pos = str(input.target_site_pos())
         cutoff = input.ppi_distance()
 
+        # Fetch the actual 3D coordinate file online ONLY when selected
+        url = f"https://files.rcsb.org/download/{pdb_id}.cif"
+        try:
+            pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
+            pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+        except Exception as e:
+            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id}.<br>Details: {e}</div>")
+
         view = py3Dmol.view(width="100%", height=480)
-        view.addModel(pdb_data, "pdb")
+        view.addModel(pdb_data, "cif")
         
-        # Color by chain so the interaction is visually obvious
+        # Color by chain so the physical interaction is obvious
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
         # Highlight the surrounding interface pocket in Cyan
@@ -810,22 +653,22 @@ def server(input, output, session):
             {'stick': {'colorscheme': 'cyanCarbon'}}
         )
         
-        # Re-highlight the core target residue heavily in Red
-        view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
-
+        # Highlight the core target residue heavily in Red
+        view.addStyle(
+            {'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
+            {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
+        )
         view.zoomTo({'resi': site_pos})
 
-        raw_html = view._make_html()
-        b64_html = base64.b64encode(raw_html.encode('utf-8')).decode('utf-8')
+        b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
 
-        iframe = f'''
+        return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>Displaying Interface: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
             <span style="color: #444;"><i>Target residue in Red. Interacting pocket within {cutoff}Å in Cyan.</i></span>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
-        '''
-        return ui.HTML(iframe)
+        ''')
 
 # --- 4. Run App ---
 app = App(app_ui, server)
