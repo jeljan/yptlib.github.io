@@ -3,7 +3,8 @@ import pandas as pd
 import urllib.parse
 import urllib.request
 import html
-import json  # <-- NEW: Required for the UniProt API
+import base64
+import json
 import py3Dmol
 from pathlib import Path
 import plotly.express as px
@@ -145,18 +146,18 @@ app_ui = ui.page_fluid(
                 # --- NEW: Right Column uses a Navset for AlphaFold vs PDB ---
                 ui.navset_card_tab(
                     ui.nav_panel(
-                        "AlphaFold 3D",
-                        ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                        ui.output_ui("alphafold_viewer")
-                    ),
-                    ui.nav_panel(
-                        "Experimental PDB",
+                        "Experimental Structure",
                         ui.div(
                             ui.p("Selected site is highlighted in red. (PDBs may be partial).", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                             ui.input_select("pdb_selector", None, choices=["Loading..."], width="160px"),
                             style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
                         ),
                         ui.output_ui("pdb_viewer")
+                    ),
+                    ui.nav_panel(
+                        "AlphaFold Structure",
+                        ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                        ui.output_ui("alphafold_viewer")
                     ),
                     id="structure_tabs"
                 ),
@@ -194,7 +195,7 @@ def server(input, output, session):
             sites = gene_to_sites[gene]
             ui.update_selectize("target_site_pos", choices=sites, selected=sites[0] if sites else None)
 
-    # --- NEW: PDB DROPDOWN LOGIC ---
+# --- PDB DROPDOWN LOGIC ---
     @reactive.Calc
     def available_pdbs():
         gene = input.target_gene()
@@ -217,40 +218,46 @@ def server(input, output, session):
             req = urllib.request.urlopen(uniprot_url)
             data = json.loads(req.read().decode('utf-8'))
             
-            pdb_choices = {}
-            contains_site = []
-            others = []
-            
-            # Safely get the integer value of the site
+            pdb_list = []
             site_num = int(site_str) if str(site_str).isdigit() else -1
 
-            # Loop through PDBs and check their residue coverage ranges
+            # 1. Parse all PDBs for Site Presence, Coverage Length, and Method
             for ref in data.get('uniProtKBCrossReferences', []):
                 if ref['database'] == 'PDB':
                     pdb_id = ref['id']
-                    
+                    method = "Unknown"
+                    resolution = ""
                     has_site = False
-                    if site_num != -1:
-                        for prop in ref.get('properties', []):
-                            if prop['key'] == 'Chains' and '=' in prop['value']:
-                                ranges_part = prop['value'].split('=', 1)[1]
-                                for r in ranges_part.split(','):
-                                    bounds = r.strip().split('-')
-                                    if len(bounds) == 2 and bounds[0].isdigit() and bounds[1].isdigit():
-                                        if int(bounds[0]) <= site_num <= int(bounds[1]):
-                                            has_site = True
-                                            break
-                                            
-                    if has_site:
-                        contains_site.append((pdb_id, f"{pdb_id} (Contains Site)"))
-                    else:
-                        others.append((pdb_id, pdb_id))
+                    coverage = 0
+                    
+                    for prop in ref.get('properties', []):
+                        if prop['key'] == 'Method': method = prop['value']
+                        elif prop['key'] == 'Resolution': resolution = prop['value']
+                        elif prop['key'] == 'Chains' and '=' in prop['value']:
+                            ranges_part = prop['value'].split('=', 1)[1]
+                            for r in ranges_part.split(','):
+                                bounds = r.strip().split('-')
+                                if len(bounds) == 2 and bounds[0].isdigit() and bounds[1].isdigit():
+                                    start, end = int(bounds[0]), int(bounds[1])
+                                    coverage += (end - start + 1) # Calculate total amino acids
+                                    if site_num != -1 and start <= site_num <= end:
+                                        has_site = True
+                                        
+                    pdb_list.append({
+                        'id': pdb_id, 'has_site': has_site, 'coverage': coverage,
+                        'method': method, 'resolution': resolution
+                    })
             
-            # Build the final dictionary: 'Good' ones first!
-            for pid, label in contains_site:
-                pdb_choices[pid] = label
-            for pid, label in others:
-                pdb_choices[pid] = label
+            # 2. Sort Logic: Prioritize 'Has Site' first, then 'Coverage' (Largest to Smallest)
+            pdb_list.sort(key=lambda x: (x['has_site'], x['coverage']), reverse=True)
+            
+            # 3. Build the descriptive dictionary
+            pdb_choices = {}
+            for p in pdb_list:
+                site_tag = "★ Contains Site" if p['has_site'] else "No Site"
+                res_tag = f", {p['resolution']}" if p['resolution'] and p['resolution'] != '-' else ""
+                label = f"{p['id']} ({site_tag} | {p['coverage']} aa | {p['method']}{res_tag})"
+                pdb_choices[p['id']] = label
                 
             return pdb_choices
         except Exception:
@@ -348,7 +355,7 @@ def server(input, output, session):
         'Site Rank': True, '% Site Rank': ':.5f'
     }
 
-    # --- TAB 1: PLOT 1 (ENGAGEMENT PLOT) ---
+    # --- PROFILE PLOT ---
     @render_widget
     def site_plot():
         plot_df, valid_indices = plot_data()
@@ -404,7 +411,7 @@ def server(input, output, session):
 
         return widget
 
-    # --- TAB 1: PLOT 2 (VOLCANO PLOT) ---
+    # --- VOLCANO PLOT ---
     @render_widget
     def volcano_plot():
         plot_df, _ = plot_data() 
@@ -492,7 +499,7 @@ def server(input, output, session):
 
         return widget
 
-    # --- TAB 2: SITE PROFILING (BAR CHART WITH CLICKS) ---
+    # --- SITE PROFILING ---
     @render_widget
     def site_profile_plot():
         gene = input.target_gene()
@@ -541,7 +548,7 @@ def server(input, output, session):
             
         return widget
 
-    # --- TAB 2: ALPHAFOLD VIEWER ---
+    # --- ALPHAFOLD VIEWER ---
     @render.ui
     def alphafold_viewer():
         gene = input.target_gene()
@@ -579,13 +586,15 @@ def server(input, output, session):
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
         view.zoomTo({'resi': site_pos})
+
+        raw_html = view._make_html()
+        b64_html = base64.b64encode(raw_html.encode('utf-8')).decode('utf-8')
         
-        viewer_html = html.escape(view._make_html())
-        iframe = f'<iframe srcdoc="{viewer_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>'
+        iframe = f'<iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>'
         
         return ui.HTML(iframe)
-
-    # --- NEW: PDB VIEWER ---
+    
+    # --- PDB VIEWER ---
     @render.ui
     def pdb_viewer():
         pdb_id = input.pdb_selector()
@@ -605,6 +614,17 @@ def server(input, output, session):
 
         site_pos = str(matching_rows.iloc[0]['Site Position'])
 
+        # 1. Fetch the official Description/Title from RCSB
+        pdb_title = "Description not available."
+        try:
+            rcsb_url = f"https://data.rcsb.org/rest/v1/core/entry/{pdb_id}"
+            rcsb_req = urllib.request.urlopen(rcsb_url)
+            rcsb_data = json.loads(rcsb_req.read().decode('utf-8'))
+            pdb_title = rcsb_data.get("struct", {}).get("title", "Description not available.")
+        except Exception:
+            pass # Fails silently if RCSB API is busy
+
+        # 2. Fetch the actual 3D coordinate file
         url = f"https://files.rcsb.org/download/{pdb_id}.pdb"
         try:
             req = urllib.request.urlopen(url)
@@ -612,19 +632,24 @@ def server(input, output, session):
         except Exception:
             return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id} from the RCSB database.</div>")
 
-        view = py3Dmol.view(width="100%", height=500)
+        # 3. Render the 3D Structure
+        view = py3Dmol.view(width="100%", height=480)
         view.addModel(pdb_data, "pdb")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
         view.zoomTo({'resi': site_pos})
         
-        viewer_html = html.escape(view._make_html())
+        # 4. Convert to Base64 to prevent iframe parsing errors
+        raw_html = view._make_html()
+        b64_html = base64.b64encode(raw_html.encode('utf-8')).decode('utf-8')
         
+        # 5. Build the UI with the injected description
         iframe = f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em;">
-            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b> 
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
+            <span style="color: #444;"><i>{pdb_title}</i></span>
         </div>
-        <iframe srcdoc="{viewer_html}" style="width: 100%; height: 470px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         '''
         
         return ui.HTML(iframe)
