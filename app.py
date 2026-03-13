@@ -23,7 +23,7 @@ if len(all_files) > 0:
     df = reduce(lambda left, right: pd.merge(left, right, on='Info', how='outer'), df_list)
 
     if 'Info' in df.columns:
-        df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence', 'Description']] = df['Info'].str.split('+', expand=True)
+        df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence', 'Description']] = df['Info'].str.split('++', expand=True)
         df.drop(columns='Info', inplace=True)
         df['Site Position'] = df['Site Position'].fillna('Unknown')
         df['Labels'] = df['Gene Symbol'] + "_Y" + df['Site Position'].astype(str)
