@@ -92,7 +92,7 @@ app_ui = ui.page_fluid(
                 ui.div(
                     ui.card(
                         ui.h5("Settings"),
-                        ui.input_select("data_type", "Select Drug (Type, Promiscuity):", choices=drug_choices, selected=default_drug),
+                        ui.input_selectize("data_type", "Select Drug (Type, Promiscuity):", choices=drug_choices, selected=default_drug),
                         ui.input_numeric("threshold", "R Threshold:", value=2.0, step=0.5),
                         ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
                         ui.hr(),
@@ -110,7 +110,7 @@ app_ui = ui.page_fluid(
                 # Right Column: Plots
                 ui.div(
                     ui.card(
-                        ui.h5("Compound Engagement Profile"),
+                        ui.h5("Proteome Engagement Profile"),
                         output_widget("site_plot"),
                         ui.hr(),
                         ui.h5("Volcano Plot"),
@@ -128,7 +128,7 @@ app_ui = ui.page_fluid(
                 # Left Column: Bar Chart & Structure
                 ui.div(
                     ui.card(
-                        ui.h5("Engagement by Compound"),
+                        ui.h5("Compound Engagement Profile"),
                         # --- NEW: Side-by-side Dropdowns ---
                         ui.layout_columns(
                             ui.input_selectize("target_gene", "Gene:", choices=gene_choices, selected=default_gene),
