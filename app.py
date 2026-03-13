@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 import urllib.parse
@@ -5,6 +6,7 @@ import urllib.request
 import html
 import base64
 import json
+import ssl
 import py3Dmol
 from pathlib import Path
 import plotly.express as px
@@ -143,23 +145,41 @@ app_ui = ui.page_fluid(
                         ui.output_ui("molecule_ui_site")
                     )
                 ),
-                # --- NEW: Right Column uses a Navset for AlphaFold vs PDB ---
-                ui.navset_card_tab(
-                    ui.nav_panel(
-                        "Experimental Structure",
-                        ui.div(
-                            ui.p("Selected site is highlighted in red. (PDBs may be partial).", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                            ui.input_select("pdb_selector", None, choices=["Loading..."], width="160px"),
-                            style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
+                # Right Column: Main Viewers + New PPI Viewer
+                ui.div(
+                    ui.navset_card_tab(
+                        ui.nav_panel(
+                            "Experimental Structure",
+                            ui.div(
+                                ui.p("Selected site is highlighted in red. (PDBs may be partial).", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                                ui.input_select("pdb_selector", None, choices=["Loading..."], width="160px"),
+                                style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
+                            ),
+                            ui.output_ui("pdb_viewer")
                         ),
-                        ui.output_ui("pdb_viewer")
+                        ui.nav_panel(
+                            "AlphaFold Structure",
+                            ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                            ui.output_ui("alphafold_viewer")
+                        ),
+                        id="structure_tabs"
                     ),
-                    ui.nav_panel(
-                        "AlphaFold Structure",
-                        ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                        ui.output_ui("alphafold_viewer")
-                    ),
-                    id="structure_tabs"
+                    
+                    # --- NEW: PPI INTERFACE VIEWER CARD ---
+                    ui.card(
+                        ui.h5("Protein-Protein Interface (PPI) Search"),
+                        ui.p("Scans available PDBs for structures where a different protein chain physically interacts within the specified distance of your target residue.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
+                        ui.layout_columns(
+                            ui.input_numeric("ppi_distance", "Max Distance (Å):", value=5.0, min=2.0, max=15.0, step=1.0),
+                            ui.div(
+                                ui.input_action_button("search_ppi", "Search Interfaces", class_="btn-primary"),
+                                style="margin-top: 30px;"
+                            ),
+                            ui.input_select("ppi_selector", "Select PPI Structure:", choices=["Click Search..."]),
+                            col_widths=(3, 3, 6)
+                        ),
+                        ui.output_ui("ppi_viewer")
+                    )
                 ),
                 col_widths=(5, 7) 
             ),
@@ -168,6 +188,56 @@ app_ui = ui.page_fluid(
         id="main_tabs"
     )
 )
+
+# --- LIGHTWEIGHT PDB DISTANCE PARSER ---
+def get_pdb_interface_status(pdb_text, target_resi, cutoff):
+    target_atoms = []
+    other_atoms = []
+    target_chains = set()
+
+    # 1. Find all chains that contain the target residue
+    for line in pdb_text.splitlines():
+        if line.startswith("ATOM"):
+            try:
+                resi = int(line[22:26].strip())
+                chain = line[21]
+                if resi == int(target_resi):
+                    target_chains.add(chain)
+            except ValueError:
+                continue
+
+    if not target_chains:
+        return False
+
+    # 2. Extract atomic coordinates, sorting them by target vs other chains
+    for line in pdb_text.splitlines():
+        if line.startswith("ATOM"):
+            try:
+                x = float(line[30:38].strip())
+                y = float(line[38:46].strip())
+                z = float(line[46:54].strip())
+                chain = line[21]
+                resi = int(line[22:26].strip())
+
+                if chain in target_chains and resi == int(target_resi):
+                    target_atoms.append((x, y, z))
+                elif chain not in target_chains:
+                    other_atoms.append((x, y, z))
+            except ValueError:
+                continue
+
+    if not target_atoms or not other_atoms:
+        return False
+
+    # 3. Mathematically check for interaction within the cutoff
+    cutoff_sq = cutoff * cutoff
+    for tx, ty, tz in target_atoms:
+        for ox, oy, oz in other_atoms:
+            dist_sq = (tx-ox)**2 + (ty-oy)**2 + (tz-oz)**2
+            if dist_sq <= cutoff_sq:
+                return True
+                
+    return False
 
 # --- 3. Shiny Server ---
 def server(input, output, session):
@@ -195,7 +265,7 @@ def server(input, output, session):
             sites = gene_to_sites[gene]
             ui.update_selectize("target_site_pos", choices=sites, selected=sites[0] if sites else None)
 
-# --- PDB DROPDOWN LOGIC ---
+    # --- PDB DROPDOWN LOGIC ---
     @reactive.Calc
     def available_pdbs():
         gene = input.target_gene()
@@ -221,7 +291,6 @@ def server(input, output, session):
             pdb_list = []
             site_num = int(site_str) if str(site_str).isdigit() else -1
 
-            # 1. Parse all PDBs for Site Presence, Coverage Length, and Method
             for ref in data.get('uniProtKBCrossReferences', []):
                 if ref['database'] == 'PDB':
                     pdb_id = ref['id']
@@ -239,7 +308,7 @@ def server(input, output, session):
                                 bounds = r.strip().split('-')
                                 if len(bounds) == 2 and bounds[0].isdigit() and bounds[1].isdigit():
                                     start, end = int(bounds[0]), int(bounds[1])
-                                    coverage += (end - start + 1) # Calculate total amino acids
+                                    coverage += (end - start + 1)
                                     if site_num != -1 and start <= site_num <= end:
                                         has_site = True
                                         
@@ -248,10 +317,8 @@ def server(input, output, session):
                         'method': method, 'resolution': resolution
                     })
             
-            # 2. Sort Logic: Prioritize 'Has Site' first, then 'Coverage' (Largest to Smallest)
             pdb_list.sort(key=lambda x: (x['has_site'], x['coverage']), reverse=True)
             
-            # 3. Build the descriptive dictionary
             pdb_choices = {}
             for p in pdb_list:
                 site_tag = "★ Contains Site" if p['has_site'] else "No Site"
@@ -271,6 +338,69 @@ def server(input, output, session):
             ui.update_select("pdb_selector", choices=pdb_dict, selected=first_key)
         else:
             ui.update_select("pdb_selector", choices={"none": "No PDBs Found"}, selected="none")
+
+
+    # --- NEW: PPI REACTIVE LOGIC ---
+    ppi_choices_val = reactive.Value({"none": "Click Search..."})
+    ppi_cached_texts = reactive.Value({})
+
+    @reactive.Effect
+    def reset_ppi():
+        # Clears the PPI dropdown if the user switches genes/sites
+        input.target_gene()
+        input.target_site_pos()
+        ppi_choices_val.set({"none": "Click Search..."})
+        ppi_cached_texts.set({})
+
+    @reactive.Effect
+    @reactive.event(input.search_ppi)
+    def perform_ppi_search():
+        cutoff = input.ppi_distance()
+        site_str = input.target_site_pos()
+        pdb_dict = available_pdbs()
+        
+        # Only scan PDBs that are physically known to possess the target site
+        candidates = [pid for pid, label in pdb_dict.items() if "★ Contains Site" in label]
+
+        if not candidates:
+            ppi_choices_val.set({"none": "No PDBs contain this site"})
+            return
+
+        ctx = ssl._create_unverified_context() if hasattr(ssl, '_create_unverified_context') else None
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        found_ppis = {}
+        cached_texts = {}
+
+        notif_id = ui.notification_show("Downloading & scanning PDBs...", duration=None, type="message")
+
+        try:
+            for pid in candidates:
+                url = f"https://files.rcsb.org/download/{pid}.pdb"
+                try:
+                    req = urllib.request.Request(url, headers=headers)
+                    pdb_data = urllib.request.urlopen(req, context=ctx).read().decode('utf-8')
+                    pdb_data_sanitized = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+
+                    if get_pdb_interface_status(pdb_data_sanitized, site_str, cutoff):
+                        found_ppis[pid] = f"{pid} (Interface Found)"
+                        cached_texts[pid] = pdb_data_sanitized
+                except Exception:
+                    continue
+        finally:
+            ui.notification_remove(notif_id)
+
+        if found_ppis:
+            ppi_choices_val.set(found_ppis)
+            ppi_cached_texts.set(cached_texts)
+        else:
+            ppi_choices_val.set({"none": "No interfaces found within range"})
+
+    @reactive.Effect
+    def update_ppi_ui():
+        choices = ppi_choices_val.get()
+        first_key = list(choices.keys())[0] if choices else "none"
+        ui.update_select("ppi_selector", choices=choices, selected=first_key)
+
 
     # --- SHARED CHEMICAL HTML GENERATOR ---
     def generate_molecule_html(drug):
@@ -578,8 +708,10 @@ def server(input, output, session):
         try:
             req = urllib.request.urlopen(url)
             pdb_data = req.read().decode('utf-8')
+            pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+            
         except Exception:
-            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve structure for {uniprot}. It may not exist in the AlphaFold database or the network request failed.</div>")
+            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve structure for {uniprot}.</div>")
 
         view = py3Dmol.view(width="100%", height=500)
         view.addModel(pdb_data, "pdb")
@@ -614,7 +746,6 @@ def server(input, output, session):
 
         site_pos = str(matching_rows.iloc[0]['Site Position'])
 
-        # 1. Fetch the official Description/Title from RCSB
         pdb_title = "Description not available."
         try:
             rcsb_url = f"https://data.rcsb.org/rest/v1/core/entry/{pdb_id}"
@@ -622,28 +753,26 @@ def server(input, output, session):
             rcsb_data = json.loads(rcsb_req.read().decode('utf-8'))
             pdb_title = rcsb_data.get("struct", {}).get("title", "Description not available.")
         except Exception:
-            pass # Fails silently if RCSB API is busy
+            pass 
 
-        # 2. Fetch the actual 3D coordinate file
         url = f"https://files.rcsb.org/download/{pdb_id}.pdb"
         try:
             req = urllib.request.urlopen(url)
             pdb_data = req.read().decode('utf-8')
+            pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+            
         except Exception:
             return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id} from the RCSB database.</div>")
 
-        # 3. Render the 3D Structure
         view = py3Dmol.view(width="100%", height=480)
         view.addModel(pdb_data, "pdb")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
         view.zoomTo({'resi': site_pos})
         
-        # 4. Convert to Base64 to prevent iframe parsing errors
         raw_html = view._make_html()
         b64_html = base64.b64encode(raw_html.encode('utf-8')).decode('utf-8')
         
-        # 5. Build the UI with the injected description
         iframe = f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
@@ -652,6 +781,50 @@ def server(input, output, session):
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         '''
         
+        return ui.HTML(iframe)
+
+    # --- NEW: PPI VIEWER ---
+    @render.ui
+    def ppi_viewer():
+        pdb_id = input.ppi_selector()
+        if not pdb_id or pdb_id in ["none", "Click Search..."]:
+            return ui.HTML("<div style='color:gray; padding:20px; font-style: italic;'>Click 'Search Interfaces' above to scan structural databases for physical interactions.</div>")
+
+        cached = ppi_cached_texts.get()
+        if pdb_id not in cached:
+            return ui.HTML("<div style='color:red; padding:20px;'>Structure data missing. Please search again.</div>")
+
+        pdb_data = cached[pdb_id]
+        site_pos = str(input.target_site_pos())
+        cutoff = input.ppi_distance()
+
+        view = py3Dmol.view(width="100%", height=480)
+        view.addModel(pdb_data, "pdb")
+        
+        # Color by chain so the interaction is visually obvious
+        view.setStyle({'cartoon': {'colorscheme': 'chain'}})
+
+        # Highlight the surrounding interface pocket in Cyan
+        view.addStyle(
+            {'within': {'distance': cutoff, 'sel': {'resi': site_pos}}},
+            {'stick': {'colorscheme': 'cyanCarbon'}}
+        )
+        
+        # Re-highlight the core target residue heavily in Red
+        view.addStyle({'resi': site_pos}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
+
+        view.zoomTo({'resi': site_pos})
+
+        raw_html = view._make_html()
+        b64_html = base64.b64encode(raw_html.encode('utf-8')).decode('utf-8')
+
+        iframe = f'''
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+            <b>Displaying Interface: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
+            <span style="color: #444;"><i>Target residue in Red. Interacting pocket within {cutoff}Å in Cyan.</i></span>
+        </div>
+        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        '''
         return ui.HTML(iframe)
 
 # --- 4. Run App ---
