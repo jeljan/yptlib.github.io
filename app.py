@@ -100,7 +100,6 @@ app_ui = ui.page_fluid(
                         ui.input_selectize("data_type", "Select Drug (Type, Promiscuity):", choices=drug_choices, selected=default_drug),
                         ui.input_numeric("threshold", "R Threshold:", value=2.0, step=0.5),
                         ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
-                        ui.hr(),
                         ui.input_select(
                             "color_mode", "Color Points By:", 
                             choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Highlight Custom List"]
@@ -150,7 +149,7 @@ app_ui = ui.page_fluid(
                             "Experimental Structure",
                             ui.div(
                                 ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                                ui.input_select("pdb_selector", None, choices=["Loading..."], width="160px"),
+                                ui.input_select("pdb_selector", "Select PDB structure:", choices=["Loading..."], width="300px"),
                                 style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
                             ),
                             ui.output_ui("pdb_viewer")
@@ -165,8 +164,8 @@ app_ui = ui.page_fluid(
 
                     # Inside app_ui, under the PPI card:
                     ui.card(
-                        ui.h5("Protein-Protein Interfaces (PPI)"),
-                        ui.p("Ranked by proximity to target residue (closest first).", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
+                        ui.h5("Protein-Protein Interactions (PPI)"),
+                        ui.p("Ranked by proximity to site.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
                         ui.layout_columns(
                             ui.input_select("ppi_selector", "Select Interface (PDB | Distance):", choices=["Loading..."]),
                             col_widths=(12,) # Full width for the descriptive dropdown
@@ -616,7 +615,7 @@ def server(input, output, session):
     @render.ui
     def pdb_viewer():
         pdb_id = input.pdb_selector()
-        if not pdb_id or pdb_id in ["Loading...", "none"]: return ui.HTML("<div style='color:orange; padding:20px;'><b>Note:</b> No experimental PDBs found.</div>")
+        if not pdb_id or pdb_id in ["Loading...", "none"]: return ui.HTML("<div style='color:orange; padding:20px;'><b>Note:</b> No PDB structure found.</div>")
         if pdb_id not in available_pdbs(): return ui.p("Syncing...")
 
         gene = input.target_gene()
