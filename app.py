@@ -181,10 +181,46 @@ app_ui = ui.page_fluid(
     )
 )
 
+# --- CHAIN MAPPING HELPERS ---
+def get_target_chains(pdb_id, uniprot_id):
+    """Fetches the specific chains in a PDB file that belong to the target UniProt ID."""
+    try:
+        url = f"https://www.ebi.ac.uk/pdbe/api/mappings/uniprot/{pdb_id.lower()}"
+        req = urllib.request.Request(url)
+        data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
+        mappings = data.get(pdb_id.lower(), {}).get('UniProt', {}).get(uniprot_id, {}).get('mappings', [])
+        chains = list(set([m['chain_id'] for m in mappings]))
+        return chains
+    except Exception:
+        return []
+
+def get_chain_names(pdb_id):
+    """Fetches the biological names for all chains in a given PDB file."""
+    try:
+        url = f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/molecules/{pdb_id.lower()}"
+        req = urllib.request.Request(url)
+        data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
+        chain_map = {}
+        for mol in data.get(pdb_id.lower(), []):
+            name = mol.get('molecule_name', ['Unknown Molecule'])[0]
+            for chain in mol.get('in_chains', []):
+                chain_map[chain] = name
+        return chain_map
+    except Exception:
+        return {}
+
 # --- 3. Shiny Server ---
 def server(input, output, session):
     
     active_drug = reactive.Value(default_drug)
+    
+    # Generic unhover behavior for JS callbacks
+    unhover_js = """function(atom,viewer) {
+        if(atom.label) {
+            viewer.removeLabel(atom.label);
+            delete atom.label;
+        }
+    }"""
     
     @reactive.Effect
     @reactive.event(input.main_tabs)
@@ -297,7 +333,6 @@ def server(input, output, session):
         else:
             ui.update_select("pdb_selector", choices={"none": "No PDBs Found"}, selected="none")
 
-    # --- RANKED PPI DROPDOWN LOGIC ---
     @reactive.Effect
     def update_ppi_dropdown():
         gene = input.target_gene()
@@ -384,7 +419,6 @@ def server(input, output, session):
             sig_genes = plot_df[plot_df['color'] == 'highlight']
         elif color_mode == "Sites with PPIs":          
             ppi_targets = set(ppi_df['Target'].dropna().unique())
-            # Convert 'ABL1_Y185' to 'ABL1_185' for matching the PPI format
             mask = plot_df['Label'].str.replace('_Y', '_', regex=False).isin(ppi_targets)
             plot_df.loc[mask, 'color'] = 'highlight'
             sig_genes = plot_df[plot_df['color'] == 'highlight']
@@ -584,6 +618,18 @@ def server(input, output, session):
         row = matching_rows.iloc[0]
         protein_string = str(row['Protein Id'])
         uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
+        gene_name = str(row['Gene Symbol'])
+
+        # Inject AlphaFold chain mapping directly (AF models are always Chain A)
+        chain_map_js = json.dumps({'A': gene_name})
+        hover_js = f"""function(atom,viewer,event,container) {{
+            if(!atom.label) {{
+                var chainNames = {chain_map_js};
+                var cName = chainNames[atom.chain] || "Unknown";
+                var labelText = atom.resn + " " + atom.resi + " (" + cName + " | Chain " + atom.chain + ")";
+                atom.label = viewer.addLabel(labelText, {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}});
+            }}
+        }}"""
 
         url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif"
         try:
@@ -601,6 +647,7 @@ def server(input, output, session):
             {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
         )
         view.zoomTo({'resi': site_pos})
+        view.setHoverable({}, True, hover_js, unhover_js)
 
         b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
             
@@ -622,6 +669,24 @@ def server(input, output, session):
         target = f"{gene}_Y{site_pos}"
         matching_rows = df[df['Labels'] == target]
         if matching_rows.empty: return ui.p("")
+        
+        row = matching_rows.iloc[0]
+        protein_string = str(row['Protein Id'])
+        uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
+
+        target_chains = get_target_chains(pdb_id, uniprot)
+        chain_map = get_chain_names(pdb_id)
+        
+        # Inject dynamic chain mapping into JS
+        chain_map_js = json.dumps(chain_map)
+        hover_js = f"""function(atom,viewer,event,container) {{
+            if(!atom.label) {{
+                var chainNames = {chain_map_js};
+                var cName = chainNames[atom.chain] || "Unknown Molecule";
+                var labelText = atom.resn + " " + atom.resi + " (" + cName + " | Chain " + atom.chain + ")";
+                atom.label = viewer.addLabel(labelText, {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}});
+            }}
+        }}"""
 
         url = f"https://files.rcsb.org/download/{pdb_id}.cif"
         try:
@@ -634,11 +699,16 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         
-        view.addStyle(
-            {'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
-            {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
-        )
-        view.zoomTo({'resi': site_pos})
+        target_sel = {'resi': site_pos}
+        if target_chains:
+            target_sel['chain'] = target_chains
+            
+        red_sel = {'not': {'atom': ['N', 'C', 'O', 'OXT']}}
+        red_sel.update(target_sel)
+
+        view.addStyle(red_sel, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+        view.zoomTo(target_sel)
+        view.setHoverable({}, True, hover_js, unhover_js)
         
         b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
             
@@ -662,10 +732,31 @@ def server(input, output, session):
         
         viz_cutoff = float(match['Min_Distance'].iloc[0]) + 1.0 if not match.empty else 5.0
 
+        df_target_label = f"{input.target_gene()}_Y{target_site}"
+        matching_rows = df[df['Labels'] == df_target_label]
+        if matching_rows.empty: return ui.div()
+        
+        row = matching_rows.iloc[0]
+        protein_string = str(row['Protein Id'])
+        uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
+
+        target_chains = get_target_chains(pdb_id, uniprot)
+        chain_map = get_chain_names(pdb_id)
+        
+        # Inject dynamic chain mapping into JS
+        chain_map_js = json.dumps(chain_map)
+        hover_js = f"""function(atom,viewer,event,container) {{
+            if(!atom.label) {{
+                var chainNames = {chain_map_js};
+                var cName = chainNames[atom.chain] || "Unknown Molecule";
+                var labelText = atom.resn + " " + atom.resi + " (" + cName + " | Chain " + atom.chain + ")";
+                atom.label = viewer.addLabel(labelText, {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}});
+            }}
+        }}"""
+
         url = f"https://files.rcsb.org/download/{pdb_id.upper()}.cif"
         try:
             pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
-            # Essential sanitization for JS safety
             pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
         except Exception as e:
             return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve {pdb_id}.</div>")
@@ -673,22 +764,25 @@ def server(input, output, session):
         view = py3Dmol.view(width="100%", height=480)
         view.addModel(pdb_data, "cif")
         
-        # Biological coloring
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
-        # Sidechain-only highlight for the target
-        view.addStyle(
-            {'resi': target_site, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
-            {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}}
-        )
+        target_sel = {'resi': target_site}
+        if target_chains:
+            target_sel['chain'] = target_chains
 
-        # Highlight the partner chain atoms that are within range
-        view.addStyle(
-            {'within': {'distance': viz_cutoff, 'sel': {'resi': target_site}}, 'not': {'atom': ['N', 'C', 'O', 'OXT']}},
-            {'stick': {'colorscheme': 'cyanCarbon'}}
-        )
+        cyan_sel = {
+            'within': {'distance': viz_cutoff, 'sel': target_sel}, 
+            'byres': True, 
+            'not': {'atom': ['N', 'C', 'O', 'OXT']}
+        }
+        view.addStyle(cyan_sel, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
+
+        red_sel = {'not': {'atom': ['N', 'C', 'O', 'OXT']}}
+        red_sel.update(target_sel)
+        view.addStyle(red_sel, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
         
-        view.zoomTo({'resi': target_site})
+        view.zoomTo(target_sel)
+        view.setHoverable({}, True, hover_js, unhover_js)
         
         b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
 
