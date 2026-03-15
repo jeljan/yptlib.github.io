@@ -103,7 +103,6 @@ app_ui = ui.page_fluid(
                         ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
                         ui.input_select(
                             "color_mode", "Color Points By:", 
-                            # --- NEW: Added 'Sites with PPIs' to choices ---
                             choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Highlight Custom List", "Sites with PPIs"]
                         ),
                         ui.input_text("custom_list", "Genes to Highlight (comma-separated):", placeholder="e.g. MAPK1, EGFR")
@@ -182,58 +181,6 @@ app_ui = ui.page_fluid(
     )
 )
 
-# --- MAPPING FUNCTIONS ---
-def get_pdb_author_resi(pdb_id, target_pos, user_seq):
-    """Directly finds the user's sequence motif inside the PDB file to extract the Author's numbering."""
-    try:
-        clean_user_seq = "".join([c.upper() for c in str(user_seq) if c.isalpha()])
-        site_idx = int(target_pos) - 1
-        start, end = max(0, site_idx - 7), site_idx + 8
-        motif = clean_user_seq[start:end]
-        motif_target_idx = site_idx - start
-        
-        aa_map = {'ALA':'A', 'ARG':'R', 'ASN':'N', 'ASP':'D', 'CYS':'C', 'GLN':'Q', 'GLU':'E', 
-                  'GLY':'G', 'HIS':'H', 'ILE':'I', 'LEU':'L', 'LYS':'K', 'MET':'M', 'PHE':'F', 
-                  'PRO':'P', 'SER':'S', 'THR':'T', 'TRP':'W', 'TYR':'Y', 'VAL':'V', 
-                  'PTR':'Y', 'TYS':'Y'}
-        
-        url = f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}"
-        req = urllib.request.Request(url)
-        data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
-        
-        for mol in data.get(pdb_id.lower(), {}).get('molecules', []):
-            for chain in mol.get('chains', []):
-                chain_seq = ""
-                auth_nums = []
-                for res in chain.get('residues', []):
-                    chain_seq += aa_map.get(res.get('residue_name', ''), 'X')
-                    auth_nums.append(res.get('author_residue_number'))
-                    
-                if motif in chain_seq:
-                    match_start = chain_seq.index(motif)
-                    exact_match_idx = match_start + motif_target_idx
-                    return str(auth_nums[exact_match_idx])
-    except Exception: pass
-    return str(target_pos)
-
-def get_true_canonical_pos(uniprot_id, target_pos, user_seq):
-    """Aligns the motif to Canonical UniProt (required for AlphaFold)."""
-    try:
-        url = f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.fasta"
-        canonical_seq = "".join(urllib.request.urlopen(url).read().decode('utf-8').split('\n')[1:])
-        
-        clean_user_seq = "".join([c.upper() for c in str(user_seq) if c.isalpha()])
-        site_idx = int(target_pos) - 1
-        start, end = max(0, site_idx - 7), site_idx + 8
-        motif = clean_user_seq[start:end]
-        motif_target_idx = site_idx - start
-        
-        if motif in canonical_seq:
-            canonical_start_idx = canonical_seq.index(motif)
-            return str(canonical_start_idx + motif_target_idx + 1)
-    except Exception: pass
-    return str(target_pos)
-
 # --- 3. Shiny Server ---
 def server(input, output, session):
     
@@ -296,7 +243,8 @@ def server(input, output, session):
                         if prop['key'] == 'Method': 
                             method = prop['value']
                         elif prop['key'] == 'Resolution' and prop['value'] != '-':
-                            try: res_val = float(prop['value'].replace('A', '').strip())
+                            try:
+                                res_val = float(prop['value'].replace('A', '').strip())
                             except: pass
                         elif prop['key'] == 'Chains' and '=' in prop['value']:
                             ranges = prop['value'].split('=', 1)[1]
@@ -323,7 +271,12 @@ def server(input, output, session):
                         'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"
                     })
             
-            pdb_list.sort(key=lambda x: (not x['has_site'], x['method_score'], x['res_val'], -x['coverage']))
+            pdb_list.sort(key=lambda x: (
+                not x['has_site'], 
+                x['method_score'],  
+                x['res_val'],       
+                -x['coverage']      
+            ))
             
             pdb_choices = {}
             for p in pdb_list:
@@ -344,6 +297,7 @@ def server(input, output, session):
         else:
             ui.update_select("pdb_selector", choices={"none": "No PDBs Found"}, selected="none")
 
+    # --- RANKED PPI DROPDOWN LOGIC ---
     @reactive.Effect
     def update_ppi_dropdown():
         gene = input.target_gene()
@@ -428,10 +382,9 @@ def server(input, output, session):
             mask = plot_df['Gene Symbol'].isin(cancer['Gene'])
             plot_df.loc[mask, 'color'] = 'highlight'
             sig_genes = plot_df[plot_df['color'] == 'highlight']
-        # --- NEW: Sites with PPIs Logic ---
         elif color_mode == "Sites with PPIs":          
             ppi_targets = set(ppi_df['Target'].dropna().unique())
-            # Replace '_Y' with '_' in Labels to correctly match offline target format (e.g. 'ABL1_Y185' -> 'ABL1_185')
+            # Convert 'ABL1_Y185' to 'ABL1_185' for matching the PPI format
             mask = plot_df['Label'].str.replace('_Y', '_', regex=False).isin(ppi_targets)
             plot_df.loc[mask, 'color'] = 'highlight'
             sig_genes = plot_df[plot_df['color'] == 'highlight']
@@ -469,7 +422,6 @@ def server(input, output, session):
             )
             fig.update_traces(marker=dict(opacity=0.2), selector=dict(name='non-significant'))
             fig.update_traces(marker=dict(opacity=0.9), selector=dict(name='high'))
-        # --- NEW: Added "Sites with PPIs" to the highlight list logic ---
         elif color_mode in ["Highlight Custom List", "Cancer-Driver List", "Sites with PPIs"]:
             fig = px.scatter(
                 plot_df, x='Site', y='R_plot', color='color',
@@ -524,7 +476,6 @@ def server(input, output, session):
         elif color_mode == "Cancer-Driver List":
             mask = volcano_df['Gene Symbol'].isin(cancer['Gene'])
             volcano_df.loc[sig_mask & mask, 'color'] = 'highlight'
-        # --- NEW: Sites with PPIs Volcano Plot Logic ---
         elif color_mode == "Sites with PPIs":
             ppi_targets = set(ppi_df['Target'].dropna().unique())
             mask = volcano_df['Label'].str.replace('_Y', '_', regex=False).isin(ppi_targets)
@@ -633,9 +584,6 @@ def server(input, output, session):
         row = matching_rows.iloc[0]
         protein_string = str(row['Protein Id'])
         uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
-        user_seq = str(row['Sequence'])
-
-        mapped_site_pos = get_true_canonical_pos(uniprot, site_pos, user_seq)
 
         url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif"
         try:
@@ -647,21 +595,18 @@ def server(input, output, session):
         view = py3Dmol.view(width="100%", height=500)
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
+        
         view.addStyle(
-            {'resi': mapped_site_pos, 'resn': ['TYR', 'PTR'], 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
+            {'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
             {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
         )
-        view.zoomTo({'resi': mapped_site_pos})
+        view.zoomTo({'resi': site_pos})
 
         b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
-        
-        mapping_notice = ""
-        if mapped_site_pos != site_pos:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Isoform Offset Detected: Automatically re-centered to Canonical UniProt position {mapped_site_pos}.</i></span>"
             
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>AlphaFold Model</b>{mapping_notice}
+            <b>AlphaFold Model</b>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
@@ -677,11 +622,6 @@ def server(input, output, session):
         target = f"{gene}_Y{site_pos}"
         matching_rows = df[df['Labels'] == target]
         if matching_rows.empty: return ui.p("")
-        
-        row = matching_rows.iloc[0]
-        user_seq = str(row['Sequence'])
-        
-        mapped_site_pos = get_pdb_author_resi(pdb_id, site_pos, user_seq)
 
         url = f"https://files.rcsb.org/download/{pdb_id}.cif"
         try:
@@ -695,20 +635,16 @@ def server(input, output, session):
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         
         view.addStyle(
-            {'resi': mapped_site_pos, 'resn': ['TYR', 'PTR'], 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
+            {'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
             {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
         )
-        view.zoomTo({'resi': mapped_site_pos})
+        view.zoomTo({'resi': site_pos})
         
         b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
-
-        mapping_notice = ""
-        if mapped_site_pos != site_pos:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Isoform Offset: CSV Site {site_pos} &rarr; PDB {mapped_site_pos}.</i></span>"
             
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
+            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
@@ -726,18 +662,10 @@ def server(input, output, session):
         
         viz_cutoff = float(match['Min_Distance'].iloc[0]) + 1.0 if not match.empty else 5.0
 
-        df_target_label = f"{input.target_gene()}_Y{target_site}"
-        matching_rows = df[df['Labels'] == df_target_label]
-        if matching_rows.empty: return ui.div()
-        
-        row = matching_rows.iloc[0]
-        user_seq = str(row['Sequence'])
-        
-        mapped_site_pos = get_pdb_author_resi(pdb_id, target_site, user_seq)
-
         url = f"https://files.rcsb.org/download/{pdb_id.upper()}.cif"
         try:
             pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
+            # Essential sanitization for JS safety
             pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
         except Exception as e:
             return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve {pdb_id}.</div>")
@@ -745,30 +673,29 @@ def server(input, output, session):
         view = py3Dmol.view(width="100%", height=480)
         view.addModel(pdb_data, "cif")
         
+        # Biological coloring
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
+        # Sidechain-only highlight for the target
         view.addStyle(
-            {'resi': mapped_site_pos, 'resn': ['TYR', 'PTR'], 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
+            {'resi': target_site, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
             {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}}
         )
 
+        # Highlight the partner chain atoms that are within range
         view.addStyle(
-            {'within': {'distance': viz_cutoff, 'sel': {'resi': mapped_site_pos, 'resn': ['TYR', 'PTR']}}, 'not': {'atom': ['N', 'C', 'O', 'OXT']}},
+            {'within': {'distance': viz_cutoff, 'sel': {'resi': target_site}}, 'not': {'atom': ['N', 'C', 'O', 'OXT']}},
             {'stick': {'colorscheme': 'cyanCarbon'}}
         )
         
-        view.zoomTo({'resi': mapped_site_pos})
+        view.zoomTo({'resi': target_site})
         
         b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
-
-        mapping_notice = ""
-        if mapped_site_pos != target_site:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Isoform Offset: CSV Site {target_site} &rarr; PDB {mapped_site_pos}.</i></span>"
 
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
-            <span style="color: #444;"><i>Interface detected at {viz_cutoff-1.0:.1f} Å. Partner chains shown in Cyan.</i></span>{mapping_notice}
+            <span style="color: #444;"><i>Interface detected at {viz_cutoff-1.0:.1f} Å. Partner chains shown in Cyan.</i></span>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
