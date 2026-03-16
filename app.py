@@ -165,9 +165,9 @@ app_ui = ui.page_fluid(
 
                     ui.card(
                         ui.h5("Protein-Protein Interaction Interfaces"),
-                        ui.p("Ranked by proximity to site.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
+                        ui.p("Residues near site highlighted in cyan.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
                         ui.layout_columns(
-                            ui.input_select("ppi_selector", "Select Interface (PDB|Distance):", choices=["Loading..."]),
+                            ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
                             col_widths=(12,) 
                         ),
                         ui.output_ui("ppi_viewer")
@@ -722,7 +722,8 @@ def server(input, output, session):
             
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>Displaying PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
+            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
+            <span style="color: #444;"><i>Hover over residue to see residue and chain.</i></span>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
@@ -796,8 +797,8 @@ def server(input, output, session):
 
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>PDB: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
-            <span style="color: #444;"><i>Interface detected at {viz_cutoff-1.0:.1f} Å. Partner chains shown in Cyan.</i></span>
+            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
+            <span style="color: #444;"><i>Hover over residue to see residue and chain.</i></span>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
