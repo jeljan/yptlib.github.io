@@ -195,7 +195,7 @@ def get_target_chains(pdb_id, uniprot_id):
         return []
 
 def get_chain_names(pdb_id):
-    """Fetches the biological names for all chains in a given PDB file."""
+    """Fetches the biological names for all chains in a given PDB file and ignores water/ligands."""
     try:
         url = f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/molecules/{pdb_id.lower()}"
         req = urllib.request.Request(url)
@@ -203,8 +203,17 @@ def get_chain_names(pdb_id):
         chain_map = {}
         for mol in data.get(pdb_id.lower(), []):
             name = mol.get('molecule_name', ['Unknown Molecule'])[0]
+            mol_type = mol.get('molecule_type', '').lower()
+            
+            # Skip water and bound molecules so they don't overwrite the main protein name
+            if 'water' in mol_type or 'bound' in mol_type:
+                continue
+                
             for chain in mol.get('in_chains', []):
-                chain_map[chain] = name
+                # Only map if it hasn't been set yet (Primary polymers usually appear first)
+                if chain not in chain_map:
+                    chain_map[chain] = name
+                    
         return chain_map
     except Exception:
         return {}
@@ -214,7 +223,6 @@ def server(input, output, session):
     
     active_drug = reactive.Value(default_drug)
     
-    # Generic unhover behavior for JS callbacks
     unhover_js = """function(atom,viewer) {
         if(atom.label) {
             viewer.removeLabel(atom.label);
@@ -620,13 +628,13 @@ def server(input, output, session):
         uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
         gene_name = str(row['Gene Symbol'])
 
-        # Inject AlphaFold chain mapping directly (AF models are always Chain A)
+        # Inject single chain name for AlphaFold
         chain_map_js = json.dumps({'A': gene_name})
         hover_js = f"""function(atom,viewer,event,container) {{
             if(!atom.label) {{
                 var chainNames = {chain_map_js};
-                var cName = chainNames[atom.chain] || "Unknown";
-                var labelText = atom.resn + " " + atom.resi + " (" + cName + " | Chain " + atom.chain + ")";
+                var cName = chainNames[atom.chain] || "Unknown Molecule";
+                var labelText = atom.resn + " " + atom.resi + " (" + cName + ")";
                 atom.label = viewer.addLabel(labelText, {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}});
             }}
         }}"""
@@ -677,13 +685,13 @@ def server(input, output, session):
         target_chains = get_target_chains(pdb_id, uniprot)
         chain_map = get_chain_names(pdb_id)
         
-        # Inject dynamic chain mapping into JS
+        # Inject dynamic chain mapping
         chain_map_js = json.dumps(chain_map)
         hover_js = f"""function(atom,viewer,event,container) {{
             if(!atom.label) {{
                 var chainNames = {chain_map_js};
                 var cName = chainNames[atom.chain] || "Unknown Molecule";
-                var labelText = atom.resn + " " + atom.resi + " (" + cName + " | Chain " + atom.chain + ")";
+                var labelText = atom.resn + " " + atom.resi + " (" + cName + ")";
                 atom.label = viewer.addLabel(labelText, {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}});
             }}
         }}"""
@@ -743,13 +751,13 @@ def server(input, output, session):
         target_chains = get_target_chains(pdb_id, uniprot)
         chain_map = get_chain_names(pdb_id)
         
-        # Inject dynamic chain mapping into JS
+        # Inject dynamic chain mapping
         chain_map_js = json.dumps(chain_map)
         hover_js = f"""function(atom,viewer,event,container) {{
             if(!atom.label) {{
                 var chainNames = {chain_map_js};
                 var cName = chainNames[atom.chain] || "Unknown Molecule";
-                var labelText = atom.resn + " " + atom.resi + " (" + cName + " | Chain " + atom.chain + ")";
+                var labelText = atom.resn + " " + atom.resi + " (" + cName + ")";
                 atom.label = viewer.addLabel(labelText, {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}});
             }}
         }}"""
