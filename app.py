@@ -660,12 +660,12 @@ def server(input, output, session):
         b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
             
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>AlphaFold Model</b>
-        </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
-        ''')
-    
+                <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+                    <b>AFDB: <a href="https://alphafold.ebi.ac.uk/entry/{uniprot}" target="_blank">{uniprot}</a></b>
+                </div>
+                <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+                ''')
+        
     @render.ui
     def pdb_viewer():
         pdb_id = input.pdb_selector()
@@ -722,7 +722,7 @@ def server(input, output, session):
             
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
+            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
             <span style="color: #444;"><i>Hover over residue to see residue and chain.</i></span>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
