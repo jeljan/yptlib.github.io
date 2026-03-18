@@ -50,6 +50,7 @@ if len(all_files) > 0:
 
     if 'Info' in df.columns:
         df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence', 'Description']] = df['Info'].str.split('++', expand=True, regex=False)
+        df['Sequence'] = df['Sequence'].str[2:-2].replace('\W', '', regex=True, inplace=True)
         df.drop(columns='Info', inplace=True)
         df['Site Position'] = df['Site Position'].fillna('Unknown')
         df['Labels'] = df['Gene Symbol'] + "_Y" + df['Site Position'].astype(str)
@@ -175,12 +176,9 @@ def verify_and_map_site(pdb_id, site_pos, user_seq):
     Strictly aligns the full user peptide sequence against the PDB chains.
     Handles perfectly matched full sequences, and handles truncated crystal ends via substring matching.
     """
-    clean_user_seq = "".join([c.upper() for c in str(user_seq) if c.isalpha()])
-    if not clean_user_seq: return None, None
     
     # Locate the target Tyrosine in the peptide (defaults to center-most Y if multiple)
-    y_indices = [i for i, aa in enumerate(clean_user_seq) if aa == 'Y']
-    y_idx = min(y_indices, key=lambda x: abs(x - len(clean_user_seq)//2)) if y_indices else len(clean_user_seq) // 2
+    y_idx = user_seq.find('Y')
 
     try:
         req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}")
@@ -207,8 +205,8 @@ def verify_and_map_site(pdb_id, site_pos, user_seq):
             
     # Check 1: Exact match of the FULL tryptic peptide anywhere in the chain
     for chain_id, chain_seq, auth_nums in all_chains:
-        if clean_user_seq in chain_seq:
-            match_start = chain_seq.index(clean_user_seq)
+        if user_seq in chain_seq:
+            match_start = chain_seq.index(user_seq)
             exact_match_idx = match_start + y_idx
             if auth_nums[exact_match_idx] is not None:
                 return chain_id, auth_nums[exact_match_idx]
@@ -220,13 +218,13 @@ def verify_and_map_site(pdb_id, site_pos, user_seq):
             if chain_seq[idx] == 'Y':
                 # Extract sequence from PDB bounded by our peptide length
                 seq_start = max(0, idx - y_idx)
-                seq_end = min(len(chain_seq), idx + len(clean_user_seq) - y_idx)
+                seq_end = min(len(chain_seq), idx + len(user_seq) - y_idx)
                 extracted = chain_seq[seq_start:seq_end]
                 
                 # Compare it strictly against the corresponding slice of our peptide
                 user_start = y_idx - (idx - seq_start)
                 user_end = y_idx + (seq_end - idx)
-                expected_subseq = clean_user_seq[user_start:user_end]
+                expected_subseq = user_seq[user_start:user_end]
                 
                 if extracted == expected_subseq:
                     return chain_id, str(site_pos)
