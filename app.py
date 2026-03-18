@@ -171,65 +171,75 @@ def get_chain_names(pdb_id):
         return chain_map
     except Exception: return {}
 
-def verify_and_map_site(pdb_id, site_pos, user_seq):
+def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
     """
     Strictly aligns the full user peptide sequence against the PDB chains.
-    Handles perfectly matched full sequences, and handles truncated crystal ends via substring matching.
+    Now strictly ignores 'unobserved' (greyed out) residues that lack 3D coordinates.
     """
-    
-    # Locate the target Tyrosine in the peptide (defaults to center-most Y if multiple)
-    y_idx = user_seq.find('Y')
+    y_idx = str(user_seq).find('Y')
+    if y_idx == -1: return None, None 
 
-    try:
-        req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}")
-        data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
-    except Exception:
-        return 'A', str(site_pos) # Fallback to prevent breaking UI if API fails
-        
+    if pdbe_data is None:
+        try:
+            req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}")
+            pdbe_data = json.loads(urllib.request.urlopen(req, timeout=10).read().decode('utf-8'))
+        except Exception:
+            return 'A', str(site_pos) # Fallback if API fails
+            
     aa_map = {'ALA':'A', 'ARG':'R', 'ASN':'N', 'ASP':'D', 'CYS':'C', 'GLN':'Q', 'GLU':'E', 
               'GLY':'G', 'HIS':'H', 'ILE':'I', 'LEU':'L', 'LYS':'K', 'MET':'M', 'PHE':'F', 
               'PRO':'P', 'SER':'S', 'THR':'T', 'TRP':'W', 'TYR':'Y', 'VAL':'V', 
               'PTR':'Y', 'TYS':'Y'}
               
     all_chains = []
-    for mol in data.get(pdb_id.lower(), {}).get('molecules', []):
+    for mol in pdbe_data.get(pdb_id.lower(), {}).get('molecules', []):
         for chain in mol.get('chains', []):
             chain_id = chain.get('chain_id')
-            chain_seq, auth_nums = "", []
+            chain_seq, auth_nums, observed = "", [], []
             for res in chain.get('residues', []):
                 chain_seq += aa_map.get(res.get('residue_name', ''), 'X')
                 auth_num = res.get('author_residue_number')
                 auth_ins = res.get('author_insertion_code', '')
                 auth_nums.append(f"{auth_num}{auth_ins}".strip() if auth_num is not None else None)
-            if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums))
+                
+                # NEW: Track if the residue actually has 3D coordinates
+                observed.append(res.get('observed_ratio', 1) > 0)
+                
+            if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums, observed))
             
     # Check 1: Exact match of the FULL tryptic peptide anywhere in the chain
-    for chain_id, chain_seq, auth_nums in all_chains:
-        if user_seq in chain_seq:
-            match_start = chain_seq.index(user_seq)
+    for chain_id, chain_seq, auth_nums, observed_flags in all_chains:
+        start = 0
+        while True:
+            match_start = chain_seq.find(user_seq, start)
+            if match_start == -1: break
+            
             exact_match_idx = match_start + y_idx
-            if auth_nums[exact_match_idx] is not None:
-                return chain_id, auth_nums[exact_match_idx]
+            if exact_match_idx < len(auth_nums) and auth_nums[exact_match_idx] is not None:
+                # NEW: Ensure the target residue is structurally resolved
+                if observed_flags[exact_match_idx]: 
+                    return chain_id, auth_nums[exact_match_idx]
+            start = match_start + 1
 
-    # Check 2: Substring match at original site_pos (Handles missing termini in the crystal structure)
-    for chain_id, chain_seq, auth_nums in all_chains:
+    # Check 2: Substring match at original site_pos 
+    for chain_id, chain_seq, auth_nums, observed_flags in all_chains:
         if str(site_pos) in auth_nums:
             idx = auth_nums.index(str(site_pos))
-            if chain_seq[idx] == 'Y':
-                # Extract sequence from PDB bounded by our peptide length
+            if idx < len(chain_seq) and chain_seq[idx] == 'Y':
                 seq_start = max(0, idx - y_idx)
                 seq_end = min(len(chain_seq), idx + len(user_seq) - y_idx)
                 extracted = chain_seq[seq_start:seq_end]
                 
-                # Compare it strictly against the corresponding slice of our peptide
                 user_start = y_idx - (idx - seq_start)
                 user_end = y_idx + (seq_end - idx)
                 expected_subseq = user_seq[user_start:user_end]
                 
                 if extracted == expected_subseq:
-                    return chain_id, str(site_pos)
+                    # NEW: Ensure the target residue is structurally resolved
+                    if observed_flags[idx]: 
+                        return chain_id, str(site_pos)
 
-    return None, None # Site is definitely missing from structure
+    return None, None
 
 # --- 3. Shiny Server ---
 def server(input, output, session):
@@ -454,14 +464,14 @@ def server(input, output, session):
         view.setHoverable({}, True, hover_js, unhover_js)
 
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;"><b>Displaying AlphaFold Model: <a href="https://alphafold.ebi.ac.uk/entry/{uniprot}" target="_blank">{uniprot}</a></b></div>
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;"><br><b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b></div>
         <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
     
     @render.ui
     def pdb_viewer():
         pdb_id, gene, site_pos = input.pdb_selector(), input.target_gene(), input.target_site_pos()
-        if not pdb_id or pdb_id in ["Loading...", "none"]: return ui.HTML("<div style='color:orange; padding:20px;'><b>Note:</b> No PDB structure found.</div>")
+        if not pdb_id or pdb_id in ["Loading...", "none"]: return ui.HTML("<div style='color:orange'><b>Note:</b> No PDB structure found.</div>")
         if pdb_id not in available_pdbs(): return ui.p("Syncing...")
 
         matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
@@ -478,7 +488,7 @@ def server(input, output, session):
             mapped_site_pos = site_pos
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Sequence missing from PDB. Displaying default position {site_pos}.</i></span>"
         elif mapped_site_pos != site_pos:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched target to author position {mapped_site_pos}.</i></span>"
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
         chain_map_js = json.dumps(get_chain_names(pdb_id))
         hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
@@ -519,7 +529,7 @@ def server(input, output, session):
             mapped_site_pos = target_site
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Sequence missing from PDB. Displaying default position {target_site}.</i></span>"
         elif mapped_site_pos != target_site:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched target to author position {mapped_site_pos}.</i></span>"
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
         chain_map_js = json.dumps(get_chain_names(pdb_id))
         hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
@@ -541,7 +551,7 @@ def server(input, output, session):
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
-            <span style="color: #444;"><i>Interface detected at {viz_cutoff-1.0:.1f} Å. Partner chains shown in Cyan.</i></span>{mapping_notice}
+            <span style="color: #444;"><i>Interface detected {viz_cutoff-1.0:.1f} Å away. </i></span>{mapping_notice}
         </div>
         <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
