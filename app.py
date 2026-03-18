@@ -61,11 +61,7 @@ if len(all_files) > 0:
         log_col = f'log2 {d} R'
         if log_col in df.columns:
             total_valid_sites = df[log_col].notna().sum()
-            if total_valid_sites > 0:
-                hits = (df[log_col] > 1).sum()
-                promiscuity = (hits / total_valid_sites) * 100
-            else:
-                promiscuity = 0.0
+            promiscuity = (df[log_col] > 1).sum() / total_valid_sites * 100 if total_valid_sites > 0 else 0.0
             drug_promiscuity[d] = promiscuity
             
     sorted_drugs = sorted(raw_drugs, key=lambda x: drug_promiscuity[x])
@@ -81,16 +77,11 @@ else:
     df = pd.DataFrame()
     drug_choices = {"No Data Found": "No Data Found"}
     default_drug = "No Data Found"
-    gene_to_sites = {}
-    gene_choices = ["No Data Found"]
-    default_gene = "No Data Found"
-    default_site_choices = ["No Data Found"]
-    default_site = "No Data Found"
+    gene_to_sites, gene_choices, default_gene, default_site_choices, default_site = {}, ["No Data Found"], "No Data Found", ["No Data Found"], "No Data Found"
 
 # --- 2. Shiny UI ---
 app_ui = ui.page_fluid(
     ui.h2("Tyrosine Library Screening"),
-    
     ui.navset_card_tab(
         ui.nav_panel(
             "Compound View", 
@@ -101,25 +92,15 @@ app_ui = ui.page_fluid(
                         ui.input_selectize("data_type", "Select Drug (Type, Promiscuity):", choices=drug_choices, selected=default_drug),
                         ui.input_numeric("threshold", "R Threshold:", value=2.0, step=0.5),
                         ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
-                        ui.input_select(
-                            "color_mode", "Color Points By:", 
-                            choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Highlight Custom List", "Sites with PPIs"]
-                        ),
+                        ui.input_select("color_mode", "Color Points By:", choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Highlight Custom List", "Sites with PPIs"]),
                         ui.input_text("custom_list", "Genes to Highlight (comma-separated):", placeholder="e.g. MAPK1, EGFR")
                     ),
-                    ui.card(
-                        ui.h5("Chemical Structure"),
-                        ui.output_ui("molecule_ui_compound")
-                    )
+                    ui.card(ui.h5("Chemical Structure"), ui.output_ui("molecule_ui_compound"))
                 ),
                 ui.div(
                     ui.card(
-                        ui.h5("Proteome Engagement Profile"),
-                        output_widget("site_plot"),
-                        ui.hr(),
-                        ui.h5("Volcano Plot"),
-                        output_widget("volcano_plot"),
-                        style="padding: 10px; height: 100%; overflow-y: auto;"
+                        ui.h5("Proteome Engagement Profile"), output_widget("site_plot"), ui.hr(),
+                        ui.h5("Volcano Plot"), output_widget("volcano_plot"), style="padding: 10px; height: 100%; overflow-y: auto;"
                     )
                 ),
                 col_widths=(3, 9) 
@@ -139,10 +120,7 @@ app_ui = ui.page_fluid(
                         ),
                         output_widget("site_profile_plot")
                     ),
-                    ui.card(
-                        ui.h5("Chemical Structure"),
-                        ui.output_ui("molecule_ui_site")
-                    )
+                    ui.card(ui.h5("Chemical Structure"), ui.output_ui("molecule_ui_site"))
                 ),
                 ui.div(
                     ui.navset_card_tab(
@@ -162,14 +140,10 @@ app_ui = ui.page_fluid(
                         ),
                         id="structure_tabs"
                     ),
-
                     ui.card(
                         ui.h5("Protein-Protein Interaction (PPI) Interfaces"),
                         ui.p("Residues near site highlighted in cyan.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
-                        ui.layout_columns(
-                            ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
-                            col_widths=(12,) 
-                        ),
+                        ui.layout_columns(ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]), col_widths=(12,)),
                         ui.output_ui("ppi_viewer")
                     )
                 ),
@@ -182,54 +156,37 @@ app_ui = ui.page_fluid(
 )
 
 # --- MAPPING HELPERS ---
-def get_target_chains(pdb_id, uniprot_id):
-    """Fetches the specific chains in a PDB file that belong to the target UniProt ID."""
-    try:
-        url = f"https://www.ebi.ac.uk/pdbe/api/mappings/uniprot/{pdb_id.lower()}"
-        req = urllib.request.Request(url)
-        data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
-        mappings = data.get(pdb_id.lower(), {}).get('UniProt', {}).get(uniprot_id, {}).get('mappings', [])
-        chains = list(set([m['chain_id'] for m in mappings]))
-        return chains
-    except Exception:
-        return []
-
 def get_chain_names(pdb_id):
-    """Fetches the biological names for all chains in a given PDB file and ignores water/ligands."""
     try:
-        url = f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/molecules/{pdb_id.lower()}"
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/molecules/{pdb_id.lower()}")
         data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
         chain_map = {}
         for mol in data.get(pdb_id.lower(), []):
             name = mol.get('molecule_name', ['Unknown Molecule'])[0]
             mol_type = mol.get('molecule_type', '').lower()
-            
-            if 'water' in mol_type or 'bound' in mol_type:
-                continue
-                
+            if 'water' in mol_type or 'bound' in mol_type: continue
             for chain in mol.get('in_chains', []):
-                if chain not in chain_map:
-                    chain_map[chain] = name
-                    
+                if chain not in chain_map: chain_map[chain] = name
         return chain_map
-    except Exception:
-        return {}
+    except Exception: return {}
 
 def verify_and_map_site(pdb_id, site_pos, user_seq):
-    """Verifies sequence match in the PDB at site_pos, searches the full crystal if misnumbered."""
+    """
+    Strictly aligns the full user peptide sequence against the PDB chains.
+    Handles perfectly matched full sequences, and handles truncated crystal ends via substring matching.
+    """
     clean_user_seq = "".join([c.upper() for c in str(user_seq) if c.isalpha()])
     if not clean_user_seq: return None, None
     
-    y_idx = clean_user_seq.find('Y')
-    if y_idx == -1: y_idx = len(clean_user_seq) // 2
+    # Locate the target Tyrosine in the peptide (defaults to center-most Y if multiple)
+    y_indices = [i for i, aa in enumerate(clean_user_seq) if aa == 'Y']
+    y_idx = min(y_indices, key=lambda x: abs(x - len(clean_user_seq)//2)) if y_indices else len(clean_user_seq) // 2
 
     try:
-        url = f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}"
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}")
         data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
     except Exception:
-        return 'A', str(site_pos) # Fallback gracefully if API is down
+        return 'A', str(site_pos) # Fallback to prevent breaking UI if API fails
         
     aa_map = {'ALA':'A', 'ARG':'R', 'ASN':'N', 'ASP':'D', 'CYS':'C', 'GLN':'Q', 'GLU':'E', 
               'GLY':'G', 'HIS':'H', 'ILE':'I', 'LEU':'L', 'LYS':'K', 'MET':'M', 'PHE':'F', 
@@ -240,50 +197,46 @@ def verify_and_map_site(pdb_id, site_pos, user_seq):
     for mol in data.get(pdb_id.lower(), {}).get('molecules', []):
         for chain in mol.get('chains', []):
             chain_id = chain.get('chain_id')
-            chain_seq = ""
-            auth_nums = []
+            chain_seq, auth_nums = "", []
             for res in chain.get('residues', []):
                 chain_seq += aa_map.get(res.get('residue_name', ''), 'X')
-                auth_nums.append(str(res.get('author_residue_number')))
-            all_chains.append((chain_id, chain_seq, auth_nums))
+                auth_num = res.get('author_residue_number')
+                auth_ins = res.get('author_insertion_code', '')
+                auth_nums.append(f"{auth_num}{auth_ins}".strip() if auth_num is not None else None)
+            if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums))
             
-    # 1. Match adjacent amino acids at original site_pos
-    for chain_id, chain_seq, auth_nums in all_chains:
-        if str(site_pos) in auth_nums:
-            idx = auth_nums.index(str(site_pos))
-            seq_start = max(0, idx - y_idx)
-            seq_end = min(len(chain_seq), idx + (len(clean_user_seq) - y_idx))
-            extracted = chain_seq[seq_start:seq_end]
-            
-            user_start = y_idx - (idx - seq_start)
-            user_end = user_start + (seq_end - seq_start)
-            expected_subseq = clean_user_seq[user_start:user_end]
-            
-            if extracted == expected_subseq and len(extracted) >= 3:
-                return chain_id, str(site_pos)
-
-    # 2. Search across all chains if misnumbered
+    # Check 1: Exact match of the FULL tryptic peptide anywhere in the chain
     for chain_id, chain_seq, auth_nums in all_chains:
         if clean_user_seq in chain_seq:
             match_start = chain_seq.index(clean_user_seq)
             exact_match_idx = match_start + y_idx
-            return chain_id, auth_nums[exact_match_idx]
-            
-    # Relaxed search (accommodating truncated crystals)
-    core_motif = clean_user_seq[max(0, y_idx-4):min(len(clean_user_seq), y_idx+5)]
-    for chain_id, chain_seq, auth_nums in all_chains:
-        if core_motif in chain_seq:
-            match_start = chain_seq.index(core_motif)
-            exact_match_idx = match_start + (4 if y_idx >= 4 else y_idx)
-            return chain_id, auth_nums[exact_match_idx]
+            if auth_nums[exact_match_idx] is not None:
+                return chain_id, auth_nums[exact_match_idx]
 
-    return None, None # Missing from structure!
+    # Check 2: Substring match at original site_pos (Handles missing termini in the crystal structure)
+    for chain_id, chain_seq, auth_nums in all_chains:
+        if str(site_pos) in auth_nums:
+            idx = auth_nums.index(str(site_pos))
+            if chain_seq[idx] == 'Y':
+                # Extract sequence from PDB bounded by our peptide length
+                seq_start = max(0, idx - y_idx)
+                seq_end = min(len(chain_seq), idx + len(clean_user_seq) - y_idx)
+                extracted = chain_seq[seq_start:seq_end]
+                
+                # Compare it strictly against the corresponding slice of our peptide
+                user_start = y_idx - (idx - seq_start)
+                user_end = y_idx + (seq_end - idx)
+                expected_subseq = clean_user_seq[user_start:user_end]
+                
+                if extracted == expected_subseq:
+                    return chain_id, str(site_pos)
+
+    return None, None # Site is definitely missing from structure
 
 # --- 3. Shiny Server ---
 def server(input, output, session):
     
     active_drug = reactive.Value(default_drug)
-    invalid_structures = reactive.Value(set()) # Tracks bad PDBs
     
     unhover_js = """function(atom,viewer) {
         if(atom.label) {
@@ -295,16 +248,12 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.main_tabs)
     def handle_tab_switch():
-        if input.main_tabs() == "site_tab":
-            active_drug.set(None) 
-        else:
-            active_drug.set(input.data_type()) 
+        active_drug.set(None if input.main_tabs() == "site_tab" else input.data_type())
             
     @reactive.Effect
     @reactive.event(input.data_type)
     def handle_dropdown():
-        if input.main_tabs() == "compound_tab":
-            active_drug.set(input.data_type())
+        if input.main_tabs() == "compound_tab": active_drug.set(input.data_type())
 
     @reactive.Effect
     def update_site_dropdown():
@@ -317,536 +266,286 @@ def server(input, output, session):
     def available_pdbs():
         gene = input.target_gene()
         site_str = input.target_site_pos()
-        if not gene or not site_str or gene == "No Data Found" or df is None or df.empty:
-            return {}
+        if not gene or not site_str or gene == "No Data Found" or df is None or df.empty: return {}
 
         target = f"{gene}_Y{site_str}"
         matching_rows = df[df['Labels'] == target]
-        if matching_rows.empty:
-            return {}
+        if matching_rows.empty: return {}
 
-        row = matching_rows.iloc[0]
-        protein_string = str(row['Protein Id'])
-        uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
+        uniprot = str(matching_rows.iloc[0]['Protein Id']).split('|')[1].split('-')[0] if '|' in str(matching_rows.iloc[0]['Protein Id']) else str(matching_rows.iloc[0]['Protein Id']).split('-')[0]
 
         try:
-            uniprot_url = f"https://rest.uniprot.org/uniprotkb/{uniprot}.json"
-            req = urllib.request.urlopen(uniprot_url)
-            data = json.loads(req.read().decode('utf-8'))
-            
+            data = json.loads(urllib.request.urlopen(f"https://rest.uniprot.org/uniprotkb/{uniprot}.json").read().decode('utf-8'))
             pdb_list = []
             site_num = int(site_str) if str(site_str).isdigit() else -1
 
             for ref in data.get('uniProtKBCrossReferences', []):
                 if ref['database'] == 'PDB':
-                    pdb_id = ref['id']
-                    method = "Unknown"
-                    res_val = 999.0  
-                    has_site = False
-                    coverage = 0
-                    
+                    pdb_id, method, res_val, has_site, coverage = ref['id'], "Unknown", 999.0, False, 0
                     for prop in ref.get('properties', []):
-                        if prop['key'] == 'Method': 
-                            method = prop['value']
+                        if prop['key'] == 'Method': method = prop['value']
                         elif prop['key'] == 'Resolution' and prop['value'] != '-':
-                            try:
-                                res_val = float(prop['value'].replace('A', '').strip())
+                            try: res_val = float(prop['value'].replace('A', '').strip())
                             except: pass
                         elif prop['key'] == 'Chains' and '=' in prop['value']:
-                            ranges = prop['value'].split('=', 1)[1]
-                            for r in ranges.split(','):
-                                bounds = r.strip().split('-')
-                                if len(bounds) >= 2 and bounds[0].isdigit() and bounds[-1].isdigit():
-                                    start, end = int(bounds[0]), int(bounds[-1])
-                                    coverage += (end - start + 1)
-                                    if site_num != -1 and start <= site_num <= end:
-                                        has_site = True
+                            for start_str, end_str in re.findall(r'(\d+)-(\d+)', prop['value'].split('=', 1)[1]):
+                                start, end = int(start_str), int(end_str)
+                                coverage += (end - start + 1)
+                                if start <= site_num <= end: has_site = True
                     
-                    method_score = 4 
-                    if 'EM' in method.upper(): method_score = 1
-                    elif 'X-RAY' in method.upper(): method_score = 2
-                    elif 'NMR' in method.upper(): method_score = 3
-                                        
-                    pdb_list.append({
-                        'id': pdb_id,
-                        'has_site': has_site,
-                        'method_score': method_score,
-                        'res_val': res_val,
-                        'coverage': coverage,
-                        'method_label': method,
-                        'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"
-                    })
+                    method_score = 1 if 'EM' in method.upper() else 2 if 'X-RAY' in method.upper() else 3 if 'NMR' in method.upper() else 4
+                    pdb_list.append({'id': pdb_id, 'has_site': has_site, 'method_score': method_score, 'res_val': res_val, 'coverage': coverage, 'method_label': method, 'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"})
             
-            pdb_list.sort(key=lambda x: (
-                not x['has_site'], 
-                x['method_score'],  
-                x['res_val'],       
-                -x['coverage']      
-            ))
+            pdb_list.sort(key=lambda x: (not x['has_site'], x['method_score'], x['res_val'], -x['coverage']))
             
-            # Filter dynamically against missing sequence PDBs
-            invalid_set = invalid_structures.get()
-            pdb_choices = {}
-            for p in pdb_list:
-                if p['id'] not in invalid_set:
-                    site_tag = "Site Present" if p['has_site'] else "Site Absent"
-                    label = f"{p['id']}|{site_tag}|{p['method_label']}|{p['res_label']}|{p['coverage']}aa"
-                    pdb_choices[p['id']] = label
-                
-            return pdb_choices
-        except Exception:
-            return {}
+            return {p['id']: f"{p['id']}|{'Site Present' if p['has_site'] else 'Site Absent'}|{p['method_label']}|{p['res_label']}|{p['coverage']}aa" for p in pdb_list}
+        except Exception: return {}
 
     @reactive.Effect
     def update_pdb_dropdown():
         pdb_dict = available_pdbs()
-        if pdb_dict:
-            first_key = list(pdb_dict.keys())[0]
-            ui.update_select("pdb_selector", choices=pdb_dict, selected=first_key)
-        else:
-            ui.update_select("pdb_selector", choices={"none": "No PDBs Found"}, selected="none")
+        if pdb_dict: ui.update_select("pdb_selector", choices=pdb_dict, selected=list(pdb_dict.keys())[0])
+        else: ui.update_select("pdb_selector", choices={"none": "No PDBs Found"}, selected="none")
 
     @reactive.Effect
     def update_ppi_dropdown():
         gene = input.target_gene()
         site_str = input.target_site_pos()
-
         if not gene or not site_str or ppi_df.empty:
             ui.update_select("ppi_selector", choices={"none": "No PPI Data Available"}, selected="none")
             return
 
-        target = f"{gene}_{site_str}"
-        valid_ppis = ppi_df[ppi_df['Target'] == target].copy()
+        valid_ppis = ppi_df[ppi_df['Target'] == f"{gene}_{site_str}"].copy()
         
-        # Ensure dropped pdbs don't pollute the PPI dropdown either
-        invalid_set = invalid_structures.get()
-        valid_ppis = valid_ppis[~valid_ppis['PDB_ID'].isin(invalid_set)]
-        
-        if valid_ppis.empty:
-            ui.update_select("ppi_selector", choices={"none": "No PPI interfaces found"}, selected="none")
+        if valid_ppis.empty: ui.update_select("ppi_selector", choices={"none": "No PPI interfaces found"}, selected="none")
         else:
             valid_ppis = valid_ppis.sort_values('Min_Distance', ascending=True)
-            choices = {}
-            for _, row in valid_ppis.iterrows():
-                dist = row['Min_Distance']
-                label = f"{row['PDB_ID']}|{dist:.1f} Å"
-                choices[row['PDB_ID']] = label
-                
-            first_key = list(choices.keys())[0]
-            ui.update_select("ppi_selector", choices=choices, selected=first_key)
+            choices = {row['PDB_ID']: f"{row['PDB_ID']}|{row['Min_Distance']:.1f} Å" for _, row in valid_ppis.iterrows()}
+            ui.update_select("ppi_selector", choices=choices, selected=list(choices.keys())[0])
 
     def generate_molecule_html(drug):
-        if not drug:
-            return ui.p("Select a drug or click a bar to view structure.", style="color: gray; font-style: italic;")
+        if not drug: return ui.p("Select a drug or click a bar to view structure.", style="color: gray; font-style: italic;")
         smiles = smiles_dict.get(drug, "") 
-        if not smiles:
-            return ui.p("No SMILES available for this drug.", style="color: gray; font-style: italic;")
-        safe_smiles = urllib.parse.quote(smiles)
-        img_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{safe_smiles}/PNG"
-        return ui.HTML(f'<div style="text-align: center;"><img src="{img_url}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px;" alt="Chemical Structure"></div>')
+        if not smiles: return ui.p("No SMILES available for this drug.", style="color: gray; font-style: italic;")
+        img_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{urllib.parse.quote(smiles)}/PNG"
+        return ui.HTML(f'<div style="text-align: center;"><img src="{img_url}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px;"></div>')
 
     @render.ui
-    def molecule_ui_compound():
-        return generate_molecule_html(active_drug.get())
+    def molecule_ui_compound(): return generate_molecule_html(active_drug.get())
 
     @render.ui
-    def molecule_ui_site():
-        return generate_molecule_html(active_drug.get())
+    def molecule_ui_site(): return generate_molecule_html(active_drug.get())
 
     @reactive.Calc
     def plot_data():
-        data_type = input.data_type()
-        threshold = input.threshold()
-        n_labels = input.n_labels()
-        color_mode = input.color_mode()
-        custom_list_text = input.custom_list()
-
+        data_type, threshold, n_labels, color_mode = input.data_type(), input.threshold(), input.n_labels(), input.color_mode()
         plot_df = pd.DataFrame({
-            'Site': np.arange(len(df[f'log2 {data_type} R'])),
-            'R_plot': 2**df[f'log2 {data_type} R'],
-            'R': 2**df[f'log2 {data_type} R'],
-            'P-value': 10**-df[f'-log10 {data_type} p'],
-            'log2 R': df[f'log2 {data_type} R'],
-            '-log10 p': df[f'-log10 {data_type} p'],
-            'Label': df['Labels'],
-            'Gene Symbol': df['Gene Symbol'],
-            'ID': df['Protein Id'],
-            'Description': df['Description'],
-        })
-        
-        plot_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-        plot_df.dropna(subset=['R', 'P-value', 'log2 R', '-log10 p'], inplace=True)
+            'Site': np.arange(len(df[f'log2 {data_type} R'])), 'R_plot': 2**df[f'log2 {data_type} R'], 'R': 2**df[f'log2 {data_type} R'],
+            'P-value': 10**-df[f'-log10 {data_type} p'], 'log2 R': df[f'log2 {data_type} R'], '-log10 p': df[f'-log10 {data_type} p'],
+            'Label': df['Labels'], 'Gene Symbol': df['Gene Symbol'], 'ID': df['Protein Id'], 'Description': df['Description'],
+        }).replace([np.inf, -np.inf], np.nan).dropna(subset=['R', 'P-value', 'log2 R', '-log10 p'])
         
         plot_df['Site Rank'] = plot_df['R'].rank(ascending=False).astype(int).astype(str)+'/'+str(len(plot_df))
         plot_df['% Site Rank'] = plot_df['R'].rank(ascending=False)/len(plot_df)*100
-
         plot_df['color'] = 'non-significant'
 
-        if color_mode == "Above Threshold":
+        if color_mode == "Above Threshold": plot_df.loc[(plot_df['R'] > threshold), 'color'] = 'high'
+        elif color_mode == "Highlight Custom List": plot_df.loc[plot_df['Gene Symbol'].str.upper().isin([g.strip().upper() for g in input.custom_list().split(',') if g.strip()]), 'color'] = 'highlight'
+        elif color_mode == "Cancer-Driver List": plot_df.loc[plot_df['Gene Symbol'].isin(cancer['Gene']), 'color'] = 'highlight'
+        elif color_mode == "Sites with PPIs": plot_df.loc[plot_df['Label'].str.replace('_Y', '_', regex=False).isin(set(ppi_df['Target'].dropna().unique())), 'color'] = 'highlight'
+        else:
             plot_df.loc[(plot_df['R'] > threshold), 'color'] = 'high'
-            sig_genes = plot_df[plot_df['color'] == 'high']
-        elif color_mode == "Highlight Custom List":
-            custom_genes = [g.strip().upper() for g in custom_list_text.split(',') if g.strip()]
-            mask = plot_df['Gene Symbol'].str.upper().isin(custom_genes)
-            plot_df.loc[mask, 'color'] = 'highlight'
-            sig_genes = plot_df[plot_df['color'] == 'highlight']
-        elif color_mode == "Cancer-Driver List":          
-            mask = plot_df['Gene Symbol'].isin(cancer['Gene'])
-            plot_df.loc[mask, 'color'] = 'highlight'
-            sig_genes = plot_df[plot_df['color'] == 'highlight']
-        elif color_mode == "Sites with PPIs":          
-            ppi_targets = set(ppi_df['Target'].dropna().unique())
-            mask = plot_df['Label'].str.replace('_Y', '_', regex=False).isin(ppi_targets)
-            plot_df.loc[mask, 'color'] = 'highlight'
-            sig_genes = plot_df[plot_df['color'] == 'highlight']
-        else: # P-Value Gradient
-            plot_df.loc[(plot_df['R'] > threshold), 'color'] = 'high'
-            sig_genes = plot_df[plot_df['color'] == 'high']
             plot_df['alpha'] = np.where(plot_df['R'] > threshold, 1.0, 0.2)
 
-        valid_indices = []
-        pos_count = min(n_labels, len(sig_genes))
-        if pos_count > 0:
-            top_positive = sig_genes.nlargest(pos_count, 'R').index
-            valid_indices = [idx for idx in top_positive if idx in plot_df.index]
-            
-        return plot_df, valid_indices
+        sig_genes = plot_df[plot_df['color'] != 'non-significant'] if color_mode != "P-Value Gradient" else plot_df[plot_df['color'] == 'high']
+        return plot_df, [idx for idx in sig_genes.nlargest(min(n_labels, len(sig_genes)), 'R').index if idx in plot_df.index]
 
-    hover_dict = {
-        'Site': False, 'color': False, 'R_plot': False,
-        'ID': True, 'Label': True, 'Description': True,    
-        'log2 R': False, '-log10 p': False, 'R': ':.3f', 'P-value': ':.4f',
-        'Site Rank': True, '% Site Rank': ':.5f'
-    }
+    hover_dict = {'Site': False, 'color': False, 'R_plot': False, 'ID': True, 'Label': True, 'Description': True, 'log2 R': False, '-log10 p': False, 'R': ':.3f', 'P-value': ':.4f', 'Site Rank': True, '% Site Rank': ':.5f'}
 
     @render_widget
     def site_plot():
         plot_df, valid_indices = plot_data()
-        color_mode = input.color_mode()
-        threshold = input.threshold()
-
-        if color_mode == "Above Threshold":
-            fig = px.scatter(
-                plot_df, x='Site', y='R_plot', color='color',
-                color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD'},
-                hover_data=hover_dict
-            )
-            fig.update_traces(marker=dict(opacity=0.2), selector=dict(name='non-significant'))
-            fig.update_traces(marker=dict(opacity=0.9), selector=dict(name='high'))
-        elif color_mode in ["Highlight Custom List", "Cancer-Driver List", "Sites with PPIs"]:
-            fig = px.scatter(
-                plot_df, x='Site', y='R_plot', color='color',
-                color_discrete_map={'non-significant': '#dddddd', 'highlight': '#D62728'},
-                hover_data=hover_dict
-            )
-            fig.update_traces(marker=dict(opacity=0.15), selector=dict(name='non-significant'))
-            fig.update_traces(marker=dict(opacity=1.0), selector=dict(name='highlight'))
-        else: # P-Value Gradient
-            fig = px.scatter(
-                plot_df, x='Site', y='R_plot', color='P-value',
-                color_continuous_scale='Viridis_r', 
-                hover_data=hover_dict
-            )
-            fig.update_traces(marker=dict(opacity=plot_df['alpha']))
-
+        fig = px.scatter(plot_df, x='Site', y='R_plot', color='color', hover_data=hover_dict, color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD', 'highlight': '#D62728'}) if input.color_mode() != "P-Value Gradient" else px.scatter(plot_df, x='Site', y='R_plot', color='P-value', color_continuous_scale='Viridis_r', hover_data=hover_dict)
+        if input.color_mode() == "P-Value Gradient": fig.update_traces(marker=dict(opacity=plot_df['alpha']))
+        else: fig.update_traces(marker=dict(opacity=0.2 if input.color_mode() == "Above Threshold" else 0.15), selector=dict(name='non-significant'))
+        
         for idx in valid_indices:
-            row = plot_df.loc[idx]
-            fig.add_annotation(
-                x=row['Site'], y=row['R'], text=row['Label'],
-                showarrow=True, arrowsize=1, arrowwidth=1,
-                arrowcolor="#444", ax=20, ay=-30,
-                font=dict(size=10, color="black"), bgcolor="white",
-                bordercolor="#c7c7c7", borderwidth=1, borderpad=3
-            )
-
-        fig.add_hline(y=threshold, line_width=1, line_dash='dash')
-        fig.update_traces(marker=dict(size=6))
+            r = plot_df.loc[idx]
+            fig.add_annotation(x=r['Site'], y=r['R'], text=r['Label'], showarrow=True, arrowsize=1, arrowwidth=1, arrowcolor="#444", ax=20, ay=-30, font=dict(size=10, color="black"), bgcolor="white", bordercolor="#c7c7c7", borderwidth=1, borderpad=3)
+        fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash')
         fig.update_layout(yaxis_title="R", plot_bgcolor='white', paper_bgcolor='white', showlegend=False, margin=dict(l=40, r=40, t=10, b=40))
-
         widget = go.FigureWidget(fig)
-        current_config = widget._config or {}
-        widget._config = {**current_config, 'edits': {'annotationTail': True}}
+        widget._config = {**(widget._config or {}), 'edits': {'annotationTail': True}}
         return widget
 
     @render_widget
     def volcano_plot():
-        plot_df, _ = plot_data() 
-        volcano_df = plot_df.copy()
-        color_mode = input.color_mode()
-        threshold = input.threshold()
-
-        safe_thresh = threshold if threshold > 0 else 1e-9 
+        volcano_df, _ = plot_data() 
+        safe_thresh = input.threshold() if input.threshold() > 0 else 1e-9 
         sig_mask = (volcano_df['log2 R'] > np.log2(safe_thresh)) & (volcano_df['-log10 p'] > -np.log10(0.05))
-
         volcano_df['color'] = 'non-significant'
 
-        if color_mode == "Highlight Custom List":
-            custom_genes = [g.strip().upper() for g in input.custom_list().split(',') if g.strip()]
-            mask = volcano_df['Gene Symbol'].str.upper().isin(custom_genes)
-            volcano_df.loc[sig_mask & mask, 'color'] = 'highlight'
-        elif color_mode == "Cancer-Driver List":
-            mask = volcano_df['Gene Symbol'].isin(cancer['Gene'])
-            volcano_df.loc[sig_mask & mask, 'color'] = 'highlight'
-        elif color_mode == "Sites with PPIs":
-            ppi_targets = set(ppi_df['Target'].dropna().unique())
-            mask = volcano_df['Label'].str.replace('_Y', '_', regex=False).isin(ppi_targets)
-            volcano_df.loc[sig_mask & mask, 'color'] = 'highlight'
-        else: 
-            volcano_df.loc[sig_mask, 'color'] = 'high'
+        if input.color_mode() == "Highlight Custom List": volcano_df.loc[sig_mask & volcano_df['Gene Symbol'].str.upper().isin([g.strip().upper() for g in input.custom_list().split(',') if g.strip()]), 'color'] = 'highlight'
+        elif input.color_mode() == "Cancer-Driver List": volcano_df.loc[sig_mask & volcano_df['Gene Symbol'].isin(cancer['Gene']), 'color'] = 'highlight'
+        elif input.color_mode() == "Sites with PPIs": volcano_df.loc[sig_mask & volcano_df['Label'].str.replace('_Y', '_', regex=False).isin(set(ppi_df['Target'].dropna().unique())), 'color'] = 'highlight'
+        else: volcano_df.loc[sig_mask, 'color'] = 'high'
 
         colored_genes = volcano_df[volcano_df['color'] != 'non-significant']
-        pos_count = min(input.n_labels(), len(colored_genes))
-        
-        valid_indices = []
-        if pos_count > 0:
-            top_positive = colored_genes.nlargest(pos_count, 'R').index
-            valid_indices = top_positive.tolist()
+        valid_indices = colored_genes.nlargest(min(input.n_labels(), len(colored_genes)), 'R').index.tolist() if not colored_genes.empty else []
 
-        if color_mode == "P-Value Gradient":
-            fig = px.scatter(
-                volcano_df[volcano_df['color'] == 'non-significant'], 
-                x='log2 R', y='-log10 p', color_discrete_sequence=['#dddddd'], hover_data=hover_dict
-            )
+        if input.color_mode() == "P-Value Gradient":
+            fig = px.scatter(volcano_df[volcano_df['color'] == 'non-significant'], x='log2 R', y='-log10 p', color_discrete_sequence=['#dddddd'], hover_data=hover_dict)
             fig.update_traces(marker=dict(opacity=0.2), hovertemplate=None)
-            
             sig_df = volcano_df[volcano_df['color'] == 'high']
             if not sig_df.empty:
-                fig2 = px.scatter(
-                    sig_df, x='log2 R', y='-log10 p', color='P-value', 
-                    color_continuous_scale='Viridis_r', hover_data=hover_dict
-                )
-                for trace in fig2.data: fig.add_trace(trace)
+                fig2 = px.scatter(sig_df, x='log2 R', y='-log10 p', color='P-value', color_continuous_scale='Viridis_r', hover_data=hover_dict)
+                for t in fig2.data: fig.add_trace(t)
                 fig.layout.coloraxis = fig2.layout.coloraxis
         else:
-            fig = px.scatter(
-                volcano_df, x='log2 R', y='-log10 p', color='color',
-                color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD', 'highlight': '#D62728'},
-                hover_data=hover_dict
-            )
+            fig = px.scatter(volcano_df, x='log2 R', y='-log10 p', color='color', color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD', 'highlight': '#D62728'}, hover_data=hover_dict)
             fig.update_traces(marker=dict(opacity=0.2), selector=dict(name='non-significant'))
-            fig.update_traces(marker=dict(opacity=0.9), selector=dict(name='high'))
-            fig.update_traces(marker=dict(opacity=1.0), selector=dict(name='highlight'))
 
         for idx in valid_indices:
-            row = volcano_df.loc[idx]
-            fig.add_annotation(
-                x=row['log2 R'], y=row['-log10 p'], text=row['Label'],
-                showarrow=True, arrowsize=1, arrowwidth=1, arrowcolor="#444", ax=20, ay=-30,
-                font=dict(size=10, color="black"), bgcolor="white", bordercolor="#c7c7c7", borderwidth=1, borderpad=3
-            )
-
+            r = volcano_df.loc[idx]
+            fig.add_annotation(x=r['log2 R'], y=r['-log10 p'], text=r['Label'], showarrow=True, arrowsize=1, arrowwidth=1, arrowcolor="#444", ax=20, ay=-30, font=dict(size=10, color="black"), bgcolor="white", bordercolor="#c7c7c7", borderwidth=1, borderpad=3)
         fig.add_vline(x=np.log2(safe_thresh), line_width=1, line_dash='dash')
         fig.add_hline(y=-np.log10(0.05), line_width=1, line_dash='dash')
-        fig.update_traces(marker=dict(size=6))
         fig.update_layout(xaxis_title="log<sub>2</sub> Fold Change", yaxis_title="-log<sub>10</sub> P-Value", plot_bgcolor='white', paper_bgcolor='white', showlegend=False, margin=dict(l=40, r=40, t=10, b=40))
-
         widget = go.FigureWidget(fig)
-        current_config = widget._config or {}
-        widget._config = {**current_config, 'edits': {'annotationTail': True}}
+        widget._config = {**(widget._config or {}), 'edits': {'annotationTail': True}}
         return widget
 
     @render_widget
     def site_profile_plot():
-        gene = input.target_gene()
-        site = input.target_site_pos()
-        
-        if not gene or not site or gene == "No Data Found" or df.empty:
-            return go.FigureWidget(px.bar(title="No Site Selected"))
-
-        target = f"{gene}_Y{site}"
-        matching_rows = df[df['Labels'] == target]
+        gene, site = input.target_gene(), input.target_site_pos()
+        if not gene or not site or df.empty: return go.FigureWidget(px.bar(title="No Site Selected"))
+        matching_rows = df[df['Labels'] == f"{gene}_Y{site}"]
         if matching_rows.empty: return go.FigureWidget(px.bar(title="Loading..."))
              
         row = matching_rows.iloc[0]
-        
-        drug_data = []
-        for d in raw_drugs: 
-            log_col = f'log2 {d} R'
-            if log_col in df.columns:
-                r_val = 2**row[log_col]
-                drug_data.append({'Drug': d, 'R': r_val})
-                
+        drug_data = [{'Drug': d, 'R': 2**row[f'log2 {d} R']} for d in raw_drugs if f'log2 {d} R' in df.columns]
         bar_df = pd.DataFrame(drug_data).dropna().sort_values('R', ascending=False)
-        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data = {'Drug': True, 'R': ':.3f'})
-        fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red', annotation_text="Threshold")
+        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f'})
+        fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red')
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), coloraxis_showscale=False)
-        
         widget = go.FigureWidget(fig)
-        
-        def handle_bar_click(trace, points, state):
-            if points.point_inds:
-                idx = points.point_inds[0]
-                clicked_drug = trace.x[idx]
-                active_drug.set(clicked_drug)
-                
-        if widget.data: widget.data[0].on_click(handle_bar_click)
+        if widget.data: widget.data[0].on_click(lambda t, p, s: active_drug.set(t.x[p.point_inds[0]]) if p.point_inds else None)
         return widget
 
     @render.ui
     def alphafold_viewer():
-        gene = input.target_gene()
-        site_pos = input.target_site_pos()
-        if not gene or not site_pos or gene == "No Data Found" or df.empty: return ui.p("Please select a Gene and Site.")
-
-        target = f"{gene}_Y{site_pos}"
-        matching_rows = df[df['Labels'] == target]
+        gene, site_pos = input.target_gene(), input.target_site_pos()
+        if not gene or not site_pos or df.empty: return ui.p("Please select a Gene and Site.")
+        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
         if matching_rows.empty: return ui.p("Loading structure...")
 
         row = matching_rows.iloc[0]
-        protein_string = str(row['Protein Id'])
-        uniprot = (protein_string.split('|')[1] if '|' in protein_string else protein_string).split('-')[0]
+        uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
 
-        url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif"
-        try:
-            pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
-            pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-        except Exception:
-            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve structure for {uniprot}.</div>")
+        chain_map_js = json.dumps({'A': str(row['Gene Symbol'])})
+        hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
+
+        try: pdb_data = urllib.request.urlopen(f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif").read().decode('utf-8').replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+        except Exception: return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve structure for {uniprot}.</div>")
 
         view = py3Dmol.view(width="100%", height=500)
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
-        
-        view.addStyle(
-            {'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, 
-            {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}}
-        )
+        view.addStyle({'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
         view.zoomTo({'resi': site_pos})
+        view.setHoverable({}, True, hover_js, unhover_js)
 
-        b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
-            
         return ui.HTML(f'''
-                <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-                    <b>AFDB: <a href="https://alphafold.ebi.ac.uk/entry/{uniprot}" target="_blank">{uniprot}</a></b><br>
-                </div>
-                <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
-                ''')
-        
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;"><b>Displaying AlphaFold Model: <a href="https://alphafold.ebi.ac.uk/entry/{uniprot}" target="_blank">{uniprot}</a></b></div>
+        <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        ''')
+    
     @render.ui
     def pdb_viewer():
-        pdb_id = input.pdb_selector()
+        pdb_id, gene, site_pos = input.pdb_selector(), input.target_gene(), input.target_site_pos()
         if not pdb_id or pdb_id in ["Loading...", "none"]: return ui.HTML("<div style='color:orange; padding:20px;'><b>Note:</b> No PDB structure found.</div>")
         if pdb_id not in available_pdbs(): return ui.p("Syncing...")
 
-        gene = input.target_gene()
-        site_pos = input.target_site_pos()
-        target = f"{gene}_Y{site_pos}"
-        matching_rows = df[df['Labels'] == target]
+        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
         if matching_rows.empty: return ui.p("")
         
         row = matching_rows.iloc[0]
-        user_seq = str(row['Sequence'])
+        
+        # Verify sequence and map exact chain/site location
+        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_pos, str(row['Sequence']))
 
-        # --- VALIDATE SEQUENCE & FIND CHAIN ---
-        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_pos, user_seq)
-
+        mapping_notice = ""
         if chain_id is None:
-            # Reactively ban this PDB from the dropdown if the sequence is missing
-            current_invalid = invalid_structures.get()
-            current_invalid.add(pdb_id)
-            invalid_structures.set(current_invalid)
-            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Alert:</b> The target sequence was not found in the crystal structure for {pdb_id}. It has been safely removed from the list. Please select the next available structure.</div>")
+            chain_id = 'A' # Fallback
+            mapped_site_pos = site_pos
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Sequence missing from PDB. Displaying default position {site_pos}.</i></span>"
+        elif mapped_site_pos != site_pos:
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched target to author position {mapped_site_pos}.</i></span>"
 
-        url = f"https://files.rcsb.org/download/{pdb_id}.cif"
-        try:
-            pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
-            pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-        except Exception:
-            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id}.</div>")
+        chain_map_js = json.dumps(get_chain_names(pdb_id))
+        hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
+
+        try: pdb_data = urllib.request.urlopen(f"https://files.rcsb.org/download/{pdb_id}.cif").read().decode('utf-8').replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+        except Exception: return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id}.</div>")
 
         view = py3Dmol.view(width="100%", height=480)
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         
         target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-            
-        red_sel = {'not': {'atom': ['N', 'C', 'O', 'OXT']}}
-        red_sel.update(target_sel)
-
-        view.addStyle(red_sel, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
         view.zoomTo(target_sel)
+        view.setHoverable({}, True, hover_js, unhover_js)
         
-        b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
-        
-        mapping_notice = ""
-        if mapped_site_pos != site_pos:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence mapping identified residue at PDB author position {mapped_site_pos}.</i></span>"
-            
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
-        </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;"><b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}</div>
+        <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
 
     @render.ui
     def ppi_viewer():
-        pdb_id = input.ppi_selector()
-        target_site = input.target_site_pos()
-        
-        if not pdb_id or pdb_id in ["none", "Loading..."]:
-            return ui.div()
+        pdb_id, target_site = input.ppi_selector(), input.target_site_pos()
+        if not pdb_id or pdb_id in ["none", "Loading..."]: return ui.div()
 
-        target_label = f"{input.target_gene()}_{target_site}"
-        match = ppi_df[(ppi_df['Target'] == target_label) & (ppi_df['PDB_ID'] == pdb_id)]
-        
+        match = ppi_df[(ppi_df['Target'] == f"{input.target_gene()}_{target_site}") & (ppi_df['PDB_ID'] == pdb_id)]
         viz_cutoff = float(match['Min_Distance'].iloc[0]) + 1.0 if not match.empty else 5.0
 
-        df_target_label = f"{input.target_gene()}_Y{target_site}"
-        matching_rows = df[df['Labels'] == df_target_label]
+        matching_rows = df[df['Labels'] == f"{input.target_gene()}_Y{target_site}"]
         if matching_rows.empty: return ui.div()
-        
-        row = matching_rows.iloc[0]
-        user_seq = str(row['Sequence'])
 
-        # Validate sequence for PPI as well
-        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, target_site, user_seq)
+        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, target_site, str(matching_rows.iloc[0]['Sequence']))
 
+        mapping_notice = ""
         if chain_id is None:
-            current_invalid = invalid_structures.get()
-            current_invalid.add(pdb_id)
-            invalid_structures.set(current_invalid)
-            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Alert:</b> The target sequence was not found in the crystal structure for {pdb_id}. It has been safely removed from the list. Please select the next available structure.</div>")
+            chain_id = 'A' # Fallback
+            mapped_site_pos = target_site
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Sequence missing from PDB. Displaying default position {target_site}.</i></span>"
+        elif mapped_site_pos != target_site:
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched target to author position {mapped_site_pos}.</i></span>"
 
-        url = f"https://files.rcsb.org/download/{pdb_id.upper()}.cif"
-        try:
-            pdb_data = urllib.request.urlopen(url).read().decode('utf-8')
-            pdb_data = pdb_data.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-        except Exception as e:
-            return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve {pdb_id}.</div>")
+        chain_map_js = json.dumps(get_chain_names(pdb_id))
+        hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
+
+        try: pdb_data = urllib.request.urlopen(f"https://files.rcsb.org/download/{pdb_id.upper()}.cif").read().decode('utf-8').replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+        except Exception: return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve {pdb_id}.</div>")
 
         view = py3Dmol.view(width="100%", height=480)
         view.addModel(pdb_data, "cif")
-        
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
         target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-
-        cyan_sel = {
-            'within': {'distance': viz_cutoff, 'sel': target_sel}, 
-            'byres': True, 
-            'not': {'atom': ['N', 'C', 'O', 'OXT']}
-        }
-        view.addStyle(cyan_sel, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
-
-        red_sel = {'not': {'atom': ['N', 'C', 'O', 'OXT']}}
-        red_sel.update(target_sel)
-        view.addStyle(red_sel, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
+        view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
+        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
         
         view.zoomTo(target_sel)
-        
-        b64_html = base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')
-        
-        mapping_notice = ""
-        if mapped_site_pos != target_site:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence mapping identified residue at PDB author position {mapped_site_pos}.</i></span>"
+        view.setHoverable({}, True, hover_js, unhover_js)
 
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
             <span style="color: #444;"><i>Interface detected at {viz_cutoff-1.0:.1f} Å. Partner chains shown in Cyan.</i></span>{mapping_notice}
         </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
 
 # --- 4. Run App ---
