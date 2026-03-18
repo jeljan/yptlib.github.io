@@ -281,6 +281,9 @@ def server(input, output, session):
         if matching_rows.empty: return {}
 
         uniprot = str(matching_rows.iloc[0]['Protein Id']).split('|')[1].split('-')[0] if '|' in str(matching_rows.iloc[0]['Protein Id']) else str(matching_rows.iloc[0]['Protein Id']).split('-')[0]
+        
+        # Extract the user's tryptic peptide sequence to pass to the rigorous checker
+        user_seq = str(matching_rows.iloc[0]['Sequence'])
 
         try:
             data = json.loads(urllib.request.urlopen(f"https://rest.uniprot.org/uniprotkb/{uniprot}.json").read().decode('utf-8'))
@@ -299,11 +302,21 @@ def server(input, output, session):
                             for start_str, end_str in re.findall(r'(\d+)-(\d+)', prop['value'].split('=', 1)[1]):
                                 start, end = int(start_str), int(end_str)
                                 coverage += (end - start + 1)
+                                
+                                # Step 1: Fast boundary check
                                 if start <= site_num <= end: has_site = True
-                    
+                                
+                    # Step 2: Rigorous Sequence and Observation validation
+                    if has_site:
+                        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_str, user_seq)
+                        # If the sequence isn't found, or if it is greyed out (unobserved), override to False
+                        if chain_id is None:
+                            has_site = False
+
                     method_score = 1 if 'EM' in method.upper() else 2 if 'X-RAY' in method.upper() else 3 if 'NMR' in method.upper() else 4
                     pdb_list.append({'id': pdb_id, 'has_site': has_site, 'method_score': method_score, 'res_val': res_val, 'coverage': coverage, 'method_label': method, 'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"})
             
+            # Sort so the rigorously validated PDBs stay at the top of the dropdown
             pdb_list.sort(key=lambda x: (not x['has_site'], x['method_score'], x['res_val'], -x['coverage']))
             
             return {p['id']: f"{p['id']}|{'Site Present' if p['has_site'] else 'Site Absent'}|{p['method_label']}|{p['res_label']}|{p['coverage']}aa" for p in pdb_list}
@@ -484,9 +497,8 @@ def server(input, output, session):
 
         mapping_notice = ""
         if chain_id is None:
-            chain_id = 'A' # Fallback
-            mapped_site_pos = site_pos
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Sequence missing from PDB. Displaying default position {site_pos}.</i></span>"
+            # REMOVED FALLBACK. Simply update the notice to reflect it's absent.
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. No residue highlighted.</i></span>"
         elif mapped_site_pos != site_pos:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -500,9 +512,15 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         
-        target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
-        view.zoomTo(target_sel)
+        # ONLY apply styles and zoom to residue if the site actually exists
+        if chain_id is not None:
+            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
+            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+            view.zoomTo(target_sel)
+        else:
+            # Zoom out to show the whole protein if site is missing
+            view.zoomTo()
+            
         view.setHoverable({}, True, hover_js, unhover_js)
         
         return ui.HTML(f'''
@@ -525,9 +543,8 @@ def server(input, output, session):
 
         mapping_notice = ""
         if chain_id is None:
-            chain_id = 'A' # Fallback
-            mapped_site_pos = target_site
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Sequence missing from PDB. Displaying default position {target_site}.</i></span>"
+            # REMOVED FALLBACK.
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. No interface highlighted.</i></span>"
         elif mapped_site_pos != target_site:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -541,11 +558,15 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
-        target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-        view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
-        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
-        
-        view.zoomTo(target_sel)
+        # ONLY build the interface visualization if the site actually exists
+        if chain_id is not None:
+            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
+            view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
+            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
+            view.zoomTo(target_sel)
+        else:
+            view.zoomTo()
+
         view.setHoverable({}, True, hover_js, unhover_js)
 
         return ui.HTML(f'''
