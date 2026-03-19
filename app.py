@@ -331,15 +331,21 @@ def server(input, output, session):
         cancer_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in cancer_df.iterrows()}
         
         ppi_targets = set(ppi_df['Target'].dropna().unique())
-        ppi_df_filtered = sum_df[sum_df['Labels'].str.replace('_Y', '_', regex=False).isin(ppi_targets)].sort_values('Max_R', ascending=False)
+        ppi_df_filtered = sum_df[sum_df['Labels'].isin(ppi_targets)].sort_values('Max_R', ascending=False)
         ppi_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in ppi_df_filtered.iterrows()}
         
         return cancer_choices, ppi_choices
-
+  
     @reactive.Effect
     def update_summary_dropdowns():
         cancer_choices, ppi_choices = site_max_r()
+        
+        # Wiping the choices first forces Shiny to completely re-render the dropdown
+        # with the newly calculated Max R values and the new sorted order.
+        ui.update_selectize("summary_cancer_site", choices=[], selected=None)
         ui.update_selectize("summary_cancer_site", choices=cancer_choices, selected=list(cancer_choices.keys())[0] if cancer_choices else None)
+        
+        ui.update_selectize("summary_ppi_site", choices=[], selected=None)
         ui.update_selectize("summary_ppi_site", choices=ppi_choices, selected=list(ppi_choices.keys())[0] if ppi_choices else None)
 
     @render_widget
@@ -496,7 +502,7 @@ def server(input, output, session):
             ui.update_select("ppi_selector", choices={"none": "No PPI Data Available"}, selected="none")
             return
 
-        valid_ppis = ppi_df[ppi_df['Target'] == f"{gene}_{site_str}"].copy()
+        valid_ppis = ppi_df[ppi_df['Target'] == f"{gene}_Y{site_str}"].copy()
         if valid_ppis.empty: ui.update_select("ppi_selector", choices={"none": "No PPI interfaces found"}, selected="none")
         else:
             valid_ppis = valid_ppis.sort_values('Min_Distance', ascending=True)
@@ -525,7 +531,7 @@ def server(input, output, session):
         if color_mode == "Above Threshold": plot_df.loc[(plot_df['R'] > threshold), 'color'] = 'high'
         elif color_mode == "Highlight Custom List": plot_df.loc[plot_df['Gene Symbol'].str.upper().isin([g.strip().upper() for g in input.custom_list().split(',') if g.strip()]), 'color'] = 'highlight'
         elif color_mode == "Cancer-Driver List": plot_df.loc[plot_df['Gene Symbol'].isin(cancer['Gene']), 'color'] = 'highlight'
-        elif color_mode == "Sites with PPIs": plot_df.loc[plot_df['Label'].str.replace('_Y', '_', regex=False).isin(set(ppi_df['Target'].dropna().unique())), 'color'] = 'highlight'
+        elif color_mode == "Sites with PPIs": plot_df.loc[plot_df['Label'].isin(set(ppi_df['Target'].dropna().unique())), 'color'] = 'highlight'
         else:
             plot_df.loc[(plot_df['R'] > threshold), 'color'] = 'high'
             plot_df['alpha'] = np.where(plot_df['R'] > threshold, 1.0, 0.2)
@@ -564,7 +570,7 @@ def server(input, output, session):
 
         if input.color_mode() == "Highlight Custom List": volcano_df.loc[sig_mask & volcano_df['Gene Symbol'].str.upper().isin([g.strip().upper() for g in input.custom_list().split(',') if g.strip()]), 'color'] = 'highlight'
         elif input.color_mode() == "Cancer-Driver List": volcano_df.loc[sig_mask & volcano_df['Gene Symbol'].isin(cancer['Gene']), 'color'] = 'highlight'
-        elif input.color_mode() == "Sites with PPIs": volcano_df.loc[sig_mask & volcano_df['Label'].str.replace('_Y', '_', regex=False).isin(set(ppi_df['Target'].dropna().unique())), 'color'] = 'highlight'
+        elif input.color_mode() == "Sites with PPIs": volcano_df.loc[sig_mask & volcano_df['Label'].isin(set(ppi_df['Target'].dropna().unique())), 'color'] = 'highlight'
         else: volcano_df.loc[sig_mask, 'color'] = 'high'
 
         colored_genes = volcano_df[volcano_df['color'] != 'non-significant']
@@ -684,7 +690,7 @@ def server(input, output, session):
         pdb_id, target_site = input.ppi_selector(), input.target_site_pos()
         if not pdb_id or pdb_id in ["none", "Loading..."]: return ui.div()
 
-        match = ppi_df[(ppi_df['Target'] == f"{input.target_gene()}_{target_site}") & (ppi_df['PDB_ID'] == pdb_id)]
+        match = ppi_df[(ppi_df['Target'] == f"{input.target_gene()}_Y{target_site}") & (ppi_df['PDB_ID'] == pdb_id)]
         viz_cutoff = float(match['Min_Distance'].iloc[0]) + 1.0 if not match.empty else 5.0
 
         matching_rows = df[df['Labels'] == f"{input.target_gene()}_Y{target_site}"]
