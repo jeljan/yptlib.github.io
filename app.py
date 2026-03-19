@@ -69,7 +69,11 @@ if len(all_files) > 0:
     drug_choices = {d: f"{d} ({type_dict.get(d, 'Unknown')}, {drug_promiscuity[d]:.2f}%)" for d in sorted_drugs}
     default_drug = sorted_drugs[0] if sorted_drugs else None
     
-    gene_to_sites = df.dropna(subset=['Gene Symbol', 'Site Position']).groupby('Gene Symbol')['Site Position'].apply(lambda x: sorted(list(set(x)))).to_dict()
+    def site_sort_key(site_str):
+        match = re.search(r'\d+', str(site_str))
+        return (int(match.group()), str(site_str)) if match else (float('inf'), str(site_str))
+    
+    gene_to_sites = df.dropna(subset=['Gene Symbol', 'Site Position']).groupby('Gene Symbol')['Site Position'].apply(lambda x: sorted(list(set(x)), key=site_sort_key)).to_dict()
     gene_choices = sorted(list(gene_to_sites.keys()))
     default_gene = gene_choices[0] if gene_choices else None
     default_site_choices = gene_to_sites.get(default_gene, [])
@@ -93,10 +97,9 @@ app_ui = ui.page_fluid(
                 col_widths=(6, 6)
             ),
             ui.card(
-                ui.h5("Targeted Subsets Engagement Profile"),
+                ui.h5("Target Engagement"),
                 ui.div(
-                    ui.input_switch("summary_sig_only", "Consider only significant (p < 0.05) interactions", value=False),
-                    style="padding-bottom: 10px;"
+                    ui.input_switch("summary_sig_only", "Significant only (p < 0.05)", value=False)
                 ),
                 ui.layout_columns(
                     ui.div(
@@ -109,9 +112,8 @@ app_ui = ui.page_fluid(
                     ),
                     col_widths=(6, 6)
                 ),
-                ui.hr(),
                 ui.div(
-                    ui.h6("Selected Compound Structure", style="text-align: center; color: #555;"),
+                    ui.h6("Compound Structure", style="text-align: center; color: #555;"),
                     ui.output_ui("molecule_ui_summary"),
                     style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 10px;"
                 )
@@ -130,7 +132,7 @@ app_ui = ui.page_fluid(
                         ui.input_select("color_mode", "Color Points By:", choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Highlight Custom List", "Sites with PPIs"]),
                         ui.input_text("custom_list", "Genes to Highlight (comma-separated):", placeholder="e.g. MAPK1, EGFR")
                     ),
-                    ui.card(ui.h5("Chemical Structure"), ui.output_ui("molecule_ui_compound"))
+                    ui.card(ui.h5("Compound Structure"), ui.output_ui("molecule_ui_compound"))
                 ),
                 ui.div(
                     ui.card(
@@ -155,7 +157,7 @@ app_ui = ui.page_fluid(
                         ),
                         output_widget("site_profile_plot")
                     ),
-                    ui.card(ui.h5("Chemical Structure"), ui.output_ui("molecule_ui_site"))
+                    ui.card(ui.h5("Compound Structure"), ui.output_ui("molecule_ui_site"))
                 ),
                 ui.div(
                     ui.navset_card_tab(
