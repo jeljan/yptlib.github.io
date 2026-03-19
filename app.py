@@ -329,9 +329,8 @@ def server(input, output, session):
         
         cancer_df = sum_df[sum_df['Gene'].isin(cancer['Gene'])].sort_values('Max_R', ascending=False)
         cancer_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in cancer_df.iterrows()}
-        
-        ppi_targets = set(ppi_df['Target'].dropna().unique())
-        ppi_df_filtered = sum_df[sum_df['Labels'].isin(ppi_targets)].sort_values('Max_R', ascending=False)
+
+        ppi_df_filtered = sum_df[sum_df['Labels'].isin(ppi_df['Target'])].sort_values('Max_R', ascending=False)
         ppi_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in ppi_df_filtered.iterrows()}
         
         return cancer_choices, ppi_choices
@@ -339,13 +338,9 @@ def server(input, output, session):
     @reactive.Effect
     def update_summary_dropdowns():
         cancer_choices, ppi_choices = site_max_r()
-        
-        # Wiping the choices first forces Shiny to completely re-render the dropdown
-        # with the newly calculated Max R values and the new sorted order.
-        ui.update_selectize("summary_cancer_site", choices=[], selected=None)
+
         ui.update_selectize("summary_cancer_site", choices=cancer_choices, selected=list(cancer_choices.keys())[0] if cancer_choices else None)
-        
-        ui.update_selectize("summary_ppi_site", choices=[], selected=None)
+
         ui.update_selectize("summary_ppi_site", choices=ppi_choices, selected=list(ppi_choices.keys())[0] if ppi_choices else None)
 
     @render_widget
