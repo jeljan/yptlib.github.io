@@ -50,7 +50,7 @@ if len(all_files) > 0:
 
     if 'Info' in df.columns:
         df[['Protein Id', 'Gene Symbol', 'Site Position', 'Sequence', 'Description']] = df['Info'].str.split('++', expand=True, regex=False)
-        df['Sequence'] = df['Sequence'].str[2:-2].replace('\W', '', regex=True)
+        df['Sequence'] = df['Sequence'].str[2:-2].replace(r'\W', '', regex=True)
         df.drop(columns='Info', inplace=True)
         df['Site Position'] = df['Site Position'].fillna('Unknown')
         df['Labels'] = df['Gene Symbol'] + "_Y" + df['Site Position'].astype(str)
@@ -76,6 +76,7 @@ if len(all_files) > 0:
     default_site = default_site_choices[0] if default_site_choices else None
 else:
     df = pd.DataFrame()
+    raw_drugs = []
     drug_choices = {"No Data Found": "No Data Found"}
     default_drug = "No Data Found"
     gene_to_sites, gene_choices, default_gene, default_site_choices, default_site = {}, ["No Data Found"], "No Data Found", ["No Data Found"], "No Data Found"
@@ -84,6 +85,31 @@ else:
 app_ui = ui.page_fluid(
     ui.h2("Tyrosine Library Screening"),
     ui.navset_card_tab(
+        ui.nav_panel(
+            "Summary View",
+            ui.layout_columns(
+                ui.card(ui.h5("Global Site Average R"), output_widget("summary_site_avg_hist")),
+                ui.card(ui.h5("Compound Promiscuity by Type"), output_widget("summary_prom_hist")),
+                col_widths=(6, 6)
+            ),
+            ui.card(
+                ui.h5("Targeted Subsets Engagement Profile"),
+                ui.layout_columns(
+                    ui.input_selectize("summary_drug", "Select Drug:", choices=drug_choices, selected=default_drug),
+                    ui.div(
+                        ui.input_switch("summary_sig_only", "Consider only significant (p < 0.05) sites", value=False),
+                        style="padding-top: 30px;"
+                    ),
+                    col_widths=(6, 6)
+                ),
+                ui.layout_columns(
+                    ui.div(ui.h6("Top Sites in Cancer Driver List"), output_widget("summary_cancer_bar")),
+                    ui.div(ui.h6("Top Sites at PPI Interfaces"), output_widget("summary_ppi_bar")),
+                    col_widths=(6, 6)
+                )
+            ),
+            value="summary_tab"
+        ),
         ui.nav_panel(
             "Compound View", 
             ui.layout_columns(
@@ -172,10 +198,6 @@ def get_chain_names(pdb_id):
     except Exception: return {}
 
 def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
-    """
-    Strictly aligns the full user peptide sequence against the PDB chains.
-    Now strictly ignores 'unobserved' (greyed out) residues that lack 3D coordinates.
-    """
     y_idx = str(user_seq).find('Y')
     if y_idx == -1: return None, None 
 
@@ -184,7 +206,7 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
             req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}")
             pdbe_data = json.loads(urllib.request.urlopen(req, timeout=10).read().decode('utf-8'))
         except Exception:
-            return 'A', str(site_pos) # Fallback if API fails
+            return 'A', str(site_pos)
             
     aa_map = {'ALA':'A', 'ARG':'R', 'ASN':'N', 'ASP':'D', 'CYS':'C', 'GLN':'Q', 'GLU':'E', 
               'GLY':'G', 'HIS':'H', 'ILE':'I', 'LEU':'L', 'LYS':'K', 'MET':'M', 'PHE':'F', 
@@ -201,13 +223,10 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
                 auth_num = res.get('author_residue_number')
                 auth_ins = res.get('author_insertion_code', '')
                 auth_nums.append(f"{auth_num}{auth_ins}".strip() if auth_num is not None else None)
-                
-                # NEW: Track if the residue actually has 3D coordinates
                 observed.append(res.get('observed_ratio', 1) > 0)
                 
             if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums, observed))
             
-    # Check 1: Exact match of the FULL tryptic peptide anywhere in the chain
     for chain_id, chain_seq, auth_nums, observed_flags in all_chains:
         start = 0
         while True:
@@ -216,12 +235,10 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
             
             exact_match_idx = match_start + y_idx
             if exact_match_idx < len(auth_nums) and auth_nums[exact_match_idx] is not None:
-                # NEW: Ensure the target residue is structurally resolved
                 if observed_flags[exact_match_idx]: 
                     return chain_id, auth_nums[exact_match_idx]
             start = match_start + 1
 
-    # Check 2: Substring match at original site_pos 
     for chain_id, chain_seq, auth_nums, observed_flags in all_chains:
         if str(site_pos) in auth_nums:
             idx = auth_nums.index(str(site_pos))
@@ -235,7 +252,6 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
                 expected_subseq = user_seq[user_start:user_end]
                 
                 if extracted == expected_subseq:
-                    # NEW: Ensure the target residue is structurally resolved
                     if observed_flags[idx]: 
                         return chain_id, str(site_pos)
 
@@ -252,16 +268,26 @@ def server(input, output, session):
             delete atom.label;
         }
     }"""
-    
+
+    # Sync Drug Dropdowns between Summary and Compound Views
+    @reactive.Effect
+    @reactive.event(input.summary_drug, ignore_init=True)
+    def sync_from_summary():
+        ui.update_selectize("data_type", selected=input.summary_drug())
+        active_drug.set(input.summary_drug())
+
+    @reactive.Effect
+    @reactive.event(input.data_type, ignore_init=True)
+    def sync_from_compound():
+        ui.update_selectize("summary_drug", selected=input.data_type())
+        active_drug.set(input.data_type())
+        
     @reactive.Effect
     @reactive.event(input.main_tabs)
     def handle_tab_switch():
-        active_drug.set(None if input.main_tabs() == "site_tab" else input.data_type())
-            
-    @reactive.Effect
-    @reactive.event(input.data_type)
-    def handle_dropdown():
-        if input.main_tabs() == "compound_tab": active_drug.set(input.data_type())
+        if input.main_tabs() == "site_tab": active_drug.set(None)
+        elif input.main_tabs() == "compound_tab": active_drug.set(input.data_type())
+        elif input.main_tabs() == "summary_tab": active_drug.set(input.summary_drug())
 
     @reactive.Effect
     def update_site_dropdown():
@@ -270,6 +296,72 @@ def server(input, output, session):
             sites = gene_to_sites[gene]
             ui.update_selectize("target_site_pos", choices=sites, selected=sites[0] if sites else None)
 
+    # --- SUMMARY VIEW PLOTS ---
+    @render_widget
+    def summary_site_avg_hist():
+        if df is None or df.empty: return go.FigureWidget()
+        log_cols = [c for c in df.columns if 'log2' in c and ' R' in c]
+        if not log_cols: return go.FigureWidget()
+        
+        avg_r = (2 ** df[log_cols]).replace([np.inf, -np.inf], np.nan).mean(axis=1)
+        fig = px.histogram(x=avg_r, nbins=100, labels={'x': 'Site Average R', 'y': 'Frequency'}, color_discrete_sequence=['#4470AD'])
+        fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40))
+        return go.FigureWidget(fig)
+
+    @render_widget
+    def summary_prom_hist():
+        if not raw_drugs or df is None: return go.FigureWidget()
+        prom, prom_type_list = [], []
+        
+        for d in raw_drugs:
+            log_col = f'log2 {d} R'
+            if log_col in df.columns:
+                valid = df[log_col].dropna()
+                if len(valid) > 0:
+                    prom.append((valid > 1).sum() / len(valid) * 100)
+                    prom_type_list.append(type_dict.get(d, 'Unknown'))
+                    
+        prom_df = pd.DataFrame({'Promiscuity': prom, 'Type': prom_type_list})
+        fig = px.histogram(prom_df, x='Promiscuity', color='Type', nbins=100, barmode='overlay', opacity=0.7, 
+                           labels={'Promiscuity': 'Compound Promiscuity (% Sites Hit at R > 2)', 'count': 'Frequency'})
+        fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40), legend_title_text='')
+        return go.FigureWidget(fig)
+
+    def get_subset_bar_plot(drug, subset_mask, sig_only):
+        if not drug or df is None or df.empty: return go.FigureWidget()
+        log_col = f'log2 {drug} R'
+        p_col = f'-log10 {drug} p'
+        if log_col not in df.columns or p_col not in df.columns: return go.FigureWidget()
+        
+        mask = subset_mask.copy()
+        if sig_only:
+            mask = mask & (df[p_col] > -np.log10(0.05))
+            
+        plot_df = df[mask].copy()
+        if plot_df.empty:
+            return go.FigureWidget(px.bar(title="No sites meet the criteria for this compound."))
+            
+        plot_df['R'] = 2 ** plot_df[log_col]
+        # Top 30 sites to prevent the bar plot from becoming illegibly crowded
+        plot_df = plot_df.sort_values('R', ascending=False).head(30) 
+        
+        fig = px.bar(plot_df, x='Labels', y='R', color='R', color_continuous_scale='Reds', hover_data=['Gene Symbol', 'Description'])
+        fig.update_layout(xaxis_title="", yaxis_title="R", plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=20, b=40), coloraxis_showscale=False)
+        return go.FigureWidget(fig)
+
+    @render_widget
+    def summary_cancer_bar():
+        mask = df['Gene Symbol'].isin(cancer['Gene'])
+        return get_subset_bar_plot(active_drug.get(), mask, input.summary_sig_only())
+
+    @render_widget
+    def summary_ppi_bar():
+        ppi_targets = set(ppi_df['Target'].dropna().unique())
+        mask = df['Labels'].str.replace('_Y', '_', regex=False).isin(ppi_targets)
+        return get_subset_bar_plot(active_drug.get(), mask, input.summary_sig_only())
+
+
+    # --- COMPOUND & SITE VIEW PLOTS ---
     @reactive.Calc
     def available_pdbs():
         gene = input.target_gene()
@@ -281,8 +373,6 @@ def server(input, output, session):
         if matching_rows.empty: return {}
 
         uniprot = str(matching_rows.iloc[0]['Protein Id']).split('|')[1].split('-')[0] if '|' in str(matching_rows.iloc[0]['Protein Id']) else str(matching_rows.iloc[0]['Protein Id']).split('-')[0]
-        
-        # Extract the user's tryptic peptide sequence to pass to the rigorous checker
         user_seq = str(matching_rows.iloc[0]['Sequence'])
 
         try:
@@ -302,23 +392,17 @@ def server(input, output, session):
                             for start_str, end_str in re.findall(r'(\d+)-(\d+)', prop['value'].split('=', 1)[1]):
                                 start, end = int(start_str), int(end_str)
                                 coverage += (end - start + 1)
-                                
-                                # Step 1: Fast boundary check
                                 if start <= site_num <= end: has_site = True
                                 
-                    # Step 2: Rigorous Sequence and Observation validation
                     if has_site:
                         chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_str, user_seq)
-                        # If the sequence isn't found, or if it is greyed out (unobserved), override to False
                         if chain_id is None:
                             has_site = False
 
                     method_score = 1 if 'EM' in method.upper() else 2 if 'X-RAY' in method.upper() else 3 if 'NMR' in method.upper() else 4
                     pdb_list.append({'id': pdb_id, 'has_site': has_site, 'method_score': method_score, 'res_val': res_val, 'coverage': coverage, 'method_label': method, 'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"})
             
-            # Sort so the rigorously validated PDBs stay at the top of the dropdown
             pdb_list.sort(key=lambda x: (not x['has_site'], x['method_score'], x['res_val'], -x['coverage']))
-            
             return {p['id']: f"{p['id']}|{'Site Present' if p['has_site'] else 'Site Absent'}|{p['method_label']}|{p['res_label']}|{p['coverage']}aa" for p in pdb_list}
         except Exception: return {}
 
@@ -337,7 +421,6 @@ def server(input, output, session):
             return
 
         valid_ppis = ppi_df[ppi_df['Target'] == f"{gene}_{site_str}"].copy()
-        
         if valid_ppis.empty: ui.update_select("ppi_selector", choices={"none": "No PPI interfaces found"}, selected="none")
         else:
             valid_ppis = valid_ppis.sort_values('Min_Distance', ascending=True)
@@ -359,7 +442,7 @@ def server(input, output, session):
 
     @reactive.Calc
     def plot_data():
-        data_type, threshold, n_labels, color_mode = input.data_type(), input.threshold(), input.n_labels(), input.color_mode()
+        data_type, threshold, n_labels, color_mode = active_drug.get(), input.threshold(), input.n_labels(), input.color_mode()
         plot_df = pd.DataFrame({
             'Site': np.arange(len(df[f'log2 {data_type} R'])), 'R_plot': 2**df[f'log2 {data_type} R'], 'R': 2**df[f'log2 {data_type} R'],
             'P-value': 10**-df[f'-log10 {data_type} p'], 'log2 R': df[f'log2 {data_type} R'], '-log10 p': df[f'-log10 {data_type} p'],
@@ -491,13 +574,10 @@ def server(input, output, session):
         if matching_rows.empty: return ui.p("")
         
         row = matching_rows.iloc[0]
-        
-        # Verify sequence and map exact chain/site location
         chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_pos, str(row['Sequence']))
 
         mapping_notice = ""
         if chain_id is None:
-            # REMOVED FALLBACK. Simply update the notice to reflect it's absent.
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. No residue highlighted.</i></span>"
         elif mapped_site_pos != site_pos:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
@@ -512,13 +592,11 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         
-        # ONLY apply styles and zoom to residue if the site actually exists
         if chain_id is not None:
             target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
             view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
             view.zoomTo(target_sel)
         else:
-            # Zoom out to show the whole protein if site is missing
             view.zoomTo()
             
         view.setHoverable({}, True, hover_js, unhover_js)
@@ -543,7 +621,6 @@ def server(input, output, session):
 
         mapping_notice = ""
         if chain_id is None:
-            # REMOVED FALLBACK.
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. No interface highlighted.</i></span>"
         elif mapped_site_pos != target_site:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
@@ -558,7 +635,6 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
-        # ONLY build the interface visualization if the site actually exists
         if chain_id is not None:
             target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
             view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
