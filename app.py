@@ -100,16 +100,20 @@ app_ui = ui.page_fluid(
                 ),
                 ui.layout_columns(
                     ui.div(
-                        ui.h6("Cancer Driver Sites"), 
-                        ui.input_selectize("summary_cancer_site", "Select Target Site:", choices=["Loading..."]),
+                        ui.input_selectize("summary_cancer_site", "Cancer Driver Sites:", choices=["Loading..."]),
                         output_widget("summary_cancer_bar")
                     ),
                     ui.div(
-                        ui.h6("PPI Interface Sites"), 
-                        ui.input_selectize("summary_ppi_site", "Select Target Site:", choices=["Loading..."]),
+                        ui.input_selectize("summary_ppi_site", "PPI Interface Sites:", choices=["Loading..."]),
                         output_widget("summary_ppi_bar")
                     ),
                     col_widths=(6, 6)
+                ),
+                ui.hr(),
+                ui.div(
+                    ui.h6("Selected Compound Structure", style="text-align: center; color: #555;"),
+                    ui.output_ui("molecule_ui_summary"),
+                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 10px;"
                 )
             ),
             value="summary_tab"
@@ -272,17 +276,19 @@ def server(input, output, session):
             delete atom.label;
         }
     }"""
+        
+    @reactive.Effect
+    @reactive.event(input.main_tabs)
+    def handle_tab_switch():
+        if input.main_tabs() == "site_tab": active_drug.set(None)
+        elif input.main_tabs() == "compound_tab": active_drug.set(input.data_type())
+        elif input.main_tabs() == "summary_tab": active_drug.set(None) # Clear when returning to summary
 
     @reactive.Effect
     @reactive.event(input.data_type, ignore_init=True)
-    def sync_from_compound():
-        active_drug.set(input.data_type())
-
-    @reactive.Effect
-    @reactive.event(active_drug)
-    def update_compound_dropdown():
-        if active_drug.get():
-            ui.update_selectize("data_type", selected=active_drug.get())
+    def update_drug_from_dropdown():
+        if input.main_tabs() == "compound_tab":
+            active_drug.set(input.data_type())
 
     @reactive.Effect
     def update_site_dropdown():
@@ -406,6 +412,23 @@ def server(input, output, session):
     def summary_ppi_bar():
         return get_site_compounds_bar_plot(input.summary_ppi_site(), input.summary_sig_only())
 
+    # --- MOLECULE HTML RENDERERS ---
+    def generate_molecule_html(drug):
+        if not drug: return ui.p("Click a bar in the plots above to view the compound structure.", style="color: gray; font-style: italic;")
+        smiles = smiles_dict.get(drug, "") 
+        if not smiles: return ui.p(f"No SMILES available for {drug}.", style="color: gray; font-style: italic;")
+        img_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{urllib.parse.quote(smiles)}/PNG"
+        return ui.HTML(f'<div style="text-align: center;"><b>{drug}</b><br><img src="{img_url}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px; margin-top: 5px;"></div>')
+
+    @render.ui
+    def molecule_ui_summary(): return generate_molecule_html(active_drug.get())
+
+    @render.ui
+    def molecule_ui_compound(): return generate_molecule_html(active_drug.get())
+
+    @render.ui
+    def molecule_ui_site(): return generate_molecule_html(active_drug.get())
+
 
     # --- COMPOUND & SITE VIEW PLOTS ---
     @reactive.Calc
@@ -473,22 +496,15 @@ def server(input, output, session):
             choices = {row['PDB_ID']: f"{row['PDB_ID']}|{row['Min_Distance']:.1f} Å" for _, row in valid_ppis.iterrows()}
             ui.update_select("ppi_selector", choices=choices, selected=list(choices.keys())[0])
 
-    def generate_molecule_html(drug):
-        if not drug: return ui.p("Select a drug or click a bar to view structure.", style="color: gray; font-style: italic;")
-        smiles = smiles_dict.get(drug, "") 
-        if not smiles: return ui.p("No SMILES available for this drug.", style="color: gray; font-style: italic;")
-        img_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{urllib.parse.quote(smiles)}/PNG"
-        return ui.HTML(f'<div style="text-align: center;"><img src="{img_url}" style="width:100%; max-width:250px; background-color:white; border: 1px solid #ddd; border-radius: 4px; padding: 5px;"></div>')
-
-    @render.ui
-    def molecule_ui_compound(): return generate_molecule_html(active_drug.get())
-
-    @render.ui
-    def molecule_ui_site(): return generate_molecule_html(active_drug.get())
 
     @reactive.Calc
     def plot_data():
         data_type, threshold, n_labels, color_mode = active_drug.get(), input.threshold(), input.n_labels(), input.color_mode()
+        
+        # Guard if no drug is selected yet (e.g. fresh launch on Compound tab)
+        if not data_type or f'log2 {data_type} R' not in df.columns:
+            return pd.DataFrame(), []
+
         plot_df = pd.DataFrame({
             'Site': np.arange(len(df[f'log2 {data_type} R'])), 'R_plot': 2**df[f'log2 {data_type} R'], 'R': 2**df[f'log2 {data_type} R'],
             'P-value': 10**-df[f'-log10 {data_type} p'], 'log2 R': df[f'log2 {data_type} R'], '-log10 p': df[f'-log10 {data_type} p'],
@@ -515,6 +531,8 @@ def server(input, output, session):
     @render_widget
     def site_plot():
         plot_df, valid_indices = plot_data()
+        if plot_df.empty: return go.FigureWidget()
+
         fig = px.scatter(plot_df, x='Site', y='R_plot', color='color', hover_data=hover_dict, color_discrete_map={'non-significant': '#dddddd', 'high': '#4470AD', 'highlight': '#D62728'}) if input.color_mode() != "P-Value Gradient" else px.scatter(plot_df, x='Site', y='R_plot', color='P-value', color_continuous_scale='Viridis_r', hover_data=hover_dict)
         if input.color_mode() == "P-Value Gradient": fig.update_traces(marker=dict(opacity=plot_df['alpha']))
         else: fig.update_traces(marker=dict(opacity=0.2 if input.color_mode() == "Above Threshold" else 0.15), selector=dict(name='non-significant'))
@@ -531,6 +549,8 @@ def server(input, output, session):
     @render_widget
     def volcano_plot():
         volcano_df, _ = plot_data() 
+        if volcano_df.empty: return go.FigureWidget()
+
         safe_thresh = input.threshold() if input.threshold() > 0 else 1e-9 
         sig_mask = (volcano_df['log2 R'] > np.log2(safe_thresh)) & (volcano_df['-log10 p'] > -np.log10(0.05))
         volcano_df['color'] = 'non-significant'
