@@ -94,17 +94,21 @@ app_ui = ui.page_fluid(
             ),
             ui.card(
                 ui.h5("Targeted Subsets Engagement Profile"),
-                ui.layout_columns(
-                    ui.input_selectize("summary_drug", "Select Drug:", choices=drug_choices, selected=default_drug),
-                    ui.div(
-                        ui.input_switch("summary_sig_only", "Consider only significant (p < 0.05) sites", value=False),
-                        style="padding-top: 30px;"
-                    ),
-                    col_widths=(6, 6)
+                ui.div(
+                    ui.input_switch("summary_sig_only", "Consider only significant (p < 0.05) interactions", value=False),
+                    style="padding-bottom: 10px;"
                 ),
                 ui.layout_columns(
-                    ui.div(ui.h6("Top Sites in Cancer Driver List"), output_widget("summary_cancer_bar")),
-                    ui.div(ui.h6("Top Sites at PPI Interfaces"), output_widget("summary_ppi_bar")),
+                    ui.div(
+                        ui.h6("Cancer Driver Sites"), 
+                        ui.input_selectize("summary_cancer_site", "Select Target Site:", choices=["Loading..."]),
+                        output_widget("summary_cancer_bar")
+                    ),
+                    ui.div(
+                        ui.h6("PPI Interface Sites"), 
+                        ui.input_selectize("summary_ppi_site", "Select Target Site:", choices=["Loading..."]),
+                        output_widget("summary_ppi_bar")
+                    ),
                     col_widths=(6, 6)
                 )
             ),
@@ -269,25 +273,16 @@ def server(input, output, session):
         }
     }"""
 
-    # Sync Drug Dropdowns between Summary and Compound Views
-    @reactive.Effect
-    @reactive.event(input.summary_drug, ignore_init=True)
-    def sync_from_summary():
-        ui.update_selectize("data_type", selected=input.summary_drug())
-        active_drug.set(input.summary_drug())
-
     @reactive.Effect
     @reactive.event(input.data_type, ignore_init=True)
     def sync_from_compound():
-        ui.update_selectize("summary_drug", selected=input.data_type())
         active_drug.set(input.data_type())
-        
+
     @reactive.Effect
-    @reactive.event(input.main_tabs)
-    def handle_tab_switch():
-        if input.main_tabs() == "site_tab": active_drug.set(None)
-        elif input.main_tabs() == "compound_tab": active_drug.set(input.data_type())
-        elif input.main_tabs() == "summary_tab": active_drug.set(input.summary_drug())
+    @reactive.event(active_drug)
+    def update_compound_dropdown():
+        if active_drug.get():
+            ui.update_selectize("data_type", selected=active_drug.get())
 
     @reactive.Effect
     def update_site_dropdown():
@@ -296,7 +291,49 @@ def server(input, output, session):
             sites = gene_to_sites[gene]
             ui.update_selectize("target_site_pos", choices=sites, selected=sites[0] if sites else None)
 
-    # --- SUMMARY VIEW PLOTS ---
+    # --- SUMMARY VIEW LOGIC ---
+    @reactive.Calc
+    def site_max_r():
+        sig_only = input.summary_sig_only()
+        if df is None or df.empty or not raw_drugs:
+            return {}, {}
+            
+        r_cols = [f'log2 {d} R' for d in raw_drugs if f'log2 {d} R' in df.columns]
+        r_df = df[r_cols].copy()
+        
+        if sig_only:
+            p_thresh = -np.log10(0.05)
+            for d in raw_drugs:
+                r_col = f'log2 {d} R'
+                p_col = f'-log10 {d} p'
+                if r_col in df.columns and p_col in df.columns:
+                    mask = (df[p_col].isna()) | (df[p_col] <= p_thresh)
+                    r_df.loc[mask, r_col] = np.nan
+                    
+        r_df = 2 ** r_df
+        max_r = r_df.max(axis=1)
+        
+        sum_df = pd.DataFrame({
+            'Labels': df['Labels'],
+            'Gene': df['Gene Symbol'],
+            'Max_R': max_r
+        }).dropna(subset=['Max_R'])
+        
+        cancer_df = sum_df[sum_df['Gene'].isin(cancer['Gene'])].sort_values('Max_R', ascending=False)
+        cancer_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in cancer_df.iterrows()}
+        
+        ppi_targets = set(ppi_df['Target'].dropna().unique())
+        ppi_df_filtered = sum_df[sum_df['Labels'].str.replace('_Y', '_', regex=False).isin(ppi_targets)].sort_values('Max_R', ascending=False)
+        ppi_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in ppi_df_filtered.iterrows()}
+        
+        return cancer_choices, ppi_choices
+
+    @reactive.Effect
+    def update_summary_dropdowns():
+        cancer_choices, ppi_choices = site_max_r()
+        ui.update_selectize("summary_cancer_site", choices=cancer_choices, selected=list(cancer_choices.keys())[0] if cancer_choices else None)
+        ui.update_selectize("summary_ppi_site", choices=ppi_choices, selected=list(ppi_choices.keys())[0] if ppi_choices else None)
+
     @render_widget
     def summary_site_avg_hist():
         if df is None or df.empty: return go.FigureWidget()
@@ -327,38 +364,47 @@ def server(input, output, session):
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40), legend_title_text='')
         return go.FigureWidget(fig)
 
-    def get_subset_bar_plot(drug, subset_mask, sig_only):
-        if not drug or df is None or df.empty: return go.FigureWidget()
-        log_col = f'log2 {drug} R'
-        p_col = f'-log10 {drug} p'
-        if log_col not in df.columns or p_col not in df.columns: return go.FigureWidget()
+    def get_site_compounds_bar_plot(site_label, sig_only):
+        if not site_label or site_label == "Loading..." or df is None or df.empty: return go.FigureWidget()
         
-        mask = subset_mask.copy()
-        if sig_only:
-            mask = mask & (df[p_col] > -np.log10(0.05))
-            
-        plot_df = df[mask].copy()
-        if plot_df.empty:
-            return go.FigureWidget(px.bar(title="No sites meet the criteria for this compound."))
-            
-        plot_df['R'] = 2 ** plot_df[log_col]
-        # Top 30 sites to prevent the bar plot from becoming illegibly crowded
-        plot_df = plot_df.sort_values('R', ascending=False).head(30) 
+        matching_rows = df[df['Labels'] == site_label]
+        if matching_rows.empty: return go.FigureWidget()
+        row = matching_rows.iloc[0]
         
-        fig = px.bar(plot_df, x='Labels', y='R', color='R', color_continuous_scale='Reds', hover_data=['Gene Symbol', 'Description'])
+        drug_data = []
+        p_thresh = -np.log10(0.05)
+        for d in raw_drugs:
+            r_col = f'log2 {d} R'
+            p_col = f'-log10 {d} p'
+            if r_col in df.columns:
+                r_val = row[r_col]
+                if pd.isna(r_val): continue
+                
+                if sig_only and p_col in df.columns:
+                    if pd.isna(row[p_col]) or row[p_col] <= p_thresh:
+                        continue
+                        
+                drug_data.append({'Drug': d, 'R': 2**r_val})
+                
+        if not drug_data:
+            return go.FigureWidget(px.bar(title="No compounds meet the criteria."))
+            
+        bar_df = pd.DataFrame(drug_data).sort_values('R', ascending=False).head(30)
+        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds')
         fig.update_layout(xaxis_title="", yaxis_title="R", plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=20, b=40), coloraxis_showscale=False)
-        return go.FigureWidget(fig)
+        
+        widget = go.FigureWidget(fig)
+        if widget.data: 
+            widget.data[0].on_click(lambda t, p, s: active_drug.set(t.x[p.point_inds[0]]) if p.point_inds else None)
+        return widget
 
     @render_widget
     def summary_cancer_bar():
-        mask = df['Gene Symbol'].isin(cancer['Gene'])
-        return get_subset_bar_plot(active_drug.get(), mask, input.summary_sig_only())
+        return get_site_compounds_bar_plot(input.summary_cancer_site(), input.summary_sig_only())
 
     @render_widget
     def summary_ppi_bar():
-        ppi_targets = set(ppi_df['Target'].dropna().unique())
-        mask = df['Labels'].str.replace('_Y', '_', regex=False).isin(ppi_targets)
-        return get_subset_bar_plot(active_drug.get(), mask, input.summary_sig_only())
+        return get_site_compounds_bar_plot(input.summary_ppi_site(), input.summary_sig_only())
 
 
     # --- COMPOUND & SITE VIEW PLOTS ---
