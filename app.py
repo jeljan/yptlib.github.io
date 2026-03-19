@@ -92,8 +92,8 @@ app_ui = ui.page_fluid(
         ui.nav_panel(
             "Summary View",
             ui.layout_columns(
-                ui.card(ui.h5("Global Site Average R"), output_widget("summary_site_avg_hist")),
-                ui.card(ui.h5("Compound Promiscuity by Type"), output_widget("summary_prom_hist")),
+                ui.card(ui.h5("Site Promiscuity"), output_widget("summary_site_hist")),
+                ui.card(ui.h5("Compound Promiscuity by Type"), output_widget("summary_drug_hist")),
                 col_widths=(6, 6)
             ),
             ui.card(
@@ -343,32 +343,37 @@ def server(input, output, session):
         ui.update_selectize("summary_ppi_site", choices=ppi_choices, selected=list(ppi_choices.keys())[0] if ppi_choices else None)
 
     @render_widget
-    def summary_site_avg_hist():
+    def summary_site_hist():
         if df is None or df.empty: return go.FigureWidget()
         log_cols = [c for c in df.columns if 'log2' in c and ' R' in c]
         if not log_cols: return go.FigureWidget()
         
-        avg_r = (2 ** df[log_cols]).replace([np.inf, -np.inf], np.nan).mean(axis=1)
-        fig = px.histogram(x=avg_r, nbins=100, labels={'x': 'Site Average R', 'y': 'Frequency'}, color_discrete_sequence=['#4470AD'])
-        fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40))
+        site_prom = (df[[i for i in df.columns if 'R' in i]]>1).sum(axis=1)/df[[i for i in df.columns if 'R' in i]].shape[1]
+        
+        prom_df = pd.DataFrame({'Promiscuity': site_prom})
+        fig = px.histogram(prom_df, x='Promiscuity', nbins=100, opacity=0.7, 
+                           labels={'Promiscuity': 'Site Promiscuity (% Compounds Hit at R > 2)', 'Frequency': 'Frequency'})
+        fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40), legend_title_text='')
+        
+        
         return go.FigureWidget(fig)
 
     @render_widget
-    def summary_prom_hist():
+    def summary_drug_hist():
         if not raw_drugs or df is None: return go.FigureWidget()
-        prom, prom_type_list = [], []
+        cpd_prom, prom_type_list = [], []
         
         for d in raw_drugs:
             log_col = f'log2 {d} R'
             if log_col in df.columns:
                 valid = df[log_col].dropna()
                 if len(valid) > 0:
-                    prom.append((valid > 1).sum() / len(valid) * 100)
+                    cpd_prom.append((valid > 1).sum() / len(valid) * 100)
                     prom_type_list.append(type_dict.get(d, 'Unknown'))
                     
-        prom_df = pd.DataFrame({'Promiscuity': prom, 'Type': prom_type_list})
+        prom_df = pd.DataFrame({'Promiscuity': cpd_prom, 'Type': prom_type_list})
         fig = px.histogram(prom_df, x='Promiscuity', color='Type', nbins=100, barmode='overlay', opacity=0.7, 
-                           labels={'Promiscuity': 'Compound Promiscuity (% Sites Hit at R > 2)', 'count': 'Frequency'})
+                           labels={'Promiscuity': 'Compound Promiscuity (% Sites Hit at R > 2)', 'Frequency': 'Frequency'})
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40), legend_title_text='')
         return go.FigureWidget(fig)
 
