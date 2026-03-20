@@ -607,82 +607,82 @@ def server(input, output, session):
         if widget.data: widget.data[0].on_click(lambda t, p, s: active_drug.set(t.x[p.point_inds[0]]) if p.point_inds else None)
         return widget
 
-@render.ui
-def alphafold_viewer():
-    gene, site_pos = input.target_gene(), input.target_site_pos()
-    if not gene or not site_pos or df.empty: return ui.p("Please select a Gene and Site.")
-    
-    matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
-    if matching_rows.empty: return ui.p("Loading structure...")
+    @render.ui
+    def alphafold_viewer():
+        gene, site_pos = input.target_gene(), input.target_site_pos()
+        if not gene or not site_pos or df.empty: return ui.p("Please select a Gene and Site.")
+        
+        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
+        if matching_rows.empty: return ui.p("Loading structure...")
 
-    row = matching_rows.iloc[0]
-    uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
+        row = matching_rows.iloc[0]
+        uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
 
-    # --- HTML payload for PDBe Molstar ---
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
-        <style>
-            body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
-            #molstar-container {{ width: 100%; height: 100%; position: relative; }}
-        </style>
-    </head>
-    <body>
-        <div id="molstar-container"></div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {{
-                var viewerInstance = new PDBeMolstarPlugin();
-                
-                var options = {{
-                    customData: {{
-                        url: 'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif',
-                        format: 'cif'
-                    }},
-                    alphafoldView: true, // MAGIC FLAG: Automatically colors by pLDDT!
-                    bgColor: {{r: 255, g: 255, b: 255}},
-                    hideControls: true, // Hides the bulky left-hand menu
-                    hideCanvasControls: ['expand', 'selection', 'animation'] // Cleans up the canvas
-                }};
-                
-                var viewerContainer = document.getElementById('molstar-container');
-                
-                // Render the structure, then zoom and highlight the target site
-                viewerInstance.render(viewerContainer, options).then(() => {{
-                    viewerInstance.visual.select({{
-                        data: [{{
-                            struct_asym_id: 'A', // Chain A
-                            residue_number: {site_pos},
-                            color: {{r: 255, g: 0, b: 0}} // Highlight Red
-                        }}],
-                        nonSelectedColor: undefined // Leaves the rest of the protein colored by pLDDT
-                    }});
+        # --- HTML payload for PDBe Molstar ---
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
+            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
+            <style>
+                body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
+                #molstar-container {{ width: 100%; height: 100%; position: relative; }}
+            </style>
+        </head>
+        <body>
+            <div id="molstar-container"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {{
+                    var viewerInstance = new PDBeMolstarPlugin();
                     
-                    // Focus camera on the specific residue
-                    viewerInstance.visual.focus([{{
-                        struct_asym_id: 'A',
-                        residue_number: {site_pos}
-                    }}]);
+                    var options = {{
+                        customData: {{
+                            url: 'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif',
+                            format: 'cif'
+                        }},
+                        alphafoldView: true, // MAGIC FLAG: Automatically colors by pLDDT!
+                        bgColor: {{r: 255, g: 255, b: 255}},
+                        hideControls: true, // Hides the bulky left-hand menu
+                        hideCanvasControls: ['expand', 'selection', 'animation'] // Cleans up the canvas
+                    }};
+                    
+                    var viewerContainer = document.getElementById('molstar-container');
+                    
+                    // Render the structure, then zoom and highlight the target site
+                    viewerInstance.render(viewerContainer, options).then(() => {{
+                        viewerInstance.visual.select({{
+                            data: [{{
+                                struct_asym_id: 'A', // Chain A
+                                residue_number: {site_pos},
+                                color: {{r: 255, g: 0, b: 0}} // Highlight Red
+                            }}],
+                            nonSelectedColor: undefined // Leaves the rest of the protein colored by pLDDT
+                        }});
+                        
+                        // Focus camera on the specific residue
+                        viewerInstance.visual.focus([{{
+                            struct_asym_id: 'A',
+                            residue_number: {site_pos}
+                        }}]);
+                    }});
                 }});
-            }});
-        </script>
-    </body>
-    </html>
-    """
-    
-    # Encode the HTML into a base64 data URI for the iframe
-    b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-    
-    # We no longer need the custom color legend in the UI because Mol* provides one natively when alphafoldView is true!
-    return ui.HTML(f'''
-    <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-        <br><b>Structure (Mol*): <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
-    </div>
-    <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
-    ''')
+            </script>
+        </body>
+        </html>
+        """
+        
+        # Encode the HTML into a base64 data URI for the iframe
+        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+        
+        # We no longer need the custom color legend in the UI because Mol* provides one natively when alphafoldView is true!
+        return ui.HTML(f'''
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+            <br><b>Structure (Mol*): <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
+        </div>
+        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        ''')
     
     @render.ui
     def pdb_viewer():
