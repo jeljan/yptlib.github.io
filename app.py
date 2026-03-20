@@ -626,11 +626,12 @@ def server(input, output, session):
         view = py3Dmol.view(width="100%", height=500)
         view.addModel(pdb_data, "cif")
         
-        # Color by pLDDT (AlphaFold B-factor bins)
-        view.setStyle({'b': [-100, 50]}, {'cartoon': {'color': '#ff7d45'}})   # Orange: Very low (<50)
-        view.addStyle({'b': [50, 70]}, {'cartoon': {'color': '#ffe500'}})      # Yellow: Low (50-70)
-        view.addStyle({'b': [70, 90]}, {'cartoon': {'color': '#65cbff'}})      # Cyan: Confident (70-90)
-        view.addStyle({'b': [90, 1000]}, {'cartoon': {'color': '#0053d6'}})    # Blue: Very high (>90)
+        # --- THE FIX: Valid Py3Dmol less-than/greater-than bounds ---
+        # setStyle clears all defaults, addStyle layers the remaining colors
+        view.setStyle({'b': {'lt': 50}}, {'cartoon': {'color': '#ff7d45'}})             # Orange: Very low (<50)
+        view.addStyle({'b': {'gt': 49.99, 'lt': 70}}, {'cartoon': {'color': '#ffe500'}})  # Yellow: Low (50-70)
+        view.addStyle({'b': {'gt': 69.99, 'lt': 90}}, {'cartoon': {'color': '#65cbff'}})  # Cyan: Confident (70-90)
+        view.addStyle({'b': {'gt': 89.99}}, {'cartoon': {'color': '#0053d6'}})            # Blue: Very high (>90)
         
         # Highlight the specific site
         view.addStyle({'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
