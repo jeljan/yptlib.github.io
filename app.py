@@ -649,10 +649,8 @@ def server(input, output, session):
 
         mapping_notice = ""
         if chain_id is None:
-            # RESTORED FALLBACK LOGIC
-            chain_id = 'A'
-            mapped_site_pos = str(site_pos)
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Defaulting to Chain A.</i></span>"
+            # FULL STRUCTURE FALLBACK
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Showing full structure.</i></span>"
         elif mapped_site_pos != site_pos:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -666,10 +664,12 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         
-        # Now safely guaranteed to have a target (real or fallback)
-        target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
-        view.zoomTo(target_sel)
+        if chain_id is not None:
+            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
+            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+            view.zoomTo(target_sel)
+        else:
+            view.zoomTo() # Fallback zoom to whole structure
             
         view.setHoverable({}, True, hover_js, unhover_js)
         
@@ -693,10 +693,8 @@ def server(input, output, session):
 
         mapping_notice = ""
         if chain_id is None:
-            # RESTORED FALLBACK LOGIC
-            chain_id = 'A'
-            mapped_site_pos = str(target_site)
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Defaulting to Chain A.</i></span>"
+            # FULL STRUCTURE FALLBACK
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Showing full structure.</i></span>"
         elif mapped_site_pos != target_site:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -710,11 +708,13 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
-        # Now safely guaranteed to have a target (real or fallback)
-        target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-        view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
-        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
-        view.zoomTo(target_sel)
+        if chain_id is not None:
+            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
+            view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
+            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
+            view.zoomTo(target_sel)
+        else:
+            view.zoomTo() # Fallback zoom to whole structure
 
         view.setHoverable({}, True, hover_js, unhover_js)
 
