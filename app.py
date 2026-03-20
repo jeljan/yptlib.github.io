@@ -164,7 +164,7 @@ app_ui = ui.page_fluid(
                         ui.nav_panel(
                             "Experimental Structure",
                             ui.div(
-                                ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                                ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                                 ui.input_select("pdb_selector", "Select PDB structure:", choices=["Loading..."], width="350px"),
                                 style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
                             ),
@@ -172,15 +172,15 @@ app_ui = ui.page_fluid(
                         ),
                         ui.nav_panel(
                             "AlphaFold Structure",
-                            ui.p("Selected site is highlighted in red.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                            ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                             ui.output_ui("alphafold_viewer")
                         ),
                         id="structure_tabs"
                     ),
                     ui.card(
                         ui.h5("Protein-Protein Interaction (PPI) Interfaces"),
-                        ui.p("Residues near site highlighted in cyan.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
-                        ui.layout_columns(ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]), col_widths=(12,)),
+                        ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
+                        ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
                         ui.output_ui("ppi_viewer")
                     )
                 ),
@@ -625,13 +625,29 @@ def server(input, output, session):
 
         view = py3Dmol.view(width="100%", height=500)
         view.addModel(pdb_data, "cif")
-        view.setStyle({'cartoon': {'color': 'spectrum'}})
+        
+        # Color by pLDDT (AlphaFold B-factor bins)
+        view.setStyle({'b': [-100, 50]}, {'cartoon': {'color': '#ff7d45'}})   # Orange: Very low (<50)
+        view.addStyle({'b': [50, 70]}, {'cartoon': {'color': '#ffe500'}})      # Yellow: Low (50-70)
+        view.addStyle({'b': [70, 90]}, {'cartoon': {'color': '#65cbff'}})      # Cyan: Confident (70-90)
+        view.addStyle({'b': [90, 1000]}, {'cartoon': {'color': '#0053d6'}})    # Blue: Very high (>90)
+        
+        # Highlight the specific site
         view.addStyle({'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+        
         view.zoomTo({'resi': site_pos})
         view.setHoverable({}, True, hover_js, unhover_js)
 
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;"><br><b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b></div>
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+            <br><b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
+            <div style="margin-top: 5px; display: flex; gap: 10px; font-size: 0.85em; color: #555;">
+                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #0053d6; border-radius: 2px;"></div> &gt;90 (Very High)</span>
+                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #65cbff; border-radius: 2px;"></div> 70-90 (Confident)</span>
+                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #ffe500; border-radius: 2px;"></div> 50-70 (Low)</span>
+                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #ff7d45; border-radius: 2px;"></div> &lt;50 (Very Low)</span>
+            </div>
+        </div>
         <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
     
@@ -650,7 +666,7 @@ def server(input, output, session):
         mapping_notice = ""
         if chain_id is None:
             # FULL STRUCTURE FALLBACK
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Showing full structure.</i></span>"
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Site not observed in this PDB, showing full structure.</i></span>"
         elif mapped_site_pos != site_pos:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -662,7 +678,7 @@ def server(input, output, session):
 
         view = py3Dmol.view(width="100%", height=480)
         view.addModel(pdb_data, "cif")
-        view.setStyle({'cartoon': {'color': 'spectrum'}})
+        view.setStyle({'cartoon': {'colorscheme': 'chain'}})
         
         if chain_id is not None:
             target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
@@ -694,7 +710,7 @@ def server(input, output, session):
         mapping_notice = ""
         if chain_id is None:
             # FULL STRUCTURE FALLBACK
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Showing full structure.</i></span>"
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Site not observed in this PDB, showing full structure.</i></span>"
         elif mapped_site_pos != target_site:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -711,7 +727,7 @@ def server(input, output, session):
         if chain_id is not None:
             target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
             view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
-            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
+            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
             view.zoomTo(target_sel)
         else:
             view.zoomTo() # Fallback zoom to whole structure
@@ -721,7 +737,7 @@ def server(input, output, session):
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
-            <span style="color: #444;"><i>Interface detected {viz_cutoff-1.0:.1f} Å away. </i></span>{mapping_notice}
+            {mapping_notice}
         </div>
         <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
