@@ -607,53 +607,82 @@ def server(input, output, session):
         if widget.data: widget.data[0].on_click(lambda t, p, s: active_drug.set(t.x[p.point_inds[0]]) if p.point_inds else None)
         return widget
 
-    @render.ui
-    def alphafold_viewer():
-        gene, site_pos = input.target_gene(), input.target_site_pos()
-        if not gene or not site_pos or df.empty: return ui.p("Please select a Gene and Site.")
-        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
-        if matching_rows.empty: return ui.p("Loading structure...")
+@render.ui
+def alphafold_viewer():
+    gene, site_pos = input.target_gene(), input.target_site_pos()
+    if not gene or not site_pos or df.empty: return ui.p("Please select a Gene and Site.")
+    
+    matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
+    if matching_rows.empty: return ui.p("Loading structure...")
 
-        row = matching_rows.iloc[0]
-        uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
+    row = matching_rows.iloc[0]
+    uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
 
-        chain_map_js = json.dumps({'A': str(row['Gene Symbol'])})
-        hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
-
-        try: pdb_data = urllib.request.urlopen(f"https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif").read().decode('utf-8').replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-        except Exception: return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve structure for {uniprot}.</div>")
-
-        view = py3Dmol.view(width="100%", height=500)
-        view.addModel(pdb_data, "cif")
-        
-        color_js = """function(atom) {
-            if (atom.b < 50) return '#ff7d45';       // Orange: Very low (<50)
-            if (atom.b < 70) return '#ffe500';       // Yellow: Low (50-70)
-            if (atom.b < 90) return '#65cbff';       // Cyan: Confident (70-90)
-            return '#0053d6';                        // Blue: Very high (>90)
-        }"""
-        
-        # Apply the base cartoon style with the dynamic color function to ALL atoms
-        view.setStyle({}, {'cartoon': {'colorfunc': color_js}})
-        
-        # Highlight the specific site (layers the stick on top of the cartoon)
-        view.addStyle({'resi': site_pos, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
-
-        view.zoomTo({'resi': site_pos})
-        view.setHoverable({}, True, hover_js, unhover_js)
-
-        return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <br><b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
-            <div style="margin-top: 5px; display: flex; gap: 10px; font-size: 0.85em; color: #555;">
-                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #0053d6; border-radius: 2px;"></div> &gt;90 (Very High)</span>
-                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #65cbff; border-radius: 2px;"></div> 70-90 (Confident)</span>
-                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #ffe500; border-radius: 2px;"></div> 50-70 (Low)</span>
-                <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 12px; height: 12px; background: #ff7d45; border-radius: 2px;"></div> &lt;50 (Very Low)</span>
-            </div>
-        </div>
-        <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
-        ''')
+    # --- HTML payload for PDBe Molstar ---
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
+        <style>
+            body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
+            #molstar-container {{ width: 100%; height: 100%; position: relative; }}
+        </style>
+    </head>
+    <body>
+        <div id="molstar-container"></div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {{
+                var viewerInstance = new PDBeMolstarPlugin();
+                
+                var options = {{
+                    customData: {{
+                        url: 'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif',
+                        format: 'cif'
+                    }},
+                    alphafoldView: true, // MAGIC FLAG: Automatically colors by pLDDT!
+                    bgColor: {{r: 255, g: 255, b: 255}},
+                    hideControls: true, // Hides the bulky left-hand menu
+                    hideCanvasControls: ['expand', 'selection', 'animation'] // Cleans up the canvas
+                }};
+                
+                var viewerContainer = document.getElementById('molstar-container');
+                
+                // Render the structure, then zoom and highlight the target site
+                viewerInstance.render(viewerContainer, options).then(() => {{
+                    viewerInstance.visual.select({{
+                        data: [{{
+                            struct_asym_id: 'A', // Chain A
+                            residue_number: {site_pos},
+                            color: {{r: 255, g: 0, b: 0}} // Highlight Red
+                        }}],
+                        nonSelectedColor: undefined // Leaves the rest of the protein colored by pLDDT
+                    }});
+                    
+                    // Focus camera on the specific residue
+                    viewerInstance.visual.focus([{{
+                        struct_asym_id: 'A',
+                        residue_number: {site_pos}
+                    }}]);
+                }});
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    
+    # Encode the HTML into a base64 data URI for the iframe
+    b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+    
+    # We no longer need the custom color legend in the UI because Mol* provides one natively when alphafoldView is true!
+    return ui.HTML(f'''
+    <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+        <br><b>Structure (Mol*): <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
+    </div>
+    <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+    ''')
     
     @render.ui
     def pdb_viewer():
