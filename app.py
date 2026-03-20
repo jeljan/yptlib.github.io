@@ -129,7 +129,7 @@ app_ui = ui.page_fluid(
                         ui.input_selectize("data_type", "Select Drug (Type, Promiscuity):", choices=drug_choices, selected=default_drug),
                         ui.input_numeric("threshold", "R Threshold:", value=2.0, step=0.5),
                         ui.input_numeric("n_labels", "Number of Top Labels:", value=5, min=0, max=20),
-                        ui.input_select("color_mode", "Color Points By:", choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Highlight Custom List", "Sites with PPIs"]),
+                        ui.input_select("color_mode", "Color Points By:", choices=["Above Threshold", "P-Value Gradient", "Cancer-Driver List", "Sites with PPIs", "Highlight Custom List"]),
                         ui.input_text("custom_list", "Genes to Highlight (comma-separated):", placeholder="e.g. MAPK1, EGFR")
                     ),
                     ui.card(ui.h5("Compound Structure"), ui.output_ui("molecule_ui_compound"))
@@ -284,7 +284,7 @@ def server(input, output, session):
     def handle_tab_switch():
         if input.main_tabs() == "site_tab": active_drug.set(None)
         elif input.main_tabs() == "compound_tab": active_drug.set(input.data_type())
-        elif input.main_tabs() == "summary_tab": active_drug.set(None) # Clear when returning to summary
+        elif input.main_tabs() == "summary_tab": active_drug.set(None)
 
     @reactive.Effect
     @reactive.event(input.data_type, ignore_init=True)
@@ -340,7 +340,6 @@ def server(input, output, session):
         cancer_choices, ppi_choices = site_max_r()
 
         ui.update_selectize("summary_cancer_site", choices=cancer_choices, selected=list(cancer_choices.keys())[0] if cancer_choices else None)
-
         ui.update_selectize("summary_ppi_site", choices=ppi_choices, selected=list(ppi_choices.keys())[0] if ppi_choices else None)
 
     @render_widget
@@ -355,8 +354,6 @@ def server(input, output, session):
         fig = px.histogram(prom_df, x='Promiscuity', nbins=100, opacity=0.7, 
                            labels={'Promiscuity': 'Site Promiscuity (% Compounds Hit at R > 2)', 'Frequency': 'Frequency'})
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40), legend_title_text='')
-        
-        
         return go.FigureWidget(fig)
 
     @render_widget
@@ -652,7 +649,10 @@ def server(input, output, session):
 
         mapping_notice = ""
         if chain_id is None:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. No residue highlighted.</i></span>"
+            # RESTORED FALLBACK LOGIC
+            chain_id = 'A'
+            mapped_site_pos = str(site_pos)
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Defaulting to Chain A.</i></span>"
         elif mapped_site_pos != site_pos:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -666,12 +666,10 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         
-        if chain_id is not None:
-            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
-            view.zoomTo(target_sel)
-        else:
-            view.zoomTo()
+        # Now safely guaranteed to have a target (real or fallback)
+        target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
+        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
+        view.zoomTo(target_sel)
             
         view.setHoverable({}, True, hover_js, unhover_js)
         
@@ -695,7 +693,10 @@ def server(input, output, session):
 
         mapping_notice = ""
         if chain_id is None:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. No interface highlighted.</i></span>"
+            # RESTORED FALLBACK LOGIC
+            chain_id = 'A'
+            mapped_site_pos = str(target_site)
+            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Target sequence missing or unobserved in this PDB. Defaulting to Chain A.</i></span>"
         elif mapped_site_pos != target_site:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
@@ -709,13 +710,11 @@ def server(input, output, session):
         view.addModel(pdb_data, "cif")
         view.setStyle({'cartoon': {'colorscheme': 'chain'}})
 
-        if chain_id is not None:
-            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-            view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
-            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
-            view.zoomTo(target_sel)
-        else:
-            view.zoomTo()
+        # Now safely guaranteed to have a target (real or fallback)
+        target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
+        view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
+        view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.3}})
+        view.zoomTo(target_sel)
 
         view.setHoverable({}, True, hover_js, unhover_js)
 
