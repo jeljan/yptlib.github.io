@@ -659,7 +659,7 @@ def server(input, output, session):
                                 struct_asym_id: 'A',
                                 start_residue_number: {site_pos},
                                 end_residue_number: {site_pos},
-                                sideChain: true,!
+                                sideChain: true,
                                 focus: true 
                             }}],
                             nonSelectedColor: undefined
