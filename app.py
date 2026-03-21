@@ -179,8 +179,11 @@ app_ui = ui.page_fluid(
                     ),
                     ui.card(
                         ui.h5("Protein-Protein Interaction (PPI) Interfaces"),
-                        ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                        ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
+                        ui.div(
+                            ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                            ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
+                            style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
+                        ),
                         ui.output_ui("ppi_viewer")
                     )
                 ),
@@ -644,27 +647,25 @@ def server(input, output, session):
                         }},
                         alphafoldView: true, 
                         bgColor: {{r: 255, g: 255, b: 255}},
-                        sequencePanel: true,  // Automatically expands the sequence panel
-                        hideControls: false,  // Must be false to allow the sequence panel to render
-                        hideCanvasControls: ['expand', 'animation'] // Keep it clean
+                        sequencePanel: true,  
+                        hideControls: false, 
                     }};
                     
                     var viewerContainer = document.getElementById('molstar-container');
                     
-                    // Wait until the structure is FULLY loaded before trying to select/focus
                     viewerInstance.events.loadComplete.subscribe(() => {{
                         viewerInstance.visual.select({{
                             data: [{{
-                                struct_asym_id: 'A', // Chain A
+                                struct_asym_id: 'A',
                                 start_residue_number: {site_pos},
                                 end_residue_number: {site_pos},
-                                color: {{r: 255, g: 0, b: 0}}, // Highlight Red
-                                focus: true // Automatically zooms the camera to this site
-                            }}]
+                                sideChain: true,!
+                                focus: true 
+                            }}],
+                            nonSelectedColor: undefined
                         }});
                     }});
-                    
-                    // Render the viewer
+
                     viewerInstance.render(viewerContainer, options);
                 }});
             </script>
@@ -675,11 +676,12 @@ def server(input, output, session):
         # Encode the HTML into a base64 data URI for the iframe
         b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
         
+        # Increased iframe height from 500px to 650px to accommodate the sequence panel
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <br><b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
+            <br><b>Alphafold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
         </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 650px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
     
     @render.ui
