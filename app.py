@@ -1,17 +1,17 @@
+import re
+import base64
+import requests
 import numpy as np
 import pandas as pd
 import urllib.parse
 import urllib.request
-import base64
-import json
-import re
-import requests
 from pathlib import Path
 import plotly.express as px
 import plotly.graph_objs as go
+from scipy.spatial import KDTree
+from functools import reduce, lru_cache
 from shiny import App, ui, render, reactive
 from shinywidgets import output_widget, render_widget
-from functools import reduce, lru_cache
 
 # --- 1. Setup Paths & Data Loading ---
 app_dir = Path(__file__).parent
@@ -274,11 +274,9 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
         alphafoldView: true,
         """
         molecule_block = ""
-        visual_style_block = ""
     else:
         custom_data_block = ""
         molecule_block = f"moleculeId: '{molecule_id.lower()}',"
-        visual_style_block = "visualStyle: 'cartoon'," 
 
     html_content = f"""
     <!DOCTYPE html>
@@ -300,20 +298,22 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
                 var options = {{
                     {molecule_block}
                     {custom_data_block}
-                    {visual_style_block}
-                    expanded: true,
+                    visualStyle: 'cartoon',
+                    hideStructure: ['water'],
+                    bgColor: 'white',
                     hideControls: false,
                     hideCanvasControls: [],
                     sequencePanel: true,
-                    bgColor: {{r: 255, g: 255, b: 255}}
+                    pdbeLink: false,
+                    expanded: true
                 }};
                 
                 var viewerContainer = document.getElementById('molstar-container');
-                
-                // RENDER MUST BE CALLED FIRST before attaching events
+
                 viewerInstance.render(viewerContainer, options);
                 
                 {selection_js}
+                
             }});
         </script>
     </body>
@@ -322,6 +322,65 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
     b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
     return f'<iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: {height}; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>'
 
+def get_spatial_neighbors(pdb_id, chain_id, target_res, radius=8.0):
+    """
+    Fetches PDB coordinates and uses a Scipy KDTree to rapidly calculate 
+    a 3D spherical neighborhood around the target residue.
+    """
+    url = f"https://files.rcsb.org/view/{pdb_id.upper()}.pdb"
+    try:
+        req = urllib.request.urlopen(url, timeout=3)
+        lines = req.read().decode('utf-8').split('\n')
+    except Exception:
+        # Fallback to a +/- 5 sequence window if the network fails
+        return list(range(max(1, target_res - 5), target_res + 6))
+    
+    atom_coords = []
+    atom_info = []
+    target_coords = []
+    
+    # 1. Parse coordinates quickly
+    for line in lines:
+        if line.startswith("ATOM  "):
+            atom_name = line[12:16].strip()
+            # CA and CB atoms give a great approximation of the residue's backbone and sidechain mass
+            if atom_name in ["CA", "CB"]: 
+                chain = line[21].strip()
+                try:
+                    res_num = int(line[22:26].strip())
+                    x = float(line[30:38].strip())
+                    y = float(line[38:46].strip())
+                    z = float(line[46:54].strip())
+                    
+                    atom_coords.append([x, y, z])
+                    atom_info.append((chain, res_num))
+                    
+                    if chain == chain_id and res_num == target_res:
+                        target_coords.append([x, y, z])
+                except ValueError:
+                    continue
+                    
+    if not target_coords or not atom_coords:
+        return list(range(max(1, target_res - 5), target_res + 6))
+        
+    # 2. Build the KD-Tree
+    tree = KDTree(atom_coords)
+    
+    # 3. Query the tree for all target atoms simultaneously
+    # This returns a list of lists containing the indices of all atoms within the radius
+    neighbor_indices = tree.query_ball_point(target_coords, r=radius)
+    
+    # 4. Flatten the indices and map them back to unique residue numbers
+    neighbors = set()
+    for idx_list in neighbor_indices:
+        for idx in idx_list:
+            c, r = atom_info[idx]
+            # Ensure we are only pulling interacting residues from our target chain
+            # (Modify this if you want to highlight interactions across different chains)
+            if c == chain_id: 
+                neighbors.add(r)
+                
+    return sorted(list(neighbors))
 
 # --- 3. Shiny Server ---
 def server(input, output, session):
@@ -654,26 +713,25 @@ def server(input, output, session):
 
         selection_js = f"""
         viewerInstance.events.loadComplete.subscribe(() => {{
-            setTimeout(() => {{
-                viewerInstance.visual.select({{
-                    data: [{{
-                        struct_asym_id: 'A',
-                        start_residue_number: {mapped_num},
-                        end_residue_number: {mapped_num},
-                        color: {{r: 255, g: 0, b: 0}},
-                        sideChain: true,
-                        focus: true 
+            var canvas3d = viewerInstance.plugin.canvas3d;
+
+            if (canvas3d) {{
+            canvas3d.setProps({{
+                cameraClipping: {{
+                far: false,
+                }}
+            }});
+            }}
+            
+            viewerInstance.visual.select({{
+                data: [{{
+                    struct_asym_id: 'A',
+                    residue_number: {mapped_num},
+                    representationColor: {{r: 255, g: 0, b: 0}},
+                    sideChain: true,
+                    focus: true,
                     }}]
-                }});
-                
-                // Aggressively override the focus animation clipping
-                let clipInterval = setInterval(() => {{
-                    if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
-                        viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 100000, minNear: 0.1 }} }});
-                    }}
-                }}, 50);
-                setTimeout(() => clearInterval(clipInterval), 1000);
-            }}, 200);
+            }});
         }});
         """
         
@@ -713,31 +771,32 @@ def server(input, output, session):
             
             selection_js = f"""
             viewerInstance.events.loadComplete.subscribe(() => {{
-                setTimeout(() => {{
-                    viewerInstance.visual.select({{
-                        data: [{{
-                            struct_asym_id: '{chain_id}',
-                            start_residue_number: {mapped_num},
-                            end_residue_number: {mapped_num},
-                            sideChain: true,
-                            focus: true 
+                var canvas3d = viewerInstance.plugin.canvas3d;
+    
+                if (canvas3d) {{
+                canvas3d.setProps({{
+                    cameraClipping: {{
+                    far: false,
+                    }}
+                }});
+                }}
+                
+                viewerInstance.visual.select({{
+                    data: [{{
+                        struct_asym_id: '{chain_id}',
+                        residue_number: {mapped_num},
+                        representationColor: {{r: 255, g: 0, b: 0}},
+                        sideChain: true,
+                        focus: true,
                         }}]
-                    }});
-                    
-                    let clipInterval = setInterval(() => {{
-                        if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
-                            viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 100000, minNear: 0.1 }} }});
-                        }}
-                    }}, 50);
-                    setTimeout(() => clearInterval(clipInterval), 1000);
-                }}, 200);
+                }});
             }});
             """
 
         iframe = create_molstar_iframe(molecule_id=pdb_id, selection_js=selection_js, height="480px")
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
+            <br><b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
         </div>
         {iframe}
         ''')
@@ -763,27 +822,41 @@ def server(input, output, session):
 
             mapped_num = int(re.search(r'\d+', str(mapped_site_pos)).group()) if re.search(r'\d+', str(mapped_site_pos)) else mapped_site_pos
 
+            # --- THE FIX: Calculate 3D Spatial Neighbors in Python ---
+            try:
+                m_num = int(mapped_num)
+                # Find residues physically touching the site, regardless of sequence order
+                neighbors = get_spatial_neighbors(pdb_id, chain_id, m_num, radius=8.0)
+            except (ValueError, TypeError):
+                neighbors = [mapped_num]
+
+            # Build the Javascript array of objects dynamically
+            selection_data = []
+            
+            # 1. Target residue (Red) + Focus camera here
+            selection_data.append(f"{{struct_asym_id: '{chain_id}', residue_number: {mapped_num}, representationColor: {{r: 255, g: 0, b: 0}}, sideChain: true, focus: true}}")
+            
+            # 2. Neighbors (Pop out sidechains and draw H-bonds/Contacts)
+            for res in neighbors:
+                if res != mapped_num:
+                    selection_data.append(f"{{struct_asym_id: '{chain_id}', residue_number: {res}, sideChain: true}}")
+                # Ensure interaction lines are drawn for every neighbor
+                selection_data.append(f"{{struct_asym_id: '{chain_id}', residue_number: {res}, representation: 'interactions'}}")
+
+            selection_data_js = ",\n".join(selection_data)
+
             selection_js = f"""
             viewerInstance.events.loadComplete.subscribe(() => {{
-                setTimeout(() => {{
-                    viewerInstance.visual.select({{
-                        data: [{{
-                            struct_asym_id: '{chain_id}',
-                            start_residue_number: {mapped_num},
-                            end_residue_number: {mapped_num},
-                            sideChain: true,
-                            focus: true 
-                        }}],
-                        nonCovalent: true 
-                    }});
-                    
-                    let clipInterval = setInterval(() => {{
-                        if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
-                            viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 100000, minNear: 0.1 }} }});
-                        }}
-                    }}, 50);
-                    setTimeout(() => clearInterval(clipInterval), 1000);
-                }}, 200);
+                var canvas3d = viewerInstance.plugin.canvas3d;
+                if (canvas3d) {{
+                    canvas3d.setProps({{ cameraClipping: {{ far: false }} }});
+                }}
+                
+                viewerInstance.visual.select({{
+                    data: [
+                        {selection_data_js}
+                    ]
+                }});
             }});
             """
 
