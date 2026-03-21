@@ -177,11 +177,7 @@ app_ui = ui.page_fluid(
                     ui.navset_card_tab(
                         ui.nav_panel(
                             "Experimental Structure",
-                            ui.div(
-                                ui.p("Selected site highlighted in red. Drag to rotate, scroll to zoom.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                                ui.input_select("pdb_selector", "Select PDB structure:", choices=["Loading..."], width="350px"),
-                                style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
-                            ),
+                            ui.input_select("pdb_selector", "Select PDB structure:", choices=["Loading..."], width="350px"),
                             ui.output_ui("pdb_viewer")
                         ),
                         ui.nav_panel(
@@ -192,11 +188,7 @@ app_ui = ui.page_fluid(
                     ),
                     ui.card(
                         ui.h5("Protein-Protein Interaction (PPI) Interfaces"),
-                        ui.div(
-                            ui.p("Selected site highlighted in red. Interacting environment highlighted.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
-                            ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
-                            style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
-                        ),
+                        ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
                         ui.output_ui("ppi_viewer")
                     )
                 ),
@@ -248,7 +240,7 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
             for res in chain.get('residues', []):
                 chain_seq += aa_map.get(res.get('residue_name', ''), 'X')
                 auth_nums.append(str(res.get('author_residue_number', '')))
-                # This explicitly checks if the site is greyed out/unobserved
+                # Checks if site is greyed out/unobserved
                 observed.append(res.get('observed_ratio', 1) > 0)
             if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums, observed))
             
@@ -258,7 +250,6 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
             match_start = chain_seq.find(user_seq, start)
             if match_start == -1: break
             exact_match_idx = match_start + y_idx
-            # Fails returning None if site is unobserved, causing it to correctly report "Site Absent"
             if exact_match_idx < len(auth_nums) and observed_flags[exact_match_idx]: 
                 return chain_id, auth_nums[exact_match_idx]
             start = match_start + 1
@@ -283,11 +274,10 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
         alphafoldView: true,
         """
         molecule_block = ""
-        visual_style_block = "" # AF preset handles its own visualization
+        visual_style_block = ""
     else:
         custom_data_block = ""
         molecule_block = f"moleculeId: '{molecule_id.lower()}',"
-        # Forces cartoon representation on EM and all generic structures
         visual_style_block = "visualStyle: 'cartoon'," 
 
     html_content = f"""
@@ -319,8 +309,11 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
                 }};
                 
                 var viewerContainer = document.getElementById('molstar-container');
-                {selection_js}
+                
+                // RENDER MUST BE CALLED FIRST before attaching events
                 viewerInstance.render(viewerContainer, options);
+                
+                {selection_js}
             }});
         </script>
     </body>
@@ -655,26 +648,32 @@ def server(input, output, session):
 
         row = matching_rows.iloc[0]
         uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
+        
+        # Ensure site_pos is cleanly passed to Mol* as an integer
+        mapped_num = int(re.search(r'\d+', str(site_pos)).group()) if re.search(r'\d+', str(site_pos)) else site_pos
 
         selection_js = f"""
         viewerInstance.events.loadComplete.subscribe(() => {{
-            viewerInstance.visual.select({{
-                data: [{{
-                    struct_asym_id: 'A',
-                    start_residue_number: {site_pos},
-                    end_residue_number: {site_pos},
-                    sideChain: true,
-                    focus: true 
-                }}],
-                nonSelectedColor: undefined
-            }});
-            
-            // Revert Mol* front/back clipping planes after the focus animation ends 
             setTimeout(() => {{
-                if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
-                    viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 10000 }} }});
-                }}
-            }}, 600);
+                viewerInstance.visual.select({{
+                    data: [{{
+                        struct_asym_id: 'A',
+                        start_residue_number: {mapped_num},
+                        end_residue_number: {mapped_num},
+                        color: {{r: 255, g: 0, b: 0}},
+                        sideChain: true,
+                        focus: true 
+                    }}]
+                }});
+                
+                // Aggressively override the focus animation clipping
+                let clipInterval = setInterval(() => {{
+                    if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
+                        viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 100000, minNear: 0.1 }} }});
+                    }}
+                }}, 50);
+                setTimeout(() => clearInterval(clipInterval), 1000);
+            }}, 200);
         }});
         """
         
@@ -709,26 +708,29 @@ def server(input, output, session):
             if str(mapped_site_pos) != str(site_pos):
                 mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
             
+            # Prevent JS syntax errors if the position has an insertion code (e.g. '145A')
+            mapped_num = int(re.search(r'\d+', str(mapped_site_pos)).group()) if re.search(r'\d+', str(mapped_site_pos)) else mapped_site_pos
+            
             selection_js = f"""
             viewerInstance.events.loadComplete.subscribe(() => {{
-                viewerInstance.visual.select({{
-                    data: [{{
-                        struct_asym_id: '{chain_id}',
-                        start_residue_number: {mapped_site_pos},
-                        end_residue_number: {mapped_site_pos},
-                        color: {{r: 255, g: 0, b: 0}},
-                        sideChain: true,
-                        focus: true 
-                    }}],
-                    nonSelectedColor: undefined
-                }});
-                
-                // Revert Mol* front/back clipping planes after the focus animation ends 
                 setTimeout(() => {{
-                    if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
-                        viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 10000 }} }});
-                    }}
-                }}, 600);
+                    viewerInstance.visual.select({{
+                        data: [{{
+                            struct_asym_id: '{chain_id}',
+                            start_residue_number: {mapped_num},
+                            end_residue_number: {mapped_num},
+                            sideChain: true,
+                            focus: true 
+                        }}]
+                    }});
+                    
+                    let clipInterval = setInterval(() => {{
+                        if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
+                            viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 100000, minNear: 0.1 }} }});
+                        }}
+                    }}, 50);
+                    setTimeout(() => clearInterval(clipInterval), 1000);
+                }}, 200);
             }});
             """
 
@@ -759,27 +761,29 @@ def server(input, output, session):
             if str(mapped_site_pos) != str(target_site):
                 mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
+            mapped_num = int(re.search(r'\d+', str(mapped_site_pos)).group()) if re.search(r'\d+', str(mapped_site_pos)) else mapped_site_pos
+
             selection_js = f"""
             viewerInstance.events.loadComplete.subscribe(() => {{
-                viewerInstance.visual.select({{
-                    data: [{{
-                        struct_asym_id: '{chain_id}',
-                        start_residue_number: {mapped_site_pos},
-                        end_residue_number: {mapped_site_pos},
-                        color: {{r: 255, g: 0, b: 0}},
-                        sideChain: true,
-                        focus: true 
-                    }}],
-                    nonCovalent: true, 
-                    nonSelectedColor: undefined
-                }});
-                
-                // Revert Mol* front/back clipping planes after the focus animation ends 
                 setTimeout(() => {{
-                    if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
-                        viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 10000 }} }});
-                    }}
-                }}, 600);
+                    viewerInstance.visual.select({{
+                        data: [{{
+                            struct_asym_id: '{chain_id}',
+                            start_residue_number: {mapped_num},
+                            end_residue_number: {mapped_num},
+                            sideChain: true,
+                            focus: true 
+                        }}],
+                        nonCovalent: true 
+                    }});
+                    
+                    let clipInterval = setInterval(() => {{
+                        if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
+                            viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 100000, minNear: 0.1 }} }});
+                        }}
+                    }}, 50);
+                    setTimeout(() => clearInterval(clipInterval), 1000);
+                }}, 200);
             }});
             """
 
