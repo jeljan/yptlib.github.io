@@ -792,7 +792,7 @@ def server(input, output, session):
         
         iframe = create_molstar_iframe(af_uniprot=uniprot, selection_js=selection_js, height="750px")
         return ui.HTML(f'''
-        <div style="margin-top: 15px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.3;">
+        <div style="margin-bottom: 20px; font-size: 0.9em; line-height: 1.3;">
             <b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
         </div>
         {iframe}
@@ -837,8 +837,8 @@ def server(input, output, session):
                 
                 viewerInstance.visual.select({{
                     data: [{{
-                        struct_asym_id: '{chain_id}',
-                        residue_number: {mapped_num},
+                        auth_asym_id: '{chain_id}',
+                        auth_residue_number: {mapped_num},
                         representationColor: {{r: 255, g: 0, b: 0}},
                         sideChain: true,
                         focus: true,
@@ -849,7 +849,7 @@ def server(input, output, session):
 
         iframe = create_molstar_iframe(molecule_id=pdb_id, selection_js=selection_js, height="480px")
         return ui.HTML(f'''
-        <div style="margin-top: 15px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.3;">
+        <div style="margin-top: 20px; margin-bottom: 20px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
         </div>
         {iframe}
@@ -883,12 +883,12 @@ def server(input, output, session):
                 neighbors = [mapped_num]
 
             selection_data = []
-            selection_data.append(f"{{struct_asym_id: '{chain_id}', residue_number: {mapped_num}, representationColor: {{r: 255, g: 0, b: 0}}, sideChain: true, focus: true}}")
+            selection_data.append(f"{{auth_asym_id: '{chain_id}', auth_residue_number: {mapped_num}, representationColor: {{r: 255, g: 0, b: 0}}, sideChain: true, focus: true}}")
             
             for n_chain, res in neighbors:
                 if res != mapped_num:
-                    selection_data.append(f"{{struct_asym_id: '{n_chain}', residue_number: {res}, sideChain: true}}")
-                selection_data.append(f"{{struct_asym_id: '{n_chain}', residue_number: {res}, representation: 'interactions'}}")
+                    selection_data.append(f"{{auth_asym_id: '{n_chain}', auth_residue_number: {res}, sideChain: true}}")
+                selection_data.append(f"{{auth_asym_id: '{n_chain}', auth_residue_number: {res}, representation: 'interactions'}}")
 
             selection_data_js = ",\n".join(selection_data)
 
@@ -909,7 +909,7 @@ def server(input, output, session):
 
         iframe = create_molstar_iframe(molecule_id=pdb_id, selection_js=selection_js, height="480px")
         return ui.HTML(f'''
-        <div style="margin-top: 15px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.3;">
+        <div style="font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
             {mapping_notice}
         </div>
