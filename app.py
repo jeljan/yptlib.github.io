@@ -2,24 +2,26 @@ import numpy as np
 import pandas as pd
 import urllib.parse
 import urllib.request
-import html
 import base64
 import json
-import py3Dmol
 import re
+import requests
 from pathlib import Path
 import plotly.express as px
 import plotly.graph_objs as go
 from shiny import App, ui, render, reactive
 from shinywidgets import output_widget, render_widget
-from functools import reduce
+from functools import reduce, lru_cache
 
 # --- 1. Setup Paths & Data Loading ---
 app_dir = Path(__file__).parent
 data_dir = app_dir / "data"
 
 all_files = list(data_dir.glob("*.csv"))
-df = None
+df = pd.DataFrame()
+
+# Global Session for connection pooling
+req_session = requests.Session()
 
 # --- Load the pre-calculated PPI database ---
 ppi_db_path = app_dir / "ppi_reference.csv"
@@ -35,8 +37,7 @@ if ypt_lib_path.exists():
     smiles_dict = dict(zip(ypt_lib['Catalog ID'], ypt_lib['Smiles']))
     type_dict = dict(zip(ypt_lib['Catalog ID'], ypt_lib['Type']))
 else:
-    smiles_dict = {}
-    type_dict = {}
+    smiles_dict, type_dict = {}, {}
     
 cancer_path = app_dir / 'cancer_gene_shortlist.csv'
 if cancer_path.exists():
@@ -57,16 +58,29 @@ if len(all_files) > 0:
 
     raw_drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
     
-    drug_promiscuity = {}
+    # --- OPTIMIZATION B: Pre-compute static plotting data once at startup ---
+    r_cols = [c for c in df.columns if 'log2' in c and ' R' in c]
+    if r_cols:
+        GLOBAL_SITE_PROM = (df[r_cols] > 1).sum(axis=1) / len(r_cols) * 100
+        GLOBAL_SITE_PROM_DF = pd.DataFrame({'Promiscuity': GLOBAL_SITE_PROM})
+    else:
+        GLOBAL_SITE_PROM_DF = pd.DataFrame(columns=['Promiscuity'])
+
+    cpd_prom, prom_type_list, drug_promiscuity = [], [], {}
     for d in raw_drugs:
         log_col = f'log2 {d} R'
         if log_col in df.columns:
-            total_valid_sites = df[log_col].notna().sum()
-            promiscuity = (df[log_col] > 1).sum() / total_valid_sites * 100 if total_valid_sites > 0 else 0.0
-            drug_promiscuity[d] = promiscuity
-            
-    sorted_drugs = sorted(raw_drugs, key=lambda x: drug_promiscuity[x])
-    drug_choices = {d: f"{d} ({type_dict.get(d, 'Unknown')}, {drug_promiscuity[d]:.2f}%)" for d in sorted_drugs}
+            valid = df[log_col].dropna()
+            promiscuity_val = (valid > 1).sum() / len(valid) * 100 if len(valid) > 0 else 0.0
+            drug_promiscuity[d] = promiscuity_val
+            if len(valid) > 0:
+                cpd_prom.append(promiscuity_val)
+                prom_type_list.append(type_dict.get(d, 'Unknown'))
+    
+    GLOBAL_DRUG_PROM_DF = pd.DataFrame({'Promiscuity': cpd_prom, 'Type': prom_type_list})
+
+    sorted_drugs = sorted(raw_drugs, key=lambda x: drug_promiscuity.get(x, 0))
+    drug_choices = {d: f"{d} ({type_dict.get(d, 'Unknown')}, {drug_promiscuity.get(d, 0):.2f}%)" for d in sorted_drugs}
     default_drug = sorted_drugs[0] if sorted_drugs else None
     
     def site_sort_key(site_str):
@@ -79,11 +93,11 @@ if len(all_files) > 0:
     default_site_choices = gene_to_sites.get(default_gene, [])
     default_site = default_site_choices[0] if default_site_choices else None
 else:
-    df = pd.DataFrame()
     raw_drugs = []
-    drug_choices = {"No Data Found": "No Data Found"}
-    default_drug = "No Data Found"
+    drug_choices, default_drug = {"No Data Found": "No Data Found"}, "No Data Found"
     gene_to_sites, gene_choices, default_gene, default_site_choices, default_site = {}, ["No Data Found"], "No Data Found", ["No Data Found"], "No Data Found"
+    GLOBAL_SITE_PROM_DF, GLOBAL_DRUG_PROM_DF = pd.DataFrame(), pd.DataFrame()
+
 
 # --- 2. Shiny UI ---
 app_ui = ui.page_fluid(
@@ -194,31 +208,32 @@ app_ui = ui.page_fluid(
     )
 )
 
-# --- MAPPING HELPERS ---
-def get_chain_names(pdb_id):
+# --- OPTIMIZATION C: API Caching ---
+@lru_cache(maxsize=128)
+def fetch_pdbe_residue_listing(pdb_id):
     try:
-        req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/molecules/{pdb_id.lower()}")
-        data = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
-        chain_map = {}
-        for mol in data.get(pdb_id.lower(), []):
-            name = mol.get('molecule_name', ['Unknown Molecule'])[0]
-            mol_type = mol.get('molecule_type', '').lower()
-            if 'water' in mol_type or 'bound' in mol_type: continue
-            for chain in mol.get('in_chains', []):
-                if chain not in chain_map: chain_map[chain] = name
-        return chain_map
-    except Exception: return {}
+        resp = req_session.get(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}", timeout=10)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception:
+        return None
 
-def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
+@lru_cache(maxsize=128)
+def fetch_uniprot_data(uniprot):
+    try:
+        resp = req_session.get(f"https://rest.uniprot.org/uniprotkb/{uniprot}.json", timeout=10)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception:
+        return {}
+
+def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_data=None):
     y_idx = str(user_seq).find('Y')
     if y_idx == -1: return None, None 
 
     if pdbe_data is None:
-        try:
-            req = urllib.request.Request(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/residue_listing/{pdb_id.lower()}")
-            pdbe_data = json.loads(urllib.request.urlopen(req, timeout=10).read().decode('utf-8'))
-        except Exception:
-            return 'A', str(site_pos)
+        pdbe_data = fetch_pdbe_residue_listing(pdb_id)
+        if pdbe_data is None: return 'A', str(site_pos)
             
     aa_map = {'ALA':'A', 'ARG':'R', 'ASN':'N', 'ASP':'D', 'CYS':'C', 'GLN':'Q', 'GLU':'E', 
               'GLY':'G', 'HIS':'H', 'ILE':'I', 'LEU':'L', 'LYS':'K', 'MET':'M', 'PHE':'F', 
@@ -232,11 +247,8 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
             chain_seq, auth_nums, observed = "", [], []
             for res in chain.get('residues', []):
                 chain_seq += aa_map.get(res.get('residue_name', ''), 'X')
-                auth_num = res.get('author_residue_number')
-                auth_ins = res.get('author_insertion_code', '')
-                auth_nums.append(f"{auth_num}{auth_ins}".strip() if auth_num is not None else None)
+                auth_nums.append(str(res.get('author_residue_number', '')))
                 observed.append(res.get('observed_ratio', 1) > 0)
-                
             if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums, observed))
             
     for chain_id, chain_seq, auth_nums, observed_flags in all_chains:
@@ -244,30 +256,73 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
         while True:
             match_start = chain_seq.find(user_seq, start)
             if match_start == -1: break
-            
             exact_match_idx = match_start + y_idx
-            if exact_match_idx < len(auth_nums) and auth_nums[exact_match_idx] is not None:
-                if observed_flags[exact_match_idx]: 
-                    return chain_id, auth_nums[exact_match_idx]
+            if exact_match_idx < len(auth_nums) and observed_flags[exact_match_idx]: 
+                return chain_id, auth_nums[exact_match_idx]
             start = match_start + 1
 
     for chain_id, chain_seq, auth_nums, observed_flags in all_chains:
         if str(site_pos) in auth_nums:
             idx = auth_nums.index(str(site_pos))
-            if idx < len(chain_seq) and chain_seq[idx] == 'Y':
-                seq_start = max(0, idx - y_idx)
-                seq_end = min(len(chain_seq), idx + len(user_seq) - y_idx)
-                extracted = chain_seq[seq_start:seq_end]
-                
-                user_start = y_idx - (idx - seq_start)
-                user_end = y_idx + (seq_end - idx)
-                expected_subseq = user_seq[user_start:user_end]
-                
-                if extracted == expected_subseq:
-                    if observed_flags[idx]: 
-                        return chain_id, str(site_pos)
+            if idx < len(chain_seq) and chain_seq[idx] == 'Y' and observed_flags[idx]:
+                return chain_id, str(site_pos)
 
     return None, None
+
+# --- OPTIMIZATION A: Molstar Abstraction ---
+def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", height="480px"):
+    """Generates the base64 iframe payload for PDBe Molstar."""
+    if af_uniprot:
+        custom_data_block = f"""
+        customData: {{
+            url: 'https://alphafold.ebi.ac.uk/files/AF-{af_uniprot}-F1-model_v6.cif',
+            format: 'cif'
+        }},
+        alphafoldView: true,
+        """
+        molecule_block = ""
+    else:
+        custom_data_block = ""
+        molecule_block = f"moleculeId: '{molecule_id.lower()}',"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
+        <style>
+            body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
+            #molstar-container {{ width: 100%; height: 100%; position: relative; }}
+        </style>
+    </head>
+    <body>
+        <div id="molstar-container"></div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {{
+                var viewerInstance = new PDBeMolstarPlugin();
+                var options = {{
+                    {molecule_block}
+                    {custom_data_block}
+                    expanded: true,
+                    hideControls: false,
+                    hideCanvasControls: [],
+                    sequencePanel: true,
+                    bgColor: {{r: 255, g: 255, b: 255}}
+                }};
+                
+                var viewerContainer = document.getElementById('molstar-container');
+                {selection_js}
+                viewerInstance.render(viewerContainer, options);
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+    return f'<iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: {height}; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>'
+
 
 # --- 3. Shiny Server ---
 def server(input, output, session):
@@ -333,39 +388,21 @@ def server(input, output, session):
     @reactive.Effect
     def update_summary_dropdowns():
         cancer_choices, ppi_choices = site_max_r()
-
         ui.update_selectize("summary_cancer_site", choices=cancer_choices, selected=list(cancer_choices.keys())[0] if cancer_choices else None)
         ui.update_selectize("summary_ppi_site", choices=ppi_choices, selected=list(ppi_choices.keys())[0] if ppi_choices else None)
 
     @render_widget
     def summary_site_hist():
-        if df is None or df.empty: return go.FigureWidget()
-        log_cols = [c for c in df.columns if 'log2' in c and ' R' in c]
-        if not log_cols: return go.FigureWidget()
-        
-        site_prom = (df[[i for i in df.columns if 'R' in i]]>1).sum(axis=1)/df[[i for i in df.columns if 'R' in i]].shape[1]
-        
-        prom_df = pd.DataFrame({'Promiscuity': site_prom})
-        fig = px.histogram(prom_df, x='Promiscuity', nbins=100, opacity=0.7, 
+        if GLOBAL_SITE_PROM_DF.empty: return go.FigureWidget()
+        fig = px.histogram(GLOBAL_SITE_PROM_DF, x='Promiscuity', nbins=100, opacity=0.7, 
                            labels={'Promiscuity': 'Site Promiscuity (% Compounds Hit at R > 2)', 'Frequency': 'Frequency'})
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40), legend_title_text='')
         return go.FigureWidget(fig)
 
     @render_widget
     def summary_drug_hist():
-        if not raw_drugs or df is None: return go.FigureWidget()
-        cpd_prom, prom_type_list = [], []
-        
-        for d in raw_drugs:
-            log_col = f'log2 {d} R'
-            if log_col in df.columns:
-                valid = df[log_col].dropna()
-                if len(valid) > 0:
-                    cpd_prom.append((valid > 1).sum() / len(valid) * 100)
-                    prom_type_list.append(type_dict.get(d, 'Unknown'))
-                    
-        prom_df = pd.DataFrame({'Promiscuity': cpd_prom, 'Type': prom_type_list})
-        fig = px.histogram(prom_df, x='Promiscuity', color='Type', nbins=100, barmode='overlay', opacity=0.7, 
+        if GLOBAL_DRUG_PROM_DF.empty: return go.FigureWidget()
+        fig = px.histogram(GLOBAL_DRUG_PROM_DF, x='Promiscuity', color='Type', nbins=100, barmode='overlay', opacity=0.7, 
                            labels={'Promiscuity': 'Compound Promiscuity (% Sites Hit at R > 2)', 'Frequency': 'Frequency'})
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=40, r=40, t=10, b=40), legend_title_text='')
         return go.FigureWidget(fig)
@@ -445,7 +482,7 @@ def server(input, output, session):
         user_seq = str(matching_rows.iloc[0]['Sequence'])
 
         try:
-            data = json.loads(urllib.request.urlopen(f"https://rest.uniprot.org/uniprotkb/{uniprot}.json").read().decode('utf-8'))
+            data = fetch_uniprot_data(uniprot)
             pdb_list = []
             site_num = int(site_str) if str(site_str).isdigit() else -1
 
@@ -501,7 +538,6 @@ def server(input, output, session):
     def plot_data():
         data_type, threshold, n_labels, color_mode = active_drug.get(), input.threshold(), input.n_labels(), input.color_mode()
         
-        # Guard if no drug is selected yet (e.g. fresh launch on Compound tab)
         if not data_type or f'log2 {data_type} R' not in df.columns:
             return pd.DataFrame(), []
 
@@ -591,7 +627,7 @@ def server(input, output, session):
         if not gene or not site or df.empty: return go.FigureWidget(px.bar(title="No Site Selected"))
         matching_rows = df[df['Labels'] == f"{gene}_Y{site}"]
         if matching_rows.empty: return go.FigureWidget(px.bar(title="Loading..."))
-             
+              
         row = matching_rows.iloc[0]
         drug_data = [{'Drug': d, 'R': 2**row[f'log2 {d} R']} for d in raw_drugs if f'log2 {d} R' in df.columns]
         bar_df = pd.DataFrame(drug_data).dropna().sort_values('R', ascending=False)
@@ -602,6 +638,7 @@ def server(input, output, session):
         if widget.data: widget.data[0].on_click(lambda t, p, s: active_drug.set(t.x[p.point_inds[0]]) if p.point_inds else None)
         return widget
 
+    # --- REWRITTEN MOLSTAR VIEWERS ---
     @render.ui
     def alphafold_viewer():
         gene, site_pos = input.target_gene(), input.target_site_pos()
@@ -613,72 +650,29 @@ def server(input, output, session):
         row = matching_rows.iloc[0]
         uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
 
-        # --- HTML payload for PDBe Molstar ---
-        html_content = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="utf-8" />
-            <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
-            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
-            <style>
-                body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
-                #molstar-container {{ width: 100%; height: 100%; position: relative; }}
-            </style>
-        </head>
-        <body>
-            <div id="molstar-container"></div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {{
-                    var viewerInstance = new PDBeMolstarPlugin();
-                    
-                    var options = {{
-                        customData: {{
-                            url: 'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif',
-                            format: 'cif'
-                        }},
-                        alphafoldView: true, 
-                        bgColor: {{r: 255, g: 255, b: 255}},
-                        
-                        // --- THE FIX ---
-                        expanded: true,           // Opens the side panels (crucial for State/JSON import tools)
-                        sequencePanel: true,      // Unhides the top sequence panel
-                        hideControls: false,      // Ensures right-hand controls remain visible
-                        hideCanvasControls: []    // Overrides the AF preset that hides canvas tools
-                    }};
-                    
-                    var viewerContainer = document.getElementById('molstar-container');
-                    
-                    viewerInstance.events.loadComplete.subscribe(() => {{
-                        viewerInstance.visual.select({{
-                            data: [{{
-                                struct_asym_id: 'A',
-                                start_residue_number: {site_pos},
-                                end_residue_number: {site_pos},
-                                sideChain: true,
-                                focus: true 
-                            }}],
-                            nonSelectedColor: undefined
-                        }});
-                    }});
-
-                    viewerInstance.render(viewerContainer, options);
-                }});
-            </script>
-        </body>
-        </html>
+        selection_js = f"""
+        viewerInstance.events.loadComplete.subscribe(() => {{
+            viewerInstance.visual.select({{
+                data: [{{
+                    struct_asym_id: 'A',
+                    start_residue_number: {site_pos},
+                    end_residue_number: {site_pos},
+                    sideChain: true,
+                    focus: true 
+                }}],
+                nonSelectedColor: undefined
+            }});
+        }});
         """
         
-        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-        
-        # Notice the added 'allow' parameters in the iframe to prevent browser blocks on import/export features
+        iframe = create_molstar_iframe(af_uniprot=uniprot, selection_js=selection_js, height="750px")
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <br><b>Alphafold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
         </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 750px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>
+        {iframe}
         ''')
-    
+
     @render.ui
     def pdb_viewer():
         pdb_id, gene, site_pos = input.pdb_selector(), input.target_gene(), input.target_site_pos()
@@ -691,19 +685,17 @@ def server(input, output, session):
         if matching_rows.empty: return ui.p("")
         
         row = matching_rows.iloc[0]
-        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_pos, str(row['Sequence']))
+        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_pos, str(row['Sequence']), req_session)
 
         mapping_notice = ""
-        # JS block for targeting the residue, empty if no chain found
         selection_js = "" 
 
         if chain_id is None:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Site not observed in this PDB, showing full structure.</i></span>"
         else:
-            if mapped_site_pos != site_pos:
+            if str(mapped_site_pos) != str(site_pos):
                 mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
             
-            # Build the Mol* selection script
             selection_js = f"""
             viewerInstance.events.loadComplete.subscribe(() => {{
                 viewerInstance.visual.select({{
@@ -720,48 +712,12 @@ def server(input, output, session):
             }});
             """
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="utf-8" />
-            <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
-            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
-            <style>
-                body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
-                #molstar-container {{ width: 100%; height: 100%; position: relative; }}
-            </style>
-        </head>
-        <body>
-            <div id="molstar-container"></div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {{
-                    var viewerInstance = new PDBeMolstarPlugin();
-                    var options = {{
-                        moleculeId: '{pdb_id.lower()}',
-                        expanded: true,
-                        hideControls: false,
-                        hideCanvasControls: [],
-                        bgColor: {{r: 255, g: 255, b: 255}}
-                    }};
-                    var viewerContainer = document.getElementById('molstar-container');
-                    
-                    {selection_js}
-
-                    viewerInstance.render(viewerContainer, options);
-                }});
-            </script>
-        </body>
-        </html>
-        """
-
-        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-        
+        iframe = create_molstar_iframe(molecule_id=pdb_id, selection_js=selection_js, height="480px")
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
         </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 480px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>
+        {iframe}
         ''')
 
     @render.ui
@@ -769,11 +725,10 @@ def server(input, output, session):
         pdb_id, target_site = input.ppi_selector(), input.target_site_pos()
         if not pdb_id or pdb_id in ["none", "Loading..."]: return ui.div()
 
-        # Note: viz_cutoff calculation is removed because Mol* natively handles environmental focus
         matching_rows = df[df['Labels'] == f"{input.target_gene()}_Y{target_site}"]
         if matching_rows.empty: return ui.div()
 
-        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, target_site, str(matching_rows.iloc[0]['Sequence']))
+        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, target_site, str(matching_rows.iloc[0]['Sequence']), req_session)
 
         mapping_notice = ""
         selection_js = ""
@@ -781,10 +736,9 @@ def server(input, output, session):
         if chain_id is None:
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Site not observed in this PDB, showing full structure.</i></span>"
         else:
-            if mapped_site_pos != target_site:
+            if str(mapped_site_pos) != str(target_site):
                 mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
-            # By adding nonCovalent: true, Mol* will automatically show the interacting PPI pocket 
             selection_js = f"""
             viewerInstance.events.loadComplete.subscribe(() => {{
                 viewerInstance.visual.select({{
@@ -802,50 +756,13 @@ def server(input, output, session):
             }});
             """
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="utf-8" />
-            <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
-            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
-            <style>
-                body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
-                #molstar-container {{ width: 100%; height: 100%; position: relative; }}
-            </style>
-        </head>
-        <body>
-            <div id="molstar-container"></div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {{
-                    var viewerInstance = new PDBeMolstarPlugin();
-                    var options = {{
-                        moleculeId: '{pdb_id.lower()}',
-                        expanded: true,
-                        hideControls: false,
-                        hideCanvasControls: [],
-                        bgColor: {{r: 255, g: 255, b: 255}}
-                    }};
-                    
-                    var viewerContainer = document.getElementById('molstar-container');
-                    
-                    {selection_js}
-
-                    viewerInstance.render(viewerContainer, options);
-                }});
-            </script>
-        </body>
-        </html>
-        """
-
-        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-
+        iframe = create_molstar_iframe(molecule_id=pdb_id, selection_js=selection_js, height="480px")
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
             {mapping_notice}
         </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 480px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>
+        {iframe}
         ''')
 
 # --- 4. Run App ---
