@@ -58,7 +58,7 @@ if len(all_files) > 0:
 
     raw_drugs = list(set([i.split(' ')[1] for i in df.columns if 'log' in i]))
     
-    # --- OPTIMIZATION B: Pre-compute static plotting data once at startup ---
+    # Pre-compute static plotting data once at startup
     r_cols = [c for c in df.columns if 'log2' in c and ' R' in c]
     if r_cols:
         GLOBAL_SITE_PROM = (df[r_cols] > 1).sum(axis=1) / len(r_cols) * 100
@@ -178,7 +178,7 @@ app_ui = ui.page_fluid(
                         ui.nav_panel(
                             "Experimental Structure",
                             ui.div(
-                                ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                                ui.p("Selected site highlighted in red. Drag to rotate, scroll to zoom.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                                 ui.input_select("pdb_selector", "Select PDB structure:", choices=["Loading..."], width="350px"),
                                 style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
                             ),
@@ -193,7 +193,7 @@ app_ui = ui.page_fluid(
                     ui.card(
                         ui.h5("Protein-Protein Interaction (PPI) Interfaces"),
                         ui.div(
-                            ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
+                            ui.p("Selected site highlighted in red. Interacting environment highlighted.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                             ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
                             style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;"
                         ),
@@ -208,7 +208,7 @@ app_ui = ui.page_fluid(
     )
 )
 
-# --- OPTIMIZATION C: API Caching ---
+# --- API Caching & Mapping Helpers ---
 @lru_cache(maxsize=128)
 def fetch_pdbe_residue_listing(pdb_id):
     try:
@@ -248,6 +248,7 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
             for res in chain.get('residues', []):
                 chain_seq += aa_map.get(res.get('residue_name', ''), 'X')
                 auth_nums.append(str(res.get('author_residue_number', '')))
+                # This explicitly checks if the site is greyed out/unobserved
                 observed.append(res.get('observed_ratio', 1) > 0)
             if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums, observed))
             
@@ -257,6 +258,7 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
             match_start = chain_seq.find(user_seq, start)
             if match_start == -1: break
             exact_match_idx = match_start + y_idx
+            # Fails returning None if site is unobserved, causing it to correctly report "Site Absent"
             if exact_match_idx < len(auth_nums) and observed_flags[exact_match_idx]: 
                 return chain_id, auth_nums[exact_match_idx]
             start = match_start + 1
@@ -269,7 +271,7 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
 
     return None, None
 
-# --- OPTIMIZATION A: Molstar Abstraction ---
+# --- Molstar Iframe Generator ---
 def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", height="480px"):
     """Generates the base64 iframe payload for PDBe Molstar."""
     if af_uniprot:
@@ -281,9 +283,12 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
         alphafoldView: true,
         """
         molecule_block = ""
+        visual_style_block = "" # AF preset handles its own visualization
     else:
         custom_data_block = ""
         molecule_block = f"moleculeId: '{molecule_id.lower()}',"
+        # Forces cartoon representation on EM and all generic structures
+        visual_style_block = "visualStyle: 'cartoon'," 
 
     html_content = f"""
     <!DOCTYPE html>
@@ -305,6 +310,7 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
                 var options = {{
                     {molecule_block}
                     {custom_data_block}
+                    {visual_style_block}
                     expanded: true,
                     hideControls: false,
                     hideCanvasControls: [],
@@ -662,6 +668,13 @@ def server(input, output, session):
                 }}],
                 nonSelectedColor: undefined
             }});
+            
+            // Revert Mol* front/back clipping planes after the focus animation ends 
+            setTimeout(() => {{
+                if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
+                    viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 10000 }} }});
+                }}
+            }}, 600);
         }});
         """
         
@@ -709,6 +722,13 @@ def server(input, output, session):
                     }}],
                     nonSelectedColor: undefined
                 }});
+                
+                // Revert Mol* front/back clipping planes after the focus animation ends 
+                setTimeout(() => {{
+                    if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
+                        viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 10000 }} }});
+                    }}
+                }}, 600);
             }});
             """
 
@@ -753,6 +773,13 @@ def server(input, output, session):
                     nonCovalent: true, 
                     nonSelectedColor: undefined
                 }});
+                
+                // Revert Mol* front/back clipping planes after the focus animation ends 
+                setTimeout(() => {{
+                    if (viewerInstance.plugin && viewerInstance.plugin.canvas3d) {{
+                        viewerInstance.plugin.canvas3d.setProps({{ cameraClipping: {{ radius: 10000 }} }});
+                    }}
+                }}, 600);
             }});
             """
 
