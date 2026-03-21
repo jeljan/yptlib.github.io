@@ -648,12 +648,11 @@ def server(input, output, session):
                         alphafoldView: true, 
                         bgColor: {{r: 255, g: 255, b: 255}},
                         
-                        // --- THE FIX: Force the layout panels to show ---
-                        hideControls: false,          // Shows the right-hand menu (Builder, Density, etc.)
-                        hideSequencePanel: false,     // Re-enables the top sequence panel
-                        sequencePanel: true,          // Legacy fallback for the sequence panel
-                        layoutShowControls: true,     // Forces base Mol* to unhide the right panel
-                        layoutShowSequence: true      // Forces base Mol* to unhide the top panel
+                        // --- THE FIX ---
+                        expanded: true,           // Opens the side panels (crucial for State/JSON import tools)
+                        sequencePanel: true,      // Unhides the top sequence panel
+                        hideControls: false,      // Ensures right-hand controls remain visible
+                        hideCanvasControls: []    // Overrides the AF preset that hides canvas tools
                     }};
                     
                     var viewerContainer = document.getElementById('molstar-container');
@@ -680,12 +679,12 @@ def server(input, output, session):
         
         b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
         
-        # Increased iframe height slightly more to ensure the UI doesn't auto-collapse due to responsiveness
+        # Notice the added 'allow' parameters in the iframe to prevent browser blocks on import/export features
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
             <br><b>Alphafold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
         </div>
-        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 750px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 750px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>
         ''')
     
     @render.ui
