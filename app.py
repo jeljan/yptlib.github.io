@@ -172,7 +172,6 @@ app_ui = ui.page_fluid(
                         ),
                         ui.nav_panel(
                             "AlphaFold Structure",
-                            ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                             ui.output_ui("alphafold_viewer")
                         ),
                         id="structure_tabs"
@@ -274,13 +273,6 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, pdbe_data=None):
 def server(input, output, session):
     
     active_drug = reactive.Value(default_drug)
-    
-    unhover_js = """function(atom,viewer) {
-        if(atom.label) {
-            viewer.removeLabel(atom.label);
-            delete atom.label;
-        }
-    }"""
         
     @reactive.Effect
     @reactive.event(input.main_tabs)
@@ -690,8 +682,10 @@ def server(input, output, session):
     @render.ui
     def pdb_viewer():
         pdb_id, gene, site_pos = input.pdb_selector(), input.target_gene(), input.target_site_pos()
-        if not pdb_id or pdb_id in ["Loading...", "none"]: return ui.HTML("<div style='color:orange'><b>Note:</b> No PDB structure found.</div>")
-        if pdb_id not in available_pdbs(): return ui.p("Syncing...")
+        if not pdb_id or pdb_id in ["Loading...", "none"]: 
+            return ui.HTML("<div style='color:orange'><b>Note:</b> No PDB structure found.</div>")
+        if pdb_id not in available_pdbs(): 
+            return ui.p("Syncing...")
 
         matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
         if matching_rows.empty: return ui.p("")
@@ -700,34 +694,74 @@ def server(input, output, session):
         chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_pos, str(row['Sequence']))
 
         mapping_notice = ""
+        # JS block for targeting the residue, empty if no chain found
+        selection_js = "" 
+
         if chain_id is None:
-            # FULL STRUCTURE FALLBACK
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Site not observed in this PDB, showing full structure.</i></span>"
-        elif mapped_site_pos != site_pos:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
-
-        chain_map_js = json.dumps(get_chain_names(pdb_id))
-        hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
-
-        try: pdb_data = urllib.request.urlopen(f"https://files.rcsb.org/download/{pdb_id}.cif").read().decode('utf-8').replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-        except Exception: return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve PDB {pdb_id}.</div>")
-
-        view = py3Dmol.view(width="100%", height=480)
-        view.addModel(pdb_data, "cif")
-        view.setStyle({'cartoon': {'colorscheme': 'chain'}})
-        
-        if chain_id is not None:
-            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
-            view.zoomTo(target_sel)
         else:
-            view.zoomTo() # Fallback zoom to whole structure
+            if mapped_site_pos != site_pos:
+                mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
             
-        view.setHoverable({}, True, hover_js, unhover_js)
+            # Build the Mol* selection script
+            selection_js = f"""
+            viewerInstance.events.loadComplete.subscribe(() => {{
+                viewerInstance.visual.select({{
+                    data: [{{
+                        struct_asym_id: '{chain_id}',
+                        start_residue_number: {mapped_site_pos},
+                        end_residue_number: {mapped_site_pos},
+                        color: {{r: 255, g: 0, b: 0}},
+                        sideChain: true,
+                        focus: true 
+                    }}],
+                    nonSelectedColor: undefined
+                }});
+            }});
+            """
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
+            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
+            <style>
+                body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
+                #molstar-container {{ width: 100%; height: 100%; position: relative; }}
+            </style>
+        </head>
+        <body>
+            <div id="molstar-container"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {{
+                    var viewerInstance = new PDBeMolstarPlugin();
+                    var options = {{
+                        moleculeId: '{pdb_id.lower()}',
+                        expanded: true,
+                        hideControls: false,
+                        hideCanvasControls: [],
+                        bgColor: {{r: 255, g: 255, b: 255}}
+                    }};
+                    var viewerContainer = document.getElementById('molstar-container');
+                    
+                    {selection_js}
+
+                    viewerInstance.render(viewerContainer, options);
+                }});
+            </script>
+        </body>
+        </html>
+        """
+
+        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
         
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;"><b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}</div>
-        <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
+        </div>
+        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 480px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>
         ''')
 
     @render.ui
@@ -735,47 +769,83 @@ def server(input, output, session):
         pdb_id, target_site = input.ppi_selector(), input.target_site_pos()
         if not pdb_id or pdb_id in ["none", "Loading..."]: return ui.div()
 
-        match = ppi_df[(ppi_df['Target'] == f"{input.target_gene()}_Y{target_site}") & (ppi_df['PDB_ID'] == pdb_id)]
-        viz_cutoff = float(match['Min_Distance'].iloc[0]) + 1.0 if not match.empty else 5.0
-
+        # Note: viz_cutoff calculation is removed because Mol* natively handles environmental focus
         matching_rows = df[df['Labels'] == f"{input.target_gene()}_Y{target_site}"]
         if matching_rows.empty: return ui.div()
 
         chain_id, mapped_site_pos = verify_and_map_site(pdb_id, target_site, str(matching_rows.iloc[0]['Sequence']))
 
         mapping_notice = ""
+        selection_js = ""
+
         if chain_id is None:
-            # FULL STRUCTURE FALLBACK
             mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Warning: Site not observed in this PDB, showing full structure.</i></span>"
-        elif mapped_site_pos != target_site:
-            mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
-
-        chain_map_js = json.dumps(get_chain_names(pdb_id))
-        hover_js = f"""function(atom,viewer,event,container) {{ if(!atom.label) {{ var cName = {chain_map_js}[atom.chain] || "Unknown Molecule"; atom.label = viewer.addLabel(atom.resn + " " + atom.resi + " (" + cName + ")", {{position: atom, backgroundColor: '#2b2b2b', fontColor: 'white', backgroundOpacity: 0.85, fontSize: 12, borderRadius: 5}}); }} }}"""
-
-        try: pdb_data = urllib.request.urlopen(f"https://files.rcsb.org/download/{pdb_id.upper()}.cif").read().decode('utf-8').replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-        except Exception: return ui.HTML(f"<div style='color:red; padding:20px;'><b>Error:</b> Could not retrieve {pdb_id}.</div>")
-
-        view = py3Dmol.view(width="100%", height=480)
-        view.addModel(pdb_data, "cif")
-        view.setStyle({'cartoon': {'colorscheme': 'chain'}})
-
-        if chain_id is not None:
-            target_sel = {'resi': mapped_site_pos, 'chain': chain_id}
-            view.addStyle({'within': {'distance': viz_cutoff, 'sel': target_sel}, 'byres': True, 'not': {'atom': ['N', 'C', 'O', 'OXT']}}, {'stick': {'colorscheme': 'cyanCarbon', 'radius': 0.2}})
-            view.addStyle({**{'not': {'atom': ['N', 'C', 'O', 'OXT']}}, **target_sel}, {'stick': {'colorscheme': 'redCarbon', 'radius': 0.2}})
-            view.zoomTo(target_sel)
         else:
-            view.zoomTo() # Fallback zoom to whole structure
+            if mapped_site_pos != target_site:
+                mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
 
-        view.setHoverable({}, True, hover_js, unhover_js)
+            # By adding nonCovalent: true, Mol* will automatically show the interacting PPI pocket 
+            selection_js = f"""
+            viewerInstance.events.loadComplete.subscribe(() => {{
+                viewerInstance.visual.select({{
+                    data: [{{
+                        struct_asym_id: '{chain_id}',
+                        start_residue_number: {mapped_site_pos},
+                        end_residue_number: {mapped_site_pos},
+                        color: {{r: 255, g: 0, b: 0}},
+                        sideChain: true,
+                        focus: true 
+                    }}],
+                    nonCovalent: true, 
+                    nonSelectedColor: undefined
+                }});
+            }});
+            """
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
+            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
+            <style>
+                body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: white; }}
+                #molstar-container {{ width: 100%; height: 100%; position: relative; }}
+            </style>
+        </head>
+        <body>
+            <div id="molstar-container"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {{
+                    var viewerInstance = new PDBeMolstarPlugin();
+                    var options = {{
+                        moleculeId: '{pdb_id.lower()}',
+                        expanded: true,
+                        hideControls: false,
+                        hideCanvasControls: [],
+                        bgColor: {{r: 255, g: 255, b: 255}}
+                    }};
+                    
+                    var viewerContainer = document.getElementById('molstar-container');
+                    
+                    {selection_js}
+
+                    viewerInstance.render(viewerContainer, options);
+                }});
+            </script>
+        </body>
+        </html>
+        """
+
+        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
 
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b><br>
+            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
             {mapping_notice}
         </div>
-        <iframe src="data:text/html;base64,{base64.b64encode(view._make_html().encode('utf-8')).decode('utf-8')}" style="width: 100%; height: 440px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
+        <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 480px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>
         ''')
 
 # --- 4. Run App ---
