@@ -63,8 +63,12 @@ if len(all_files) > 0:
     if r_cols:
         GLOBAL_SITE_PROM = (df[r_cols] > 1).sum(axis=1) / len(r_cols) * 100
         GLOBAL_SITE_PROM_DF = pd.DataFrame({'Promiscuity': GLOBAL_SITE_PROM})
+        
+        # Calculate static Max R for default sorting before any UI switches are clicked
+        df['Static_Max_R'] = (2**df[r_cols]).max(axis=1)
     else:
         GLOBAL_SITE_PROM_DF = pd.DataFrame(columns=['Promiscuity'])
+        df['Static_Max_R'] = 0
 
     cpd_prom, prom_type_list, drug_promiscuity = [], [], {}
     for d in raw_drugs:
@@ -83,19 +87,25 @@ if len(all_files) > 0:
     drug_choices = {d: f"{d} ({type_dict.get(d, 'Unknown')}, {drug_promiscuity.get(d, 0):.2f}%)" for d in sorted_drugs}
     default_drug = sorted_drugs[0] if sorted_drugs else None
     
-    def site_sort_key(site_str):
-        match = re.search(r'\d+', str(site_str))
-        return (int(match.group()), str(site_str)) if match else (float('inf'), str(site_str))
-    
-    gene_to_sites = df.dropna(subset=['Gene Symbol', 'Site Position']).groupby('Gene Symbol')['Site Position'].apply(lambda x: sorted(list(set(x)), key=site_sort_key)).to_dict()
+    # --- THE FIX: Rank default initial sites by Max R instead of sequence position ---
+    gene_to_sites = {}
+    for gene, group in df.dropna(subset=['Gene Symbol', 'Site Position']).groupby('Gene Symbol'):
+        sorted_group = group.sort_values('Static_Max_R', ascending=False)
+        site_dict = {}
+        for _, row in sorted_group.iterrows():
+            s = str(row['Site Position'])
+            if s not in site_dict:
+                site_dict[s] = f"{s} (Max R: {row['Static_Max_R']:.2f})"
+        gene_to_sites[gene] = site_dict
+        
     gene_choices = sorted(list(gene_to_sites.keys()))
     default_gene = gene_choices[0] if gene_choices else None
-    default_site_choices = gene_to_sites.get(default_gene, [])
-    default_site = default_site_choices[0] if default_site_choices else None
+    default_site_choices = gene_to_sites.get(default_gene, {})
+    default_site = list(default_site_choices.keys())[0] if default_site_choices else None
 else:
     raw_drugs = []
     drug_choices, default_drug = {"No Data Found": "No Data Found"}, "No Data Found"
-    gene_to_sites, gene_choices, default_gene, default_site_choices, default_site = {}, ["No Data Found"], "No Data Found", ["No Data Found"], "No Data Found"
+    gene_to_sites, gene_choices, default_gene, default_site_choices, default_site = {}, ["No Data Found"], "No Data Found", {}, "No Data Found"
     GLOBAL_SITE_PROM_DF, GLOBAL_DRUG_PROM_DF = pd.DataFrame(), pd.DataFrame()
 
 
@@ -164,6 +174,10 @@ app_ui = ui.page_fluid(
                 ui.div(
                     ui.card(
                         ui.h5("Compound Engagement Profile"),
+                        # --- THE FIX: Added Significance Switch to the Site Tab ---
+                        ui.div(
+                            ui.input_switch("site_sig_only", "Significant only (p < 0.05)", value=False)
+                        ),
                         ui.layout_columns(
                             ui.input_selectize("target_gene", "Gene:", choices=gene_choices, selected=default_gene),
                             ui.input_selectize("target_site_pos", "Site:", choices=default_site_choices, selected=default_site),
@@ -300,7 +314,7 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
                     {custom_data_block}
                     visualStyle: 'cartoon',
                     hideStructure: ['water'],
-                    bgColor: 'white',
+                    bgColor: {{r:255, g: 255, b:255}},
                     hideControls: false,
                     hideCanvasControls: [],
                     sequencePanel: true,
@@ -322,28 +336,26 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
     b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
     return f'<iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: {height}; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>'
 
-def get_spatial_neighbors(pdb_id, chain_id, target_res, radius=8.0):
+def get_spatial_neighbors(pdb_id, target_chain, target_res, radius=8.0):
     """
-    Fetches PDB coordinates and uses a Scipy KDTree to rapidly calculate 
-    a 3D spherical neighborhood around the target residue.
+    Fetches PDB coordinates and uses a Scipy cKDTree to rapidly calculate 
+    a 3D spherical neighborhood, returning neighbors across ALL chains.
     """
     url = f"https://files.rcsb.org/view/{pdb_id.upper()}.pdb"
     try:
         req = urllib.request.urlopen(url, timeout=3)
         lines = req.read().decode('utf-8').split('\n')
     except Exception:
-        # Fallback to a +/- 5 sequence window if the network fails
-        return list(range(max(1, target_res - 5), target_res + 6))
+        # Fallback to local chain sequence window if the network fails
+        return [(target_chain, r) for r in range(max(1, target_res - 5), target_res + 6)]
     
     atom_coords = []
     atom_info = []
     target_coords = []
     
-    # 1. Parse coordinates quickly
     for line in lines:
         if line.startswith("ATOM  "):
             atom_name = line[12:16].strip()
-            # CA and CB atoms give a great approximation of the residue's backbone and sidechain mass
             if atom_name in ["CA", "CB"]: 
                 chain = line[21].strip()
                 try:
@@ -355,30 +367,22 @@ def get_spatial_neighbors(pdb_id, chain_id, target_res, radius=8.0):
                     atom_coords.append([x, y, z])
                     atom_info.append((chain, res_num))
                     
-                    if chain == chain_id and res_num == target_res:
+                    if chain == target_chain and res_num == target_res:
                         target_coords.append([x, y, z])
                 except ValueError:
                     continue
                     
     if not target_coords or not atom_coords:
-        return list(range(max(1, target_res - 5), target_res + 6))
+        return [(target_chain, r) for r in range(max(1, target_res - 5), target_res + 6)]
         
-    # 2. Build the KD-Tree
     tree = KDTree(atom_coords)
-    
-    # 3. Query the tree for all target atoms simultaneously
-    # This returns a list of lists containing the indices of all atoms within the radius
     neighbor_indices = tree.query_ball_point(target_coords, r=radius)
     
-    # 4. Flatten the indices and map them back to unique residue numbers
     neighbors = set()
     for idx_list in neighbor_indices:
         for idx in idx_list:
             c, r = atom_info[idx]
-            # Ensure we are only pulling interacting residues from our target chain
-            # (Modify this if you want to highlight interactions across different chains)
-            if c == chain_id: 
-                neighbors.add(r)
+            neighbors.add((c, r)) 
                 
     return sorted(list(neighbors))
 
@@ -400,12 +404,45 @@ def server(input, output, session):
         if input.main_tabs() == "compound_tab":
             active_drug.set(input.data_type())
 
+    # --- THE FIX: Calculate true Max R to populate the sites dropdown reactively ---
     @reactive.Effect
     def update_site_dropdown():
         gene = input.target_gene()
-        if gene and gene in gene_to_sites:
-            sites = gene_to_sites[gene]
-            ui.update_selectize("target_site_pos", choices=sites, selected=sites[0] if sites else None)
+        sig_only = input.site_sig_only()  # Listen to the new switch!
+        
+        if not gene or df is None or df.empty: return
+        gene_df = df[df['Gene Symbol'] == gene].copy()
+        if gene_df.empty: return
+        
+        p_thresh = -np.log10(0.05)
+        site_max_rs = {}
+        
+        # Calculate dynamic Max R for each site based on switch
+        for _, row in gene_df.iterrows():
+            site = str(row['Site Position'])
+            max_r = 0
+            for d in raw_drugs:
+                r_col = f'log2 {d} R'
+                p_col = f'-log10 {d} p'
+                if r_col in row and pd.notna(row[r_col]):
+                    # Apply significant filter if enabled
+                    if sig_only:
+                        if p_col not in row or pd.isna(row[p_col]) or row[p_col] <= p_thresh:
+                            continue
+                    
+                    val = 2 ** row[r_col]
+                    if val > max_r: 
+                        max_r = val
+            site_max_rs[site] = max_r
+            
+        # Sort sites descending by their highest engagement score
+        sorted_sites = sorted(site_max_rs.keys(), key=lambda x: site_max_rs[x], reverse=True)
+        choices = {s: f"{s} (Max R: {site_max_rs[s]:.2f})" for s in sorted_sites}
+        
+        current_site = input.target_site_pos()
+        selected = current_site if current_site in choices else (sorted_sites[0] if sorted_sites else None)
+        
+        ui.update_selectize("target_site_pos", choices=choices, selected=selected)
 
     # --- SUMMARY VIEW LOGIC ---
     @reactive.Calc
@@ -679,16 +716,35 @@ def server(input, output, session):
         widget._config = {**(widget._config or {}), 'edits': {'annotationTail': True}}
         return widget
 
+    # --- THE FIX: Pass significance filter down to the profile bar plot ---
     @render_widget
     def site_profile_plot():
         gene, site = input.target_gene(), input.target_site_pos()
+        sig_only = input.site_sig_only()
+        
         if not gene or not site or df.empty: return go.FigureWidget(px.bar(title="No Site Selected"))
         matching_rows = df[df['Labels'] == f"{gene}_Y{site}"]
         if matching_rows.empty: return go.FigureWidget(px.bar(title="Loading..."))
               
         row = matching_rows.iloc[0]
-        drug_data = [{'Drug': d, 'R': 2**row[f'log2 {d} R']} for d in raw_drugs if f'log2 {d} R' in df.columns]
-        bar_df = pd.DataFrame(drug_data).dropna().sort_values('R', ascending=False)
+        drug_data = []
+        p_thresh = -np.log10(0.05)
+        
+        for d in raw_drugs:
+            r_col = f'log2 {d} R'
+            p_col = f'-log10 {d} p'
+            if r_col in row and pd.notna(row[r_col]):
+                # Skip drugs that don't pass significance when switch is ON
+                if sig_only:
+                    if p_col not in row or pd.isna(row[p_col]) or row[p_col] <= p_thresh:
+                        continue
+                        
+                drug_data.append({'Drug': d, 'R': 2**row[r_col]})
+                
+        if not drug_data:
+            return go.FigureWidget(px.bar(title="No compounds meet the criteria."))
+            
+        bar_df = pd.DataFrame(drug_data).sort_values('R', ascending=False)
         fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f'})
         fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red')
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), coloraxis_showscale=False)
@@ -708,7 +764,6 @@ def server(input, output, session):
         row = matching_rows.iloc[0]
         uniprot = str(row['Protein Id']).split('|')[1].split('-')[0] if '|' in str(row['Protein Id']) else str(row['Protein Id']).split('-')[0]
         
-        # Ensure site_pos is cleanly passed to Mol* as an integer
         mapped_num = int(re.search(r'\d+', str(site_pos)).group()) if re.search(r'\d+', str(site_pos)) else site_pos
 
         selection_js = f"""
@@ -737,8 +792,8 @@ def server(input, output, session):
         
         iframe = create_molstar_iframe(af_uniprot=uniprot, selection_js=selection_js, height="750px")
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <br><b>Alphafold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
+        <div style="margin-top: 15px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.3;">
+            <b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
         </div>
         {iframe}
         ''')
@@ -766,7 +821,6 @@ def server(input, output, session):
             if str(mapped_site_pos) != str(site_pos):
                 mapping_notice = f"<br><span style='color: #d62728; font-size: 0.85em;'><i>Sequence alignment matched site to author position {mapped_site_pos}.</i></span>"
             
-            # Prevent JS syntax errors if the position has an insertion code (e.g. '145A')
             mapped_num = int(re.search(r'\d+', str(mapped_site_pos)).group()) if re.search(r'\d+', str(mapped_site_pos)) else mapped_site_pos
             
             selection_js = f"""
@@ -795,8 +849,8 @@ def server(input, output, session):
 
         iframe = create_molstar_iframe(molecule_id=pdb_id, selection_js=selection_js, height="480px")
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <br><b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
+        <div style="margin-top: 15px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.3;">
+            <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>{mapping_notice}
         </div>
         {iframe}
         ''')
@@ -822,26 +876,19 @@ def server(input, output, session):
 
             mapped_num = int(re.search(r'\d+', str(mapped_site_pos)).group()) if re.search(r'\d+', str(mapped_site_pos)) else mapped_site_pos
 
-            # --- THE FIX: Calculate 3D Spatial Neighbors in Python ---
             try:
                 m_num = int(mapped_num)
-                # Find residues physically touching the site, regardless of sequence order
                 neighbors = get_spatial_neighbors(pdb_id, chain_id, m_num, radius=8.0)
             except (ValueError, TypeError):
                 neighbors = [mapped_num]
 
-            # Build the Javascript array of objects dynamically
             selection_data = []
-            
-            # 1. Target residue (Red) + Focus camera here
             selection_data.append(f"{{struct_asym_id: '{chain_id}', residue_number: {mapped_num}, representationColor: {{r: 255, g: 0, b: 0}}, sideChain: true, focus: true}}")
             
-            # 2. Neighbors (Pop out sidechains and draw H-bonds/Contacts)
-            for res in neighbors:
+            for n_chain, res in neighbors:
                 if res != mapped_num:
-                    selection_data.append(f"{{struct_asym_id: '{chain_id}', residue_number: {res}, sideChain: true}}")
-                # Ensure interaction lines are drawn for every neighbor
-                selection_data.append(f"{{struct_asym_id: '{chain_id}', residue_number: {res}, representation: 'interactions'}}")
+                    selection_data.append(f"{{struct_asym_id: '{n_chain}', residue_number: {res}, sideChain: true}}")
+                selection_data.append(f"{{struct_asym_id: '{n_chain}', residue_number: {res}, representation: 'interactions'}}")
 
             selection_data_js = ",\n".join(selection_data)
 
@@ -862,7 +909,7 @@ def server(input, output, session):
 
         iframe = create_molstar_iframe(molecule_id=pdb_id, selection_js=selection_js, height="480px")
         return ui.HTML(f'''
-        <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
+        <div style="margin-top: 15px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.3;">
             <b>PDB ID: <a href="https://www.rcsb.org/structure/{pdb_id}" target="_blank">{pdb_id}</a></b>
             {mapping_notice}
         </div>
