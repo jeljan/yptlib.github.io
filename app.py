@@ -179,7 +179,7 @@ app_ui = ui.page_fluid(
                     ),
                     ui.card(
                         ui.h5("Protein-Protein Interaction (PPI) Interfaces"),
-                        ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 10px;"),
+                        ui.p("Selected site highlighted in red, hover over residue to see more info.", style="color: gray; font-size: 0.9em; margin-bottom: 0;"),
                         ui.input_select("ppi_selector", "Select Interface (ID|Distance):", choices=["Loading..."]),
                         ui.output_ui("ppi_viewer")
                     )
@@ -642,31 +642,30 @@ def server(input, output, session):
                             url: 'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v6.cif',
                             format: 'cif'
                         }},
-                        alphafoldView: true, // MAGIC FLAG: Automatically colors by pLDDT!
+                        alphafoldView: true, 
                         bgColor: {{r: 255, g: 255, b: 255}},
-                        hideControls: true, // Hides the bulky left-hand menu
-                        hideCanvasControls: ['expand', 'selection', 'animation'] // Cleans up the canvas
+                        sequencePanel: true,  // Automatically expands the sequence panel
+                        hideControls: false,  // Must be false to allow the sequence panel to render
+                        hideCanvasControls: ['expand', 'animation'] // Keep it clean
                     }};
                     
                     var viewerContainer = document.getElementById('molstar-container');
                     
-                    // Render the structure, then zoom and highlight the target site
-                    viewerInstance.render(viewerContainer, options).then(() => {{
+                    // Wait until the structure is FULLY loaded before trying to select/focus
+                    viewerInstance.events.loadComplete.subscribe(() => {{
                         viewerInstance.visual.select({{
                             data: [{{
                                 struct_asym_id: 'A', // Chain A
-                                residue_number: {site_pos},
-                                color: {{r: 255, g: 0, b: 0}} // Highlight Red
-                            }}],
-                            nonSelectedColor: undefined // Leaves the rest of the protein colored by pLDDT
+                                start_residue_number: {site_pos},
+                                end_residue_number: {site_pos},
+                                color: {{r: 255, g: 0, b: 0}}, // Highlight Red
+                                focus: true // Automatically zooms the camera to this site
+                            }}]
                         }});
-                        
-                        // Focus camera on the specific residue
-                        viewerInstance.visual.focus([{{
-                            struct_asym_id: 'A',
-                            residue_number: {site_pos}
-                        }}]);
                     }});
+                    
+                    // Render the viewer
+                    viewerInstance.render(viewerContainer, options);
                 }});
             </script>
         </body>
@@ -676,10 +675,9 @@ def server(input, output, session):
         # Encode the HTML into a base64 data URI for the iframe
         b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
         
-        # We no longer need the custom color legend in the UI because Mol* provides one natively when alphafoldView is true!
         return ui.HTML(f'''
         <div style="margin-bottom: 5px; font-size: 0.9em; line-height: 1.3;">
-            <br><b>Structure (Mol*): <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
+            <br><b>AlphaFold: <a href="https://alphafold.ebi.ac.uk/entry/AF-{uniprot}-F1" target="_blank">{uniprot}</a></b>
         </div>
         <iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: 500px; border: 1px solid #eee; border-radius: 5px; overflow: hidden;"></iframe>
         ''')
