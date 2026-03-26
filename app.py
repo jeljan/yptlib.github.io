@@ -87,7 +87,6 @@ if len(all_files) > 0:
     drug_choices = {d: f"{d} ({type_dict.get(d, 'Unknown')}, {drug_promiscuity.get(d, 0):.2f}%)" for d in sorted_drugs}
     default_drug = sorted_drugs[0] if sorted_drugs else None
     
-    # --- THE FIX: Rank default initial sites by Max R instead of sequence position ---
     gene_to_sites = {}
     for gene, group in df.dropna(subset=['Gene Symbol', 'Site Position']).groupby('Gene Symbol'):
         sorted_group = group.sort_values('Static_Max_R', ascending=False)
@@ -174,7 +173,6 @@ app_ui = ui.page_fluid(
                 ui.div(
                     ui.card(
                         ui.h5("Compound Engagement Profile"),
-                        # --- THE FIX: Added Significance Switch to the Site Tab ---
                         ui.div(
                             ui.input_switch("site_sig_only", "Significant only (p < 0.05)", value=False)
                         ),
@@ -404,11 +402,10 @@ def server(input, output, session):
         if input.main_tabs() == "compound_tab":
             active_drug.set(input.data_type())
 
-    # --- THE FIX: Calculate true Max R to populate the sites dropdown reactively ---
     @reactive.Effect
     def update_site_dropdown():
         gene = input.target_gene()
-        sig_only = input.site_sig_only()  # Listen to the new switch!
+        sig_only = input.site_sig_only()  
         
         if not gene or df is None or df.empty: return
         gene_df = df[df['Gene Symbol'] == gene].copy()
@@ -417,7 +414,6 @@ def server(input, output, session):
         p_thresh = -np.log10(0.05)
         site_max_rs = {}
         
-        # Calculate dynamic Max R for each site based on switch
         for _, row in gene_df.iterrows():
             site = str(row['Site Position'])
             max_r = 0
@@ -425,7 +421,6 @@ def server(input, output, session):
                 r_col = f'log2 {d} R'
                 p_col = f'-log10 {d} p'
                 if r_col in row and pd.notna(row[r_col]):
-                    # Apply significant filter if enabled
                     if sig_only:
                         if p_col not in row or pd.isna(row[p_col]) or row[p_col] <= p_thresh:
                             continue
@@ -435,7 +430,6 @@ def server(input, output, session):
                         max_r = val
             site_max_rs[site] = max_r
             
-        # Sort sites descending by their highest engagement score
         sorted_sites = sorted(site_max_rs.keys(), key=lambda x: site_max_rs[x], reverse=True)
         choices = {s: f"{s} (Max R: {site_max_rs[s]:.2f})" for s in sorted_sites}
         
@@ -521,14 +515,21 @@ def server(input, output, session):
                 if sig_only and p_col in df.columns:
                     if pd.isna(row[p_col]) or row[p_col] <= p_thresh:
                         continue
-                        
-                drug_data.append({'Drug': d, 'R': 2**r_val})
+                
+                # --- THE FIX: Pass string formatted promiscuity directly to dict ---
+                drug_data.append({
+                    'Drug': d, 
+                    'R': 2**r_val,
+                    'Promiscuity': f"{drug_promiscuity.get(d, 0):.1f}%"
+                })
                 
         if not drug_data:
             return go.FigureWidget(px.bar(title="No compounds meet the criteria."))
             
         bar_df = pd.DataFrame(drug_data).sort_values('R', ascending=False).head(30)
-        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds')
+        
+        # --- THE FIX: Include Promiscuity in Plotly hover config ---
+        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f', 'Promiscuity': True})
         fig.update_layout(xaxis_title="", yaxis_title="R", plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=20, b=40), coloraxis_showscale=False)
         
         widget = go.FigureWidget(fig)
@@ -579,11 +580,10 @@ def server(input, output, session):
         try:
             data = fetch_uniprot_data(uniprot)
             pdb_list = []
-            site_num = int(site_str) if str(site_str).isdigit() else -1
 
             for ref in data.get('uniProtKBCrossReferences', []):
                 if ref['database'] == 'PDB':
-                    pdb_id, method, res_val, has_site, coverage = ref['id'], "Unknown", 999.0, False, 0
+                    pdb_id, method, res_val, coverage = ref['id'], "Unknown", 999.0, 0
                     for prop in ref.get('properties', []):
                         if prop['key'] == 'Method': method = prop['value']
                         elif prop['key'] == 'Resolution' and prop['value'] != '-':
@@ -593,12 +593,11 @@ def server(input, output, session):
                             for start_str, end_str in re.findall(r'(\d+)-(\d+)', prop['value'].split('=', 1)[1]):
                                 start, end = int(start_str), int(end_str)
                                 coverage += (end - start + 1)
-                                if start <= site_num <= end: has_site = True
                                 
-                    if has_site:
-                        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_str, user_seq)
-                        if chain_id is None:
-                            has_site = False
+                    # --- THE FIX: Completely bypass Uniprot sequence mapping logic ---
+                    # Always rely on verify_and_map_site as the ultimate source of truth
+                    chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_str, user_seq)
+                    has_site = chain_id is not None
 
                     method_score = 1 if 'EM' in method.upper() else 2 if 'X-RAY' in method.upper() else 3 if 'NMR' in method.upper() else 4
                     pdb_list.append({'id': pdb_id, 'has_site': has_site, 'method_score': method_score, 'res_val': res_val, 'coverage': coverage, 'method_label': method, 'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"})
@@ -716,7 +715,6 @@ def server(input, output, session):
         widget._config = {**(widget._config or {}), 'edits': {'annotationTail': True}}
         return widget
 
-    # --- THE FIX: Pass significance filter down to the profile bar plot ---
     @render_widget
     def site_profile_plot():
         gene, site = input.target_gene(), input.target_site_pos()
@@ -734,18 +732,24 @@ def server(input, output, session):
             r_col = f'log2 {d} R'
             p_col = f'-log10 {d} p'
             if r_col in row and pd.notna(row[r_col]):
-                # Skip drugs that don't pass significance when switch is ON
                 if sig_only:
                     if p_col not in row or pd.isna(row[p_col]) or row[p_col] <= p_thresh:
                         continue
                         
-                drug_data.append({'Drug': d, 'R': 2**row[r_col]})
+                # --- THE FIX: Pass string formatted promiscuity directly to dict ---
+                drug_data.append({
+                    'Drug': d, 
+                    'R': 2**row[r_col],
+                    'Promiscuity': f"{drug_promiscuity.get(d, 0):.1f}%"
+                })
                 
         if not drug_data:
             return go.FigureWidget(px.bar(title="No compounds meet the criteria."))
             
         bar_df = pd.DataFrame(drug_data).sort_values('R', ascending=False)
-        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f'})
+        
+        # --- THE FIX: Include Promiscuity in Plotly hover config ---
+        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f', 'Promiscuity': True})
         fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red')
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), coloraxis_showscale=False)
         widget = go.FigureWidget(fig)
