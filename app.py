@@ -87,7 +87,6 @@ if len(all_files) > 0:
     drug_choices = {d: f"{d} ({type_dict.get(d, 'Unknown')}, {drug_promiscuity.get(d, 0):.2f}%)" for d in sorted_drugs}
     default_drug = sorted_drugs[0] if sorted_drugs else None
     
-    # --- THE FIX: Rank default initial sites by Max R instead of sequence position ---
     gene_to_sites = {}
     for gene, group in df.dropna(subset=['Gene Symbol', 'Site Position']).groupby('Gene Symbol'):
         sorted_group = group.sort_values('Static_Max_R', ascending=False)
@@ -174,7 +173,6 @@ app_ui = ui.page_fluid(
                 ui.div(
                     ui.card(
                         ui.h5("Compound Engagement Profile"),
-                        # --- THE FIX: Added Significance Switch to the Site Tab ---
                         ui.div(
                             ui.input_switch("site_sig_only", "Significant only (p < 0.05)", value=False)
                         ),
@@ -254,7 +252,6 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
             for res in chain.get('residues', []):
                 chain_seq += aa_map.get(res.get('residue_name', ''), 'X')
                 auth_nums.append(str(res.get('author_residue_number', '')))
-                # Checks if site is greyed out/unobserved
                 observed.append(res.get('observed_ratio', 1) > 0)
             if chain_seq: all_chains.append((chain_id, chain_seq, auth_nums, observed))
             
@@ -278,7 +275,6 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
 
 # --- Molstar Iframe Generator ---
 def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", height="480px"):
-    """Generates the base64 iframe payload for PDBe Molstar."""
     if af_uniprot:
         custom_data_block = f"""
         customData: {{
@@ -323,11 +319,8 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
                 }};
                 
                 var viewerContainer = document.getElementById('molstar-container');
-
                 viewerInstance.render(viewerContainer, options);
-                
                 {selection_js}
-                
             }});
         </script>
     </body>
@@ -337,16 +330,11 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
     return f'<iframe src="data:text/html;base64,{b64_html}" style="width: 100%; height: {height}; border: 1px solid #eee; border-radius: 5px; overflow: hidden;" allow="downloads; clipboard-write"></iframe>'
 
 def get_spatial_neighbors(pdb_id, target_chain, target_res, radius=8.0):
-    """
-    Fetches PDB coordinates and uses a Scipy cKDTree to rapidly calculate 
-    a 3D spherical neighborhood, returning neighbors across ALL chains.
-    """
     url = f"https://files.rcsb.org/view/{pdb_id.upper()}.pdb"
     try:
         req = urllib.request.urlopen(url, timeout=3)
         lines = req.read().decode('utf-8').split('\n')
     except Exception:
-        # Fallback to local chain sequence window if the network fails
         return [(target_chain, r) for r in range(max(1, target_res - 5), target_res + 6)]
     
     atom_coords = []
@@ -404,11 +392,10 @@ def server(input, output, session):
         if input.main_tabs() == "compound_tab":
             active_drug.set(input.data_type())
 
-    # --- THE FIX: Calculate true Max R to populate the sites dropdown reactively ---
     @reactive.Effect
     def update_site_dropdown():
         gene = input.target_gene()
-        sig_only = input.site_sig_only()  # Listen to the new switch!
+        sig_only = input.site_sig_only()  
         
         if not gene or df is None or df.empty: return
         gene_df = df[df['Gene Symbol'] == gene].copy()
@@ -417,7 +404,6 @@ def server(input, output, session):
         p_thresh = -np.log10(0.05)
         site_max_rs = {}
         
-        # Calculate dynamic Max R for each site based on switch
         for _, row in gene_df.iterrows():
             site = str(row['Site Position'])
             max_r = 0
@@ -425,7 +411,6 @@ def server(input, output, session):
                 r_col = f'log2 {d} R'
                 p_col = f'-log10 {d} p'
                 if r_col in row and pd.notna(row[r_col]):
-                    # Apply significant filter if enabled
                     if sig_only:
                         if p_col not in row or pd.isna(row[p_col]) or row[p_col] <= p_thresh:
                             continue
@@ -433,9 +418,11 @@ def server(input, output, session):
                     val = 2 ** row[r_col]
                     if val > max_r: 
                         max_r = val
-            site_max_rs[site] = max_r
             
-        # Sort sites descending by their highest engagement score
+            # --- THE FIX 1: Safely keep absolute max among duplicates/isoforms ---
+            if site not in site_max_rs or max_r > site_max_rs[site]:
+                site_max_rs[site] = max_r
+            
         sorted_sites = sorted(site_max_rs.keys(), key=lambda x: site_max_rs[x], reverse=True)
         choices = {s: f"{s} (Max R: {site_max_rs[s]:.2f})" for s in sorted_sites}
         
@@ -455,7 +442,7 @@ def server(input, output, session):
         r_df = df[r_cols].copy()
         
         if sig_only:
-            p_thresh = -np.log10(0.05)
+            p_thresh = -log10(0.05)
             for d in raw_drugs:
                 r_col = f'log2 {d} R'
                 p_col = f'-log10 {d} p'
@@ -472,10 +459,11 @@ def server(input, output, session):
             'Max_R': max_r
         }).dropna(subset=['Max_R'])
         
-        cancer_df = sum_df[sum_df['Gene'].isin(cancer['Gene'])].sort_values('Max_R', ascending=False)
+        # --- THE FIX 2: Drop duplicates before converting to dictionary to prevent overwriting keys with lesser values ---
+        cancer_df = sum_df[sum_df['Gene'].isin(cancer['Gene'])].sort_values('Max_R', ascending=False).drop_duplicates(subset=['Labels'])
         cancer_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in cancer_df.iterrows()}
 
-        ppi_df_filtered = sum_df[sum_df['Labels'].isin(ppi_df['Target'])].sort_values('Max_R', ascending=False)
+        ppi_df_filtered = sum_df[sum_df['Labels'].isin(ppi_df['Target'])].sort_values('Max_R', ascending=False).drop_duplicates(subset=['Labels'])
         ppi_choices = {row['Labels']: f"{row['Labels']} (Max R: {row['Max_R']:.2f})" for _, row in ppi_df_filtered.iterrows()}
         
         return cancer_choices, ppi_choices
@@ -505,7 +493,8 @@ def server(input, output, session):
     def get_site_compounds_bar_plot(site_label, sig_only):
         if not site_label or site_label == "Loading..." or df is None or df.empty: return go.FigureWidget()
         
-        matching_rows = df[df['Labels'] == site_label]
+        # --- THE FIX 3: Always sort by Max_R descending before calling iloc[0] ---
+        matching_rows = df[df['Labels'] == site_label].sort_values('Static_Max_R', ascending=False)
         if matching_rows.empty: return go.FigureWidget()
         row = matching_rows.iloc[0]
         
@@ -521,14 +510,18 @@ def server(input, output, session):
                 if sig_only and p_col in df.columns:
                     if pd.isna(row[p_col]) or row[p_col] <= p_thresh:
                         continue
-                        
-                drug_data.append({'Drug': d, 'R': 2**r_val})
+                
+                drug_data.append({
+                    'Drug': d, 
+                    'R': 2**r_val,
+                    'Promiscuity': f"{drug_promiscuity.get(d, 0):.1f}%"
+                })
                 
         if not drug_data:
             return go.FigureWidget(px.bar(title="No compounds meet the criteria."))
             
         bar_df = pd.DataFrame(drug_data).sort_values('R', ascending=False).head(30)
-        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds')
+        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f', 'Promiscuity': True})
         fig.update_layout(xaxis_title="", yaxis_title="R", plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=20, b=40), coloraxis_showscale=False)
         
         widget = go.FigureWidget(fig)
@@ -561,7 +554,6 @@ def server(input, output, session):
     @render.ui
     def molecule_ui_site(): return generate_molecule_html(active_drug.get())
 
-
     # --- COMPOUND & SITE VIEW PLOTS ---
     @reactive.Calc
     def available_pdbs():
@@ -570,7 +562,7 @@ def server(input, output, session):
         if not gene or not site_str or gene == "No Data Found" or df is None or df.empty: return {}
 
         target = f"{gene}_Y{site_str}"
-        matching_rows = df[df['Labels'] == target]
+        matching_rows = df[df['Labels'] == target].sort_values('Static_Max_R', ascending=False)
         if matching_rows.empty: return {}
 
         uniprot = str(matching_rows.iloc[0]['Protein Id']).split('|')[1].split('-')[0] if '|' in str(matching_rows.iloc[0]['Protein Id']) else str(matching_rows.iloc[0]['Protein Id']).split('-')[0]
@@ -578,12 +570,14 @@ def server(input, output, session):
 
         try:
             data = fetch_uniprot_data(uniprot)
-            pdb_list = []
             site_num = int(site_str) if str(site_str).isdigit() else -1
-
+            
+            raw_pdbs = []
             for ref in data.get('uniProtKBCrossReferences', []):
                 if ref['database'] == 'PDB':
-                    pdb_id, method, res_val, has_site, coverage = ref['id'], "Unknown", 999.0, False, 0
+                    pdb_id, method, res_val, coverage = ref['id'], "Unknown", 999.0, 0
+                    has_uniprot_coverage = False
+                    
                     for prop in ref.get('properties', []):
                         if prop['key'] == 'Method': method = prop['value']
                         elif prop['key'] == 'Resolution' and prop['value'] != '-':
@@ -593,16 +587,29 @@ def server(input, output, session):
                             for start_str, end_str in re.findall(r'(\d+)-(\d+)', prop['value'].split('=', 1)[1]):
                                 start, end = int(start_str), int(end_str)
                                 coverage += (end - start + 1)
-                                if start <= site_num <= end: has_site = True
-                                
-                    if has_site:
-                        chain_id, mapped_site_pos = verify_and_map_site(pdb_id, site_str, user_seq)
-                        if chain_id is None:
-                            has_site = False
-
+                                if start - 50 <= site_num <= end + 50:
+                                    has_uniprot_coverage = True
+                    
                     method_score = 1 if 'EM' in method.upper() else 2 if 'X-RAY' in method.upper() else 3 if 'NMR' in method.upper() else 4
-                    pdb_list.append({'id': pdb_id, 'has_site': has_site, 'method_score': method_score, 'res_val': res_val, 'coverage': coverage, 'method_label': method, 'res_label': "N/A" if res_val == 999.0 else f"{res_val}Å"})
+                    raw_pdbs.append({
+                        'id': pdb_id, 'method_score': method_score, 'res_val': res_val, 
+                        'coverage': coverage, 'method_label': method, 
+                        'has_uniprot_coverage': has_uniprot_coverage
+                    })
             
+            raw_pdbs.sort(key=lambda x: (not x['has_uniprot_coverage'], x['method_score'], x['res_val'], -x['coverage']))
+            
+            pdb_list = []
+            for p in raw_pdbs[:25]:
+                chain_id, _ = verify_and_map_site(p['id'], site_str, user_seq)
+                has_site = chain_id is not None
+                res_label = "N/A" if p['res_val'] == 999.0 else f"{p['res_val']}Å"
+                pdb_list.append({
+                    'id': p['id'], 'has_site': has_site, 'method_score': p['method_score'], 
+                    'res_val': p['res_val'], 'coverage': p['coverage'], 
+                    'method_label': p['method_label'], 'res_label': res_label
+                })
+                
             pdb_list.sort(key=lambda x: (not x['has_site'], x['method_score'], x['res_val'], -x['coverage']))
             return {p['id']: f"{p['id']}|{'Site Present' if p['has_site'] else 'Site Absent'}|{p['method_label']}|{p['res_label']}|{p['coverage']}aa" for p in pdb_list}
         except Exception: return {}
@@ -716,14 +723,14 @@ def server(input, output, session):
         widget._config = {**(widget._config or {}), 'edits': {'annotationTail': True}}
         return widget
 
-    # --- THE FIX: Pass significance filter down to the profile bar plot ---
     @render_widget
     def site_profile_plot():
         gene, site = input.target_gene(), input.target_site_pos()
         sig_only = input.site_sig_only()
         
         if not gene or not site or df.empty: return go.FigureWidget(px.bar(title="No Site Selected"))
-        matching_rows = df[df['Labels'] == f"{gene}_Y{site}"]
+        # --- THE FIX 3: Sort descending to grab the top-performing isoform for this plot ---
+        matching_rows = df[df['Labels'] == f"{gene}_Y{site}"].sort_values('Static_Max_R', ascending=False)
         if matching_rows.empty: return go.FigureWidget(px.bar(title="Loading..."))
               
         row = matching_rows.iloc[0]
@@ -734,18 +741,21 @@ def server(input, output, session):
             r_col = f'log2 {d} R'
             p_col = f'-log10 {d} p'
             if r_col in row and pd.notna(row[r_col]):
-                # Skip drugs that don't pass significance when switch is ON
                 if sig_only:
                     if p_col not in row or pd.isna(row[p_col]) or row[p_col] <= p_thresh:
                         continue
                         
-                drug_data.append({'Drug': d, 'R': 2**row[r_col]})
+                drug_data.append({
+                    'Drug': d, 
+                    'R': 2**row[r_col],
+                    'Promiscuity': f"{drug_promiscuity.get(d, 0):.1f}%"
+                })
                 
         if not drug_data:
             return go.FigureWidget(px.bar(title="No compounds meet the criteria."))
             
         bar_df = pd.DataFrame(drug_data).sort_values('R', ascending=False)
-        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f'})
+        fig = px.bar(bar_df, x='Drug', y='R', color='R', color_continuous_scale='Reds', hover_data={'Drug': True, 'R': ':.3f', 'Promiscuity': True})
         fig.add_hline(y=input.threshold(), line_width=1, line_dash='dash', line_color='red')
         fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), coloraxis_showscale=False)
         widget = go.FigureWidget(fig)
@@ -758,7 +768,7 @@ def server(input, output, session):
         gene, site_pos = input.target_gene(), input.target_site_pos()
         if not gene or not site_pos or df.empty: return ui.p("Please select a Gene and Site.")
         
-        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
+        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"].sort_values('Static_Max_R', ascending=False)
         if matching_rows.empty: return ui.p("Loading structure...")
 
         row = matching_rows.iloc[0]
@@ -806,7 +816,7 @@ def server(input, output, session):
         if pdb_id not in available_pdbs(): 
             return ui.p("Syncing...")
 
-        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"]
+        matching_rows = df[df['Labels'] == f"{gene}_Y{site_pos}"].sort_values('Static_Max_R', ascending=False)
         if matching_rows.empty: return ui.p("")
         
         row = matching_rows.iloc[0]
@@ -860,7 +870,7 @@ def server(input, output, session):
         pdb_id, target_site = input.ppi_selector(), input.target_site_pos()
         if not pdb_id or pdb_id in ["none", "Loading..."]: return ui.div()
 
-        matching_rows = df[df['Labels'] == f"{input.target_gene()}_Y{target_site}"]
+        matching_rows = df[df['Labels'] == f"{input.target_gene()}_Y{target_site}"].sort_values('Static_Max_R', ascending=False)
         if matching_rows.empty: return ui.div()
 
         chain_id, mapped_site_pos = verify_and_map_site(pdb_id, target_site, str(matching_rows.iloc[0]['Sequence']), req_session)
