@@ -811,7 +811,8 @@ def server(input, output, session):
                     color: null,
                     sideChain: true,
                     focus: true,
-                    }}]
+                    }}],
+                keepColors: true
             }});
         }});
         """
