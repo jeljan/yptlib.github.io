@@ -287,7 +287,7 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
         molecule_block = ""
     else:
         custom_data_block = ""
-        molecule_block = f"moleculeId: '{molecule_id.lower()}',"
+        molecule_block = f"moleculeId: '{molecule_id.lower()}', visualStyle: 'cartoon',"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -309,7 +309,6 @@ def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", he
                 var options = {{
                     {molecule_block}
                     {custom_data_block}
-                    visualStyle: 'cartoon',
                     hideStructure: ['water'],
                     bgColor: {{r:255, g: 255, b:255}},
                     hideControls: false,
@@ -811,9 +810,7 @@ def server(input, output, session):
                     color: null,
                     sideChain: true,
                     focus: true,
-                    }}],
-                keepColors: true,
-                nonSelectedColor: null
+                    }}]
             }});
         }});
         """
