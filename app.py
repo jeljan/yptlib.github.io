@@ -278,11 +278,11 @@ def verify_and_map_site(pdb_id, site_pos, user_seq, session=req_session, pdbe_da
 def create_molstar_iframe(molecule_id=None, af_uniprot=None, selection_js="", height="480px"):
     if af_uniprot:
         custom_data_block = f"""
+        alphafoldView: true,
         customData: {{
             url: 'https://alphafold.ebi.ac.uk/files/AF-{af_uniprot}-F1-model_v6.cif',
             format: 'cif'
         }},
-        alphafoldView: true,
         """
         molecule_block = ""
     else:
@@ -812,7 +812,8 @@ def server(input, output, session):
                     sideChain: true,
                     focus: true,
                     }}],
-                keepColors: true
+                keepColors: true,
+                nonSelectedColor: null
             }});
         }});
         """
@@ -867,7 +868,7 @@ def server(input, output, session):
                         auth_asym_id: '{chain_id}',
                         auth_residue_number: {mapped_num},
                         representationColor: {{r: 255, g: 0, b: 0}},
-                        color:null,
+                        color: null,
                         sideChain: true,
                         focus: true,
                         }}]
@@ -916,7 +917,7 @@ def server(input, output, session):
             for n_chain, res in neighbors:
                 if res != mapped_num:
                     selection_data.append(f"{{auth_asym_id: '{n_chain}', auth_residue_number: {res}, color: null, sideChain: true}}")
-                selection_data.append(f"{{auth_asym_id: '{n_chain}', auth_residue_number: {res}, representation: 'interactions'}}")
+                selection_data.append(f"{{auth_asym_id: '{n_chain}', auth_residue_number: {res}, color: null, representation: 'interactions'}}")
 
             selection_data_js = ",\n".join(selection_data)
 
