@@ -807,12 +807,9 @@ def server(input, output, session):
                 data: [{{
                     struct_asym_id: 'A',
                     residue_number: {mapped_num},
-                    representationColor: {{r: 255, g: 0, b: 0}},
-                    color: null,
                     sideChain: true,
                     focus: true,
-                    }}],
-                keepColors: true
+                    }}]
             }});
         }});
         """
