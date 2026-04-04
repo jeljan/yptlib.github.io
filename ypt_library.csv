@@ -739,3 +739,4 @@ Z4410120958,421.0965,C13H8BrCl2N3O2S,"1-(2-bromo-4,5-dichlorobenzenesulfonyl)-5-
 Z4444806975,376.6455,C13H8Cl3N3O2S,"5-methyl-1-(2,4,5-trichlorobenzenesulfonyl)-1H-1,2,3-benzotriazole",CC=1C=CC2=C(C1)N=NN2S(=O)(=O)C=3C=C(Cl)C(Cl)=CC3Cl,SuTEx
 Z5015141764,361.4155,C17H19N3O4S,"1-(2,5-diethoxy-4-methylbenzenesulfonyl)-1H-1,2,3-benzotriazole",CCOC1=CC(C)=C(C=C1S(=O)(=O)N2N=NC=3C=CC=CC32)OCC,SuTEx
 Z1464110544,364.4177,C15H13FN4O2S2,"3-(benzylsulfanyl)-1-(3-fluorobenzenesulfonyl)-1H-1,2,4-triazol-5-amine",NC1=NC(=NN1S(=O)(=O)C=2C=CC=C(F)C2)SCC=3C=CC=CC3,SuTEx
+SRPKIN-1,472.53,C27H21FN2O3S,SRPKIN-1,CCc1cc2C(=O)c3c([nH]c4cc(ccc34)C#N)C(C)(C)c2cc1-c1cccc(c1)S(F)(=O)=O,SuFEx
