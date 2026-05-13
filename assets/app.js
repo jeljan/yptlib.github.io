@@ -2,7 +2,7 @@ const DATA_ROOT = window.YPTLIB_DATA_ROOT || "https://raw.githubusercontent.com/
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "raw-hover-v3";
+const ASSET_VERSION = "pages-data-v2";
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CONTACT_LABELS = {
   PPI: "PPI",
