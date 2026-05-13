@@ -11,6 +11,7 @@ let releaseArchivePromise = null;
 const ASSET_VERSION = "pages-data-v4";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
+const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CONTACT_LABELS = {
   PPI: "PPI",
@@ -808,6 +809,20 @@ function rowMatchesTarget(row, targetList, customGenes) {
   return true;
 }
 
+async function mapWithConcurrency(items, concurrency, worker) {
+  const results = [];
+  let index = 0;
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (index < items.length) {
+      const currentIndex = index;
+      index += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
 async function renderSummary() {
   updateConditionalFields();
   const targetList = el("summaryTargetList").value;
@@ -815,7 +830,7 @@ async function renderSummary() {
   const maxHits = hitCountLimit("summaryMaxHits");
   const candidates = state.catalog.filter((row) => rowMatchesTarget(row, targetList, customGenes));
   const uniqueGenes = [...new Set(candidates.map((row) => row.gene))];
-  await Promise.allSettled(uniqueGenes.map((gene) => loadGeneSites(gene)));
+  await mapWithConcurrency(uniqueGenes, SUMMARY_GENE_FETCH_CONCURRENCY, (gene) => loadGeneSites(gene));
   const scoredRows = candidates
     .map((row) => {
       const payload = state.geneSiteCache.get(row.gene);

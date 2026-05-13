@@ -60,6 +60,12 @@ assert.match(
 
 assert.match(
   appJs,
-  /Promise\.allSettled\(uniqueGenes\.map\(\(gene\) => loadGeneSites\(gene\)\)\)/,
-  "Target Engagement should not fail entirely when one gene data request fails"
+  /const SUMMARY_GENE_FETCH_CONCURRENCY = 8;/,
+  "Target Engagement should limit concurrent gene data requests"
+);
+
+assert.match(
+  appJs,
+  /await mapWithConcurrency\(uniqueGenes, SUMMARY_GENE_FETCH_CONCURRENCY, \(gene\) => loadGeneSites\(gene\)\);/,
+  "Target Engagement should not flood the browser with gene data requests"
 );
