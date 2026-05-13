@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tyrosine Library Screening</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>Tyrosine Library Screening</h1>
+        <p id="statusText">Loading static assets...</p>
+      </div>
+      <div class="dataset-toggle" role="group" aria-label="Dataset">
+        <span>One-Shot</span>
+        <label class="switch">
+          <input id="datasetSwitch" type="checkbox">
+          <span class="switch-track"></span>
+        </label>
+        <span>Fractionated</span>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Views">
+      <button class="tab-button active" data-tab="summary">Summary</button>
+      <button class="tab-button" data-tab="compound">Compound</button>
+      <button class="tab-button" data-tab="site">Site</button>
+      <button class="tab-button" data-tab="global">Global Proteome</button>
+      <button class="tab-button" data-tab="bio">Bioinformatics</button>
+    </nav>
+
+    <main>
+      <section id="summary" class="tab-panel active">
+        <div class="grid four summary-grid">
+          <section class="panel">
+            <h2>Site Hits</h2>
+            <div id="siteReactivityBinary" class="plot compact-plot"></div>
+          </section>
+          <section class="panel">
+            <h2>Site Reactivity Distribution</h2>
+            <div id="siteReactivityDist" class="plot compact-plot"></div>
+          </section>
+          <section class="panel">
+            <h2>Compound Hits By Warhead</h2>
+            <div id="compoundHitsBinary" class="plot compact-plot"></div>
+          </section>
+          <section class="panel">
+            <h2>Compound Selectivity Profiles</h2>
+            <div id="compoundHitsBinned" class="plot compact-plot"></div>
+          </section>
+        </div>
+        <section class="panel">
+          <h2>Target Engagement</h2>
+          <div class="toolbar summary-controls">
+            <label>Target list<select id="summaryTargetList"></select></label>
+            <label>Site<select id="summarySiteSelect"></select></label>
+            <label id="summaryCustomGenesWrap" class="wide conditional-field">Custom genes<input id="summaryCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
+          </div>
+          <fieldset class="filter-box">
+            <legend>Filters</legend>
+            <label>Compound selectivity<select id="summaryMaxHits"></select></label>
+            <label class="check"><input id="summarySigOnly" type="checkbox"> Significant only</label>
+            <label class="check"><input id="summaryHideVariance" type="checkbox"> Hide high variance</label>
+            <label class="narrow">Min SN<input id="summaryMinSn" type="number" min="0" step="10" value="0"></label>
+          </fieldset>
+          <div>
+            <div id="summaryBar" class="plot medium"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="compound" class="tab-panel">
+        <div class="grid sidebar-layout">
+          <aside class="panel">
+            <label>Compound<select id="compoundSelect"></select></label>
+            <label>R threshold<input id="compoundThreshold" type="number" step="0.1" value="2"></label>
+            <label>Label top<input id="compoundLabels" type="number" min="0" max="30" step="1" value="5"></label>
+            <label>Color by<select id="compoundColorMode"></select></label>
+            <label id="compoundCustomGenesWrap" class="conditional-field">Custom genes<input id="compoundCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
+            <fieldset class="filter-box vertical">
+              <legend>Filters</legend>
+              <label class="check"><input id="compoundActiveOnly" type="checkbox"> ≥ 1 Site hit only</label>
+              <label class="check"><input id="compoundSigOnly" type="checkbox"> Significant only</label>
+              <label class="check"><input id="compoundHideVariance" type="checkbox"> Hide high variance</label>
+              <label class="narrow">Min SN<input id="compoundMinSn" type="number" min="0" step="10" value="0"></label>
+            </fieldset>
+            <div id="compoundMolecule" class="molecule compact"></div>
+          </aside>
+          <section class="panel">
+            <h2>Proteome Engagement Profile</h2>
+            <div id="compoundScatter" class="plot medium"></div>
+            <h2 class="section-gap">Volcano Plot</h2>
+            <div id="compoundVolcano" class="plot medium"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="site" class="tab-panel">
+        <div class="grid sidebar-layout">
+          <aside class="panel">
+            <label>Gene<select id="siteGeneSelect"></select></label>
+            <label>Site<select id="siteSelect"></select></label>
+            <fieldset class="filter-box vertical">
+              <legend>Filters</legend>
+              <label>Compound selectivity<select id="siteMaxHits"></select></label>
+              <label class="check"><input id="siteActiveOnly" type="checkbox"> ≥ 1 Compound hit only</label>
+              <label class="check"><input id="siteSigOnly" type="checkbox"> Significant only</label>
+              <label class="check"><input id="siteHideVariance" type="checkbox"> Hide high variance</label>
+              <label class="narrow">Min SN<input id="siteMinSn" type="number" min="0" step="10" value="0"></label>
+            </fieldset>
+          </aside>
+          <section class="panel">
+            <h2>Compound Engagement Profile</h2>
+            <div id="siteBar" class="plot medium"></div>
+            <div class="structure-toolbar">
+              <label>Structure<select id="structureSelect"></select></label>
+              <label>Contact neighborhood<select id="contactPdbSelect"></select></label>
+            </div>
+            <div class="grid two structure-grid">
+              <section>
+                <div id="structureMessage" class="viewer-message"></div>
+                <p class="viewer-link"><a id="structureSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+                <div id="structureViewer" class="molstar-viewer"></div>
+              </section>
+              <section>
+                <div id="contactMessage" class="viewer-message"></div>
+                <p class="viewer-link"><a id="contactSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+                <div id="contactViewer" class="molstar-viewer"></div>
+              </section>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="global" class="tab-panel">
+        <section class="panel">
+          <div class="toolbar">
+            <label>Hit threshold<input id="globalThreshold" type="number" step="0.1" value="2"></label>
+            <label>Highlight<select id="globalHighlightMode"></select></label>
+            <label class="wide">Custom genes<input id="globalCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
+          </div>
+          <div id="globalScatter" class="plot tall"></div>
+        </section>
+      </section>
+
+      <section id="bio" class="tab-panel">
+        <section class="panel">
+          <div class="toolbar">
+            <label>Gene filter<input id="bioGeneFilter" type="text" placeholder="Gene"></label>
+            <label>Trait<select id="bioTraitSelect"><option>Evolutionary conservedness</option><option>Structure contacts</option><option>Promiscuity</option></select></label>
+          </div>
+          <div class="table-wrap">
+            <table id="bioTable">
+              <thead>
+                <tr><th>Gene</th><th>Site</th><th>Max R</th><th>Conservedness</th><th>Status</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div id="moleculeTooltip" class="molecule-tooltip" aria-hidden="true"></div>
+    <script src="assets/app.js?v=raw-hover-v3"></script>
+  </body>
+</html>

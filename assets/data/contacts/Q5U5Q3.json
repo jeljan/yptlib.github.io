@@ -1,0 +1,1 @@
+{"359":[{"pdb":"5WWZ","method":"X-RAY","resolution":2.5,"chain":"A","authSeq":359,"mappingStatus":"OK","contacts":["PPI"],"minDist":1.328,"neighbors":[{"chain":"A","residue":358,"label":"A/THR358/C"}]},{"pdb":"5WWX","method":"X-RAY","resolution":2.0,"chain":"A","authSeq":359,"mappingStatus":"OK","contacts":["Rna"],"minDist":3.531,"neighbors":[]}]}
