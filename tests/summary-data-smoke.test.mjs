@@ -5,7 +5,7 @@ const roots = [
   "https://cdn.statically.io/gh/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
   "https://raw.githubusercontent.com/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
 ];
-const version = "pages-data-v4";
+const version = "pages-data-v5";
 
 async function fetchJson(path) {
   let lastError = null;
