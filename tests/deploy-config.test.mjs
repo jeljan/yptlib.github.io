@@ -36,12 +36,30 @@ assert.match(
 
 assert.match(
   appJs,
-  /const ASSET_VERSION = "pages-data-v3";/,
+  /const ASSET_VERSION = "pages-data-v4";/,
   "data fetches should use the current deployment cache key"
 );
 
 assert.match(
   indexHtml,
-  /<script src="assets\/app\.js\?v=pages-data-v3"><\/script>/,
+  /<script src="assets\/app\.js\?v=pages-data-v4"><\/script>/,
   "index.html should load app.js with the current cache-busting key"
+);
+
+assert.match(
+  appJs,
+  /const FETCH_RETRIES_PER_ROOT = 2;/,
+  "data fetches should retry each root before falling back"
+);
+
+assert.match(
+  appJs,
+  /const FETCH_TIMEOUT_MS = 12000;/,
+  "data fetches should time out instead of hanging on one CDN"
+);
+
+assert.match(
+  appJs,
+  /Promise\.allSettled\(uniqueGenes\.map\(\(gene\) => loadGeneSites\(gene\)\)\)/,
+  "Target Engagement should not fail entirely when one gene data request fails"
 );
