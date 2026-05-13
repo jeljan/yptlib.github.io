@@ -1,5 +1,5 @@
-const DATA_ROOT = "assets/data/";
-const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "https://github.com/jeljan/yptlib/releases/download/data-v1/yptlib-assets-data.zip";
+const DATA_ROOT = window.YPTLIB_DATA_ROOT || "https://raw.githubusercontent.com/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/";
+const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
 const ASSET_VERSION = "raw-hover-v3";
