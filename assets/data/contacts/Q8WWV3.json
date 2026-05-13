@@ -1,1 +1,0 @@
-{"255":[{"pdb":"2VN8","method":"X-RAY","resolution":2.1,"chain":"A","authSeq":255,"mappingStatus":"OK","contacts":["PPI","Cofactor"],"minDist":1.328,"neighbors":[{"chain":"A","residue":256,"label":"A/LYS256/N"},{"chain":"A","residue":600,"label":"A/NDP600/O1X"}]}]}

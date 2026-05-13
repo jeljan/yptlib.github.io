@@ -1,4 +1,7 @@
 const DATA_ROOT = "assets/data/";
+const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "https://github.com/jeljan/yptlib/releases/download/data-v1/yptlib-assets-data.zip";
+const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
+let releaseArchivePromise = null;
 const ASSET_VERSION = "raw-hover-v3";
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CONTACT_LABELS = {
@@ -58,7 +61,42 @@ function setStatus(text) {
   el("statusText").textContent = text;
 }
 
+function normalizeArchivePath(path) {
+  return path.split("?")[0].replace(/^\/+/, "");
+}
+
+async function getReleaseArchive() {
+  if (!RELEASE_DATA_ARCHIVE_ENABLED) return null;
+  if (typeof zip === "undefined") {
+    throw new Error("zip.js did not load; cannot read release data archive");
+  }
+  if (!releaseArchivePromise) {
+    releaseArchivePromise = (async () => {
+      const response = await fetch(RELEASE_DATA_ARCHIVE_URL, { cache: "force-cache" });
+      if (!response.ok) {
+        throw new Error(`Unable to load release data archive: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const reader = new zip.ZipReader(new zip.BlobReader(blob));
+      const entries = await reader.getEntries();
+      const byName = new Map(entries.filter((entry) => !entry.directory).map((entry) => [entry.filename.replace(/^assets\/data\//, ""), entry]));
+      return { reader, byName };
+    })();
+  }
+  return releaseArchivePromise;
+}
+
 async function fetchJson(path) {
+  if (RELEASE_DATA_ARCHIVE_ENABLED) {
+    const archive = await getReleaseArchive();
+    const normalized = normalizeArchivePath(path);
+    const entry = archive.byName.get(normalized);
+    if (!entry) {
+      throw new Error(`Unable to load ${path}: missing from release archive`);
+    }
+    const text = await entry.getData(new zip.TextWriter());
+    return JSON.parse(text);
+  }
   const separator = path.includes("?") ? "&" : "?";
   const response = await fetch(`${DATA_ROOT}${path}${separator}v=${ASSET_VERSION}`, { cache: "no-store" });
   if (!response.ok) {

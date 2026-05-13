@@ -1,1 +1,0 @@
-{"587":[{"pdb":"2QTZ","method":"X-RAY","resolution":1.9,"chain":"A","authSeq":587,"mappingStatus":"OK","contacts":[],"minDist":null,"neighbors":[]}],"624":[{"pdb":"2QTZ","method":"X-RAY","resolution":1.9,"chain":"A","authSeq":624,"mappingStatus":"OK","contacts":["Cofactor"],"minDist":2.618,"neighbors":[{"chain":"A","residue":701,"label":"A/NAP701/O1X"}]}]}

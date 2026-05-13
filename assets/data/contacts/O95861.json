@@ -1,1 +1,0 @@
-{"125":[{"pdb":"2WEF","method":"X-RAY","resolution":1.8,"chain":"A","authSeq":125,"mappingStatus":"OK","contacts":[],"minDist":null,"neighbors":[]}],"236":[{"pdb":"2WEF","method":"X-RAY","resolution":1.8,"chain":"A","authSeq":236,"mappingStatus":"OK","contacts":["Cofactor"],"minDist":4.248,"neighbors":[{"chain":"A","residue":601,"label":"A/AMP601/C5'"}]}]}
