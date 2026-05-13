@@ -1,8 +1,14 @@
-const DATA_ROOT = window.YPTLIB_DATA_ROOT || "https://raw.githubusercontent.com/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/";
+const DATA_ROOTS = window.YPTLIB_DATA_ROOT
+  ? [window.YPTLIB_DATA_ROOT]
+  : [
+      "https://cdn.jsdelivr.net/gh/jeljan/yptlib@a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
+      "https://cdn.statically.io/gh/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
+      "https://raw.githubusercontent.com/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
+    ];
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v2";
+const ASSET_VERSION = "pages-data-v3";
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CONTACT_LABELS = {
   PPI: "PPI",
@@ -98,11 +104,19 @@ async function fetchJson(path) {
     return JSON.parse(text);
   }
   const separator = path.includes("?") ? "&" : "?";
-  const response = await fetch(`${DATA_ROOT}${path}${separator}v=${ASSET_VERSION}`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Unable to load ${path}: ${response.status}`);
+  let lastError = null;
+  for (const root of DATA_ROOTS) {
+    try {
+      const response = await fetch(`${root}${path}${separator}v=${ASSET_VERSION}`, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`${response.status}`);
+      }
+      return response.json();
+    } catch (err) {
+      lastError = err;
+    }
   }
-  return response.json();
+  throw new Error(`Unable to load ${path}: ${lastError?.message || "network error"}`);
 }
 
 function setOptions(select, options, selected = null) {
