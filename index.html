@@ -96,8 +96,9 @@
       <section id="compound" class="tab-panel">
         <div class="grid sidebar-layout">
           <aside class="panel">
+            <div id="compoundMolecule" class="molecule compact"></div>
             <label>Compound<select id="compoundSelect"></select></label>
-            <label>R threshold<input id="compoundThreshold" type="number" step="0.1" value="2"></label>
+            <label>Hit threshold<input id="compoundThreshold" type="number" step="0.1" value="2"></label>
             <label>Label top<input id="compoundLabels" type="number" min="0" max="30" step="1" value="5"></label>
             <label>Color by<select id="compoundColorMode"></select></label>
             <label id="compoundCustomGenesWrap" class="conditional-field">Custom genes<input id="compoundCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
@@ -108,7 +109,6 @@
               <label class="check"><input id="compoundHideVariance" type="checkbox"> Hide high variance</label>
               <label class="narrow">Min SN<input id="compoundMinSn" type="number" min="0" step="10" value="0"></label>
             </fieldset>
-            <div id="compoundMolecule" class="molecule compact"></div>
           </aside>
           <section class="panel">
             <h2>Proteome Engagement Profile</h2>
@@ -120,7 +120,7 @@
       </section>
 
       <section id="site" class="tab-panel">
-        <div class="grid sidebar-layout">
+        <div class="grid sidebar-layout site-analysis-layout">
           <aside class="panel">
             <label>Gene<select id="siteGeneSelect"></select></label>
             <label>Site<select id="siteSelect"></select></label>
@@ -134,26 +134,27 @@
             </fieldset>
           </aside>
           <section class="panel">
-            <h2>Compound Engagement Profile</h2>
             <div id="siteBar" class="plot medium"></div>
-            <div class="structure-toolbar">
-              <label>Structure<select id="structureSelect"></select></label>
-              <label>Contact neighborhood<select id="contactPdbSelect"></select></label>
-            </div>
-            <div class="grid two structure-grid">
-              <section>
-                <div id="structureMessage" class="viewer-message"></div>
-                <p class="viewer-link"><a id="structureSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
-                <div id="structureViewer" class="molstar-viewer"></div>
-              </section>
-              <section>
-                <div id="contactMessage" class="viewer-message"></div>
-                <p class="viewer-link"><a id="contactSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
-                <div id="contactViewer" class="molstar-viewer"></div>
-              </section>
-            </div>
           </section>
         </div>
+        <section class="panel site-structure-panel">
+          <div class="structure-toolbar">
+            <label>Structure<select id="structureSelect"></select></label>
+            <label>Contact neighborhood<select id="contactPdbSelect"></select></label>
+          </div>
+          <div class="grid two structure-grid">
+            <section>
+              <div id="structureMessage" class="viewer-message"></div>
+              <p class="viewer-link"><a id="structureSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+              <div id="structureViewer" class="molstar-viewer"></div>
+            </section>
+            <section>
+              <div id="contactMessage" class="viewer-message"></div>
+              <p class="viewer-link"><a id="contactSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+              <div id="contactViewer" class="molstar-viewer"></div>
+            </section>
+          </div>
+        </section>
       </section>
 
       <section id="bio" class="tab-panel">
@@ -175,6 +176,6 @@
     </main>
 
     <div id="moleculeTooltip" class="molecule-tooltip" aria-hidden="true"></div>
-    <script src="assets/app.js?v=pages-data-v6"></script>
+    <script src="assets/app.js?v=pages-data-v7"></script>
   </body>
 </html>

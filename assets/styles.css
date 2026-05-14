@@ -191,6 +191,10 @@ main {
   grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
 }
 
+.site-analysis-layout {
+  align-items: start;
+}
+
 .plot-with-side {
   grid-template-columns: minmax(0, 1fr) 280px;
 }
@@ -227,10 +231,14 @@ main {
 
 label {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 650;
+}
+
+.sidebar-layout > aside.panel > label {
+  margin-bottom: 14px;
 }
 
 .filter-box {
@@ -414,7 +422,7 @@ button:hover {
 
 .molecule.compact {
   min-height: 220px;
-  margin-top: 16px;
+  margin: 0 0 18px;
 }
 
 .molecule img {
@@ -437,7 +445,11 @@ button:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px 12px;
   align-items: end;
-  margin: 12px 0 8px;
+  margin: 0 0 8px;
+}
+
+.site-structure-panel {
+  margin-top: 0;
 }
 
 .structure-toolbar label {
@@ -610,6 +622,33 @@ th {
   display: inline;
   margin: 0;
   font-size: 11px;
+}
+
+.site-bin-detail {
+  max-height: 260px;
+  overflow: auto;
+  margin-bottom: 0;
+}
+
+.site-bin-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-bin-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(216, 213, 206, 0.7);
+  padding-bottom: 3px;
+}
+
+.site-bin-list span {
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .raw-hover {

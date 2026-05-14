@@ -9,7 +9,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v6";
+const ASSET_VERSION = "pages-data-v7";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
 const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
@@ -585,8 +585,36 @@ function showCompoundPointTooltip(payload, event) {
   hydratePointTooltip(drug, payload.rowId);
 }
 
+function showSiteDistributionTooltip(payload, event) {
+  if (!payload || !event?.event) {
+    hideMoleculeTooltip();
+    return;
+  }
+  const tooltip = el("moleculeTooltip");
+  const rows = (payload.sites || [])
+    .map((site) => `<li><strong>${escapeHtml(site.label)}</strong><span>${roundLabel(site.value)}%</span></li>`)
+    .join("");
+  tooltip.innerHTML = `
+    <strong>${escapeHtml(payload.title)}</strong>
+    <div class="tooltip-detail site-bin-detail">
+      <ul class="site-bin-list">${rows}</ul>
+    </div>
+  `;
+  tooltip.style.display = "block";
+  positionTooltip(tooltip, event.event, 360, 320);
+}
+
 function hideMoleculeTooltip() {
   el("moleculeTooltip").style.display = "none";
+}
+
+function bindSiteDistributionHover() {
+  const plot = el("siteReactivityDist");
+  if (typeof plot.on !== "function") return;
+  plot.removeAllListeners?.("plotly_hover");
+  plot.removeAllListeners?.("plotly_unhover");
+  plot.on("plotly_hover", (event) => showSiteDistributionTooltip(event.points[0].customdata, event));
+  plot.on("plotly_unhover", hideMoleculeTooltip);
 }
 
 function bindBarHover(targetId, payloads) {
@@ -695,6 +723,7 @@ async function populateDatasetControls() {
 
 function compoundChoiceFilterKey() {
   return [
+    numericValue("compoundThreshold", 2),
     checkboxChecked("compoundSigOnly") ? 1 : 0,
     checkboxChecked("compoundHideVariance") ? 1 : 0,
     numericValue("compoundMinSn", 0),
@@ -709,9 +738,10 @@ async function filteredCompoundHitCount(drug) {
   const cached = state.compoundChoiceCountCache.get(key);
   if (cached.has(drug)) return cached.get(drug);
   const rows = await loadCompound(drug);
+  const threshold = numericValue("compoundThreshold", 2);
   const count = rows.filter(
     (row) =>
-      row[1] > 2 &&
+      row[1] > threshold &&
       qualityPassFromCompound(row, {
         sigOnly: "compoundSigOnly",
         hideVariance: "compoundHideVariance",
@@ -726,7 +756,7 @@ async function populateCompoundChoices() {
   const activeOnly = checkboxChecked("compoundActiveOnly");
   const current = el("compoundSelect").value || state.dataset.defaultDrug;
   let dynamicCounts = null;
-  if (compoundQualityFiltersActive()) {
+  if (compoundQualityFiltersActive() || numericValue("compoundThreshold", 2) !== 2) {
     dynamicCounts = new Map(await Promise.all(state.dataset.rawDrugs.map(async (drug) => [drug, await filteredCompoundHitCount(drug)])));
   }
   const shownHitCount = (drug) => dynamicCounts?.get(drug) ?? drugHitCount(drug);
@@ -760,8 +790,10 @@ function updateStructureLinks(structureHref = "", contactHref = "") {
 }
 
 function renderDatasetStaticPlots() {
-  const sitePromiscuity = (state.dataset.sitePromiscuity || []).map(Number).filter((v) => Number.isFinite(v));
-  const siteHits = sitePromiscuity.map((v) => Math.round((v / 100) * state.dataset.rawDrugs.length));
+  const sitePromiscuity = (state.dataset.sitePromiscuity || []).map(Number);
+  const siteHits = sitePromiscuity
+    .filter((v) => Number.isFinite(v))
+    .map((v) => Math.round((v / 100) * state.dataset.rawDrugs.length));
   const siteZero = siteHits.filter((v) => v === 0).length;
   const siteActive = siteHits.length - siteZero;
   safePlot(
@@ -784,12 +816,41 @@ function renderDatasetStaticPlots() {
     })
   );
 
-  const activeSitePromiscuity = sitePromiscuity.filter((v) => v > 0);
-  safePlot(
+  const siteBins = Array.from({ length: 50 }, (_, idx) => ({
+    low: idx * 2,
+    high: (idx + 1) * 2,
+    mid: idx * 2 + 1,
+    sites: [],
+  }));
+  sitePromiscuity.forEach((value, idx) => {
+    if (!Number.isFinite(value) || value <= 0) return;
+    const binIndex = Math.min(49, Math.max(0, Math.floor(value / 2)));
+    const row = state.catalog[idx];
+    siteBins[binIndex].sites.push({
+      label: row?.label || `Site ${idx + 1}`,
+      gene: row?.gene || "",
+      value,
+    });
+  });
+  const activeBins = siteBins.filter((bin) => bin.sites.length);
+  const plottedSiteDist = safePlot(
     "siteReactivityDist",
-    [{ type: "histogram", x: activeSitePromiscuity, nbinsx: 50, marker: { color: MORANDI.blue }, opacity: 0.82 }],
-    mergeAxes(baseLayout({ margin: { l: 44, r: 12, t: 8, b: 54 } }), { title: "Reactivity (% compounds hit at R > 2)", automargin: true }, { title: "Number of Sites" })
+    [{
+      type: "bar",
+      x: activeBins.map((bin) => bin.mid),
+      y: activeBins.map((bin) => bin.sites.length),
+      width: activeBins.map(() => 1.8),
+      marker: { color: MORANDI.blue },
+      opacity: 0.82,
+      customdata: activeBins.map((bin) => ({
+        title: `${bin.low}-${bin.high}%`,
+        sites: bin.sites.sort((a, b) => b.value - a.value || a.label.localeCompare(b.label)),
+      })),
+      hoverinfo: "none",
+    }],
+    mergeAxes(baseLayout({ margin: { l: 44, r: 12, t: 8, b: 54 } }), { title: "Reactivity (% compounds hit at R > 2)", range: [0, 100], automargin: true }, { title: "Number of Sites" })
   );
+  if (plottedSiteDist) bindSiteDistributionHover();
 
   const promiscuityRecords = state.dataset.compoundPromiscuityRecords || [];
   const typeByDrug = state.manifest.compoundTypes || {};
@@ -1172,7 +1233,8 @@ async function renderCompound() {
       ? [pValueGradientTrace(items)]
       : [traceForCompoundItems(items, "non", "Other"), traceForCompoundItems(items, "high", "Above threshold"), traceForCompoundItems(items, "highlight", "Highlighted")],
     baseLayout({
-      xaxis: { title: "Tyrosine Sites", showgrid: false, zeroline: false },
+      margin: { l: 48, r: 8, t: 18, b: 48 },
+      xaxis: { title: "Tyrosine Sites", range: [scatterX0, scatterX1], showgrid: false, zeroline: false },
       yaxis: { title: "R", showgrid: false, zeroline: false },
       showlegend: false,
       shapes: [{ type: "line", xref: "x", x0: scatterX0, x1: scatterX1, y0: threshold, y1: threshold, line: { dash: "dash", color: "#666" } }],
@@ -1975,9 +2037,13 @@ function bindEvents() {
   ["summarySigOnly", "summaryHideVariance", "summaryMinSn"].forEach((id) => el(id).addEventListener("input", () => refreshAllForSharedFilters("summary")));
   el("summarySiteSelect").addEventListener("input", () => renderSummaryBar());
 
-  ["compoundSelect", "compoundThreshold", "compoundLabels", "compoundColorMode", "compoundCustomGenes"].forEach((id) =>
+  ["compoundSelect", "compoundLabels", "compoundColorMode", "compoundCustomGenes"].forEach((id) =>
     el(id).addEventListener("input", () => renderCompound())
   );
+  el("compoundThreshold").addEventListener("input", async () => {
+    await populateCompoundChoices();
+    await renderCompound();
+  });
   el("compoundActiveOnly").addEventListener("input", async () => {
     await populateCompoundChoices();
     await renderCompound();
