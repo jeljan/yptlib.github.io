@@ -1,8 +1,5 @@
 const DATA_ROOT = "assets/data/";
-const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "https://github.com/jeljan/yptlib/releases/download/data-v1/yptlib-assets-data.zip";
-const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
-let releaseArchivePromise = null;
-const ASSET_VERSION = "raw-hover-v3";
+const ASSET_VERSION = "proteome-v14";
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CONTACT_LABELS = {
   PPI: "PPI",
@@ -31,6 +28,9 @@ const PVALUE_BLUE_SCALE = [
   [0.5, "#a9bfd1"],
   [1, "#dbe4eb"],
 ];
+const SPECTRAL_HIT_BLUE = "#2b83ba";
+const SPECTRAL_CANCER_RED = "#d7191c";
+const CUSTOM_GENE_PURPLE = "#7b3294";
 const ANGSTROM = "\u00c5";
 
 const state = {
@@ -53,6 +53,8 @@ const state = {
   activeSummaryDrug: null,
   activeSiteDrug: null,
   siteRefreshSeq: 0,
+  globalProteome: null,
+  globalProteomePromise: null,
 };
 
 const el = (id) => document.getElementById(id);
@@ -61,42 +63,7 @@ function setStatus(text) {
   el("statusText").textContent = text;
 }
 
-function normalizeArchivePath(path) {
-  return path.split("?")[0].replace(/^\/+/, "");
-}
-
-async function getReleaseArchive() {
-  if (!RELEASE_DATA_ARCHIVE_ENABLED) return null;
-  if (typeof zip === "undefined") {
-    throw new Error("zip.js did not load; cannot read release data archive");
-  }
-  if (!releaseArchivePromise) {
-    releaseArchivePromise = (async () => {
-      const response = await fetch(RELEASE_DATA_ARCHIVE_URL, { cache: "force-cache" });
-      if (!response.ok) {
-        throw new Error(`Unable to load release data archive: ${response.status}`);
-      }
-      const blob = await response.blob();
-      const reader = new zip.ZipReader(new zip.BlobReader(blob));
-      const entries = await reader.getEntries();
-      const byName = new Map(entries.filter((entry) => !entry.directory).map((entry) => [entry.filename.replace(/^assets\/data\//, ""), entry]));
-      return { reader, byName };
-    })();
-  }
-  return releaseArchivePromise;
-}
-
 async function fetchJson(path) {
-  if (RELEASE_DATA_ARCHIVE_ENABLED) {
-    const archive = await getReleaseArchive();
-    const normalized = normalizeArchivePath(path);
-    const entry = archive.byName.get(normalized);
-    if (!entry) {
-      throw new Error(`Unable to load ${path}: missing from release archive`);
-    }
-    const text = await entry.getData(new zip.TextWriter());
-    return JSON.parse(text);
-  }
   const separator = path.includes("?") ? "&" : "?";
   const response = await fetch(`${DATA_ROOT}${path}${separator}v=${ASSET_VERSION}`, { cache: "no-store" });
   if (!response.ok) {
@@ -278,16 +245,26 @@ function plotMessage(target, message) {
 }
 
 function safePlot(target, traces, layout, config = {}) {
+  const node = typeof target === "string" ? el(target) : target;
   if (!window.Plotly) {
-    plotMessage(target, "Plotly failed to load. Check network access to the CDN.");
+    plotMessage(node?.id || target, "Plotly failed to load. Check network access to the CDN.");
     return false;
   }
-  Plotly.react(target, traces, layout, {
+  Plotly.react(node, traces, { autosize: true, ...layout }, {
     responsive: true,
     displaylogo: false,
     ...config,
   });
+  schedulePlotResize(node);
   return true;
+}
+
+function schedulePlotResize(target) {
+  const node = typeof target === "string" ? el(target) : target;
+  if (!node || !window.Plotly?.Plots?.resize) return;
+  [0, 80, 240].forEach((delay) => {
+    window.setTimeout(() => Plotly.Plots.resize(node), delay);
+  });
 }
 
 function baseLayout(extra = {}) {
@@ -362,7 +339,7 @@ function rawHoverChartHtml(values) {
   const axisMid = axisMax / 2;
   return `
     <div class="raw-hover">
-      <div class="raw-hover-title">Site SN</div>
+      <div class="raw-hover-title">TMT SN</div>
       <div class="raw-horizontal">
         ${groups
           .map((group) => {
@@ -429,6 +406,7 @@ async function hydrateHitTooltip(drug, rowId) {
   const candidateKeys = rawHoverCandidateKeys(rowId);
   const values = candidateKeys.map((candidate) => rows?.[candidate]).find(Boolean);
   slot.innerHTML = values ? rawHoverChartHtml(values) : rawHoverUnavailableHtml();
+  repositionTooltipFromDataset(tooltip);
 }
 
 async function hydratePointTooltip(drug, rowId) {
@@ -442,6 +420,7 @@ async function hydratePointTooltip(drug, rowId) {
   const candidateKeys = rawHoverCandidateKeys(rowId);
   const values = candidateKeys.map((candidate) => rows?.[candidate]).find(Boolean);
   slot.innerHTML = values ? rawHoverChartHtml(values) : rawHoverUnavailableHtml();
+  repositionTooltipFromDataset(tooltip);
 }
 
 function showMoleculeTooltip(drug, event) {
@@ -459,16 +438,36 @@ function showMoleculeTooltip(drug, event) {
   positionTooltip(tooltip, event.event, 250, 250);
 }
 
-function positionTooltip(tooltip, pointerEvent, fallbackWidth = 286, fallbackHeight = 250) {
+function computeTooltipPosition(tooltip, pointerEvent, fallbackWidth = 286, fallbackHeight = 250) {
   const rect = tooltip.getBoundingClientRect();
-  const width = rect.width || fallbackWidth;
-  const height = rect.height || fallbackHeight;
-  let x = pointerEvent.clientX + 18;
-  let y = pointerEvent.clientY + 18;
-  if (x + width + 12 > window.innerWidth) x = pointerEvent.clientX - width - 18;
-  if (y + height + 12 > window.innerHeight) y = pointerEvent.clientY - height - 18;
-  tooltip.style.left = `${Math.max(12, Math.min(x, window.innerWidth - width - 12))}px`;
-  tooltip.style.top = `${Math.max(12, Math.min(y, window.innerHeight - height - 12))}px`;
+  const width = Math.max(rect.width || fallbackWidth, fallbackWidth);
+  const height = Math.max(tooltip.scrollHeight || rect.height || fallbackHeight, fallbackHeight);
+  const edgePad = 32;
+  const pointerPad = 24;
+  const bottomReserve = 92;
+  let x = pointerEvent.clientX + pointerPad;
+  let y = pointerEvent.clientY + pointerPad;
+  if (x + width + edgePad > window.innerWidth) x = pointerEvent.clientX - width - pointerPad;
+  if (y + height + bottomReserve > window.innerHeight) y = pointerEvent.clientY - height - pointerPad;
+  return {
+    x: Math.max(edgePad, Math.min(x, window.innerWidth - width - edgePad)),
+    y: Math.max(edgePad, Math.min(y, window.innerHeight - height - bottomReserve)),
+  };
+}
+
+function positionTooltip(tooltip, pointerEvent, fallbackWidth = 286, fallbackHeight = 250) {
+  tooltip.dataset.pointerX = String(pointerEvent.clientX);
+  tooltip.dataset.pointerY = String(pointerEvent.clientY);
+  const pos = computeTooltipPosition(tooltip, pointerEvent, fallbackWidth, fallbackHeight);
+  tooltip.style.left = `${pos.x}px`;
+  tooltip.style.top = `${pos.y}px`;
+}
+
+function repositionTooltipFromDataset(tooltip) {
+  const clientX = Number(tooltip.dataset.pointerX);
+  const clientY = Number(tooltip.dataset.pointerY);
+  if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return;
+  positionTooltip(tooltip, { clientX, clientY }, 286, 300);
 }
 
 function showHitTooltip(payload, event) {
@@ -484,7 +483,7 @@ function showHitTooltip(payload, event) {
     <strong>${drug}</strong>
     <img src="structures/${drug}.png" alt="${drug} structure" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
     <p class="muted" style="display:none">Structure image not found.</p>
-    <div class="tooltip-stats">
+    <div class="tooltip-stats one-row">
       <div><strong>R:</strong><span>${roundLabel(hit[1])}</span></div>
       <div><strong>P-value:</strong><span>${formatPValue(hit[2])}</span></div>
       <div><strong>Sites Hit:</strong><span>${drugHitCount(drug)}</span></div>
@@ -492,7 +491,7 @@ function showHitTooltip(payload, event) {
     <div class="raw-hover-slot"><div class="raw-hover-empty muted">Loading raw intensities...</div></div>
   `;
   tooltip.style.display = "block";
-  positionTooltip(tooltip, event.event, 286, 275);
+  positionTooltip(tooltip, event.event, 286, 320);
   hydrateHitTooltip(drug, rowId);
 }
 
@@ -508,14 +507,15 @@ function showCompoundPointTooltip(payload, event) {
     <strong>${payload.label}</strong>
     <div class="tooltip-uniprot">${payload.uniprot || "N/A"}</div>
     <div class="tooltip-detail">${description || "No description available."}</div>
-    <div class="tooltip-stats">
+    <div class="tooltip-stats one-row">
       <div><strong>R:</strong><span>${roundLabel(payload.r)}</span></div>
       <div><strong>P-value:</strong><span>${compactPValue(payload.p)}</span></div>
+      <div><strong>Sites Hit:</strong><span>${drugHitCount(drug)}</span></div>
     </div>
     <div class="raw-hover-slot"><div class="raw-hover-empty muted">Loading raw intensities...</div></div>
   `;
   tooltip.style.display = "block";
-  positionTooltip(tooltip, event.event, 286, 275);
+  positionTooltip(tooltip, event.event, 286, 320);
   hydratePointTooltip(drug, payload.rowId);
 }
 
@@ -540,27 +540,44 @@ function bindBarHover(targetId, payloads) {
 }
 
 async function loadDataset(datasetKey) {
+  setDatasetLoading(true, datasetKey);
   state.datasetKey = datasetKey;
   state.dataset = state.manifest.datasets[datasetKey];
   el("datasetSwitch").checked = datasetKey === "frac";
-  state.catalog = await fetchJson(state.dataset.catalog);
-  state.rowById = new Map(state.catalog.map((row) => [row.i, row]));
-  state.compoundCache.clear();
-  state.compoundChoiceCountCache.clear();
-  state.geneSiteCache.clear();
-  state.filteredSitesByGene.clear();
-  state.rawHoverAliasCache.clear();
-  state.currentSiteRow = null;
-  state.currentSiteSummary = null;
+  try {
+    state.catalog = await fetchJson(state.dataset.catalog);
+    state.rowById = new Map(state.catalog.map((row) => [row.i, row]));
+    state.compoundCache.clear();
+    state.compoundChoiceCountCache.clear();
+    state.geneSiteCache.clear();
+    state.filteredSitesByGene.clear();
+    state.rawHoverAliasCache.clear();
+    state.currentSiteRow = null;
+    state.currentSiteSummary = null;
 
-  await populateDatasetControls();
-  renderDatasetStaticPlots();
-  await renderSummary();
-  await renderCompound();
-  await refreshSiteControls();
-  renderGlobalProteome();
-  renderBioTable();
-  setStatus(`${state.dataset.label}: ${state.catalog.length.toLocaleString()} sites, ${state.dataset.rawDrugs.length.toLocaleString()} compounds`);
+    await populateDatasetControls();
+    renderDatasetStaticPlots();
+    await renderSummary();
+    await renderCompound();
+    await refreshSiteControls();
+    if (el("summary")?.classList.contains("active")) await renderGlobalProteome();
+    renderBioTable();
+    setStatus(`${state.dataset.label}: ${state.catalog.length.toLocaleString()} sites, ${state.dataset.rawDrugs.length.toLocaleString()} compounds`);
+  } finally {
+    setDatasetLoading(false, datasetKey);
+  }
+}
+
+function setDatasetLoading(isLoading, datasetKey = state.datasetKey) {
+  const toggle = document.querySelector(".dataset-toggle");
+  const checkbox = el("datasetSwitch");
+  toggle?.classList.toggle("loading", isLoading);
+  toggle?.setAttribute("aria-busy", isLoading ? "true" : "false");
+  if (checkbox) checkbox.disabled = isLoading;
+  if (isLoading) {
+    const datasetLabel = datasetKey === "frac" ? "Fractionated" : "One-Shot";
+    setStatus(`Loading ${datasetLabel} data...`);
+  }
 }
 
 async function populateDatasetControls() {
@@ -584,7 +601,7 @@ async function populateDatasetControls() {
   );
 
   setOptions(el("summaryTargetList"), [
-    { value: "cancer", label: "Cancer driver genes" },
+    { value: "cancer", label: "Cancer-driver genes" },
     { value: "PPI", label: "Sites at PPI interface" },
     { value: "Metal", label: "Sites near metal" },
     { value: "Cofactor", label: "Sites near cofactor" },
@@ -607,12 +624,6 @@ async function populateDatasetControls() {
     { value: "custom", label: "Custom gene list" },
   ];
   setOptions(el("compoundColorMode"), highlightModes);
-  setOptions(el("globalHighlightMode"), [
-    { value: "threshold", label: "Above Threshold" },
-    { value: "cancer", label: "Cancer-Driver List" },
-    { value: "contacts", label: "Sites with Contacts" },
-    { value: "custom", label: "Highlight Custom List" },
-  ]);
   updateConditionalFields();
 }
 
@@ -669,6 +680,8 @@ async function populateCompoundChoices() {
 function updateConditionalFields() {
   el("summaryCustomGenesWrap").hidden = el("summaryTargetList").value !== "custom";
   el("compoundCustomGenesWrap").hidden = el("compoundColorMode").value !== "custom";
+  el("globalCustomGenesWrap").hidden = !checkboxChecked("globalShowCustom");
+  el("globalThresholdWrap").hidden = !checkboxChecked("globalShowHits");
 }
 
 function updateStructureLinks(structureHref = "", contactHref = "") {
@@ -698,7 +711,11 @@ function renderDatasetStaticPlots() {
         hovertemplate: "<b>%{label}</b><br>%{value} sites<br>%{percent}<extra></extra>",
       },
     ],
-    baseLayout({ margin: { l: 8, r: 8, t: 8, b: 8 }, showlegend: true, legend: { x: 0.72, y: 0.86 } })
+    baseLayout({
+      margin: { l: 6, r: 6, t: 8, b: 42 },
+      showlegend: true,
+      legend: { orientation: "h", x: 0.5, xanchor: "center", y: -0.08, yanchor: "top" },
+    })
   );
 
   const activeSitePromiscuity = sitePromiscuity.filter((v) => v > 0);
@@ -1540,32 +1557,278 @@ function autoLoadStructures() {
   renderContactViewer();
 }
 
-function renderGlobalProteome() {
-  const threshold = numericValue("globalThreshold", 2);
-  const mode = el("globalHighlightMode").value;
-  const customGenes = customGeneSet(el("globalCustomGenes").value);
-  const colors = state.catalog.map((row) => {
-    if (mode === "custom") return customGenes.has(String(row.gene).toUpperCase()) ? MORANDI.red : MORANDI.blueLight;
-    if (mode === "cancer") return isCancerGene(row.gene) ? MORANDI.red : MORANDI.blueLight;
-    if (mode === "contacts") return row.contactTypes.length ? MORANDI.green : MORANDI.blueLight;
-    return (row.maxR ?? 0) >= threshold ? MORANDI.blueDark : MORANDI.blueLight;
+async function loadGlobalProteome() {
+  if (state.globalProteome) return state.globalProteome;
+  if (state.globalProteomePromise) return state.globalProteomePromise;
+  const path = state.manifest?.globalProteome;
+  if (!path) {
+    plotMessage("globalScatter", "Run python build_global_proteome_data.py to generate the global proteome view.");
+    return null;
+  }
+  state.globalProteomePromise = fetchJson(path)
+    .then((payload) => {
+      state.globalProteome = payload;
+      return payload;
+    })
+    .catch((err) => {
+      state.globalProteomePromise = null;
+      plotMessage("globalScatter", `Unable to load global proteome data: ${err.message}`);
+      return null;
+    });
+  return state.globalProteomePromise;
+}
+
+function pointSeen(point) {
+  if (typeof point.seen === "boolean") return point.seen;
+  return point.source === "assay" || point.source === "both";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function pointMaxR(point, datasetKey = state.datasetKey) {
+  const raw = point.maxRByDataset?.[datasetKey];
+  if (raw == null) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
+function pointHitCount(point, datasetKey = state.datasetKey) {
+  const value = Number(point.hitCountByDataset?.[datasetKey]);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function globalCustomData(points, clusterMap) {
+  return points.map((point) => {
+    const cluster = clusterMap.get(String(point.cluster));
+    return {
+      gene: point.gene || point.uniprot,
+      uniprot: point.uniprot,
+      description: point.description || "",
+      annotations: point.annotations || (point.annotation ? [point.annotation] : []),
+      maxR: pointMaxR(point),
+      hitCount: pointHitCount(point),
+      seen: pointSeen(point),
+      clusterId: String(point.cluster),
+      clusterLabel: cluster?.label || `Cluster ${point.cluster}`,
+      clusterAnnotation: cluster?.annotation || "N/A",
+      clusterAnnotationPercent: cluster?.annotationPercent,
+      clusterTopAnnotations: cluster?.topAnnotations || [],
+    };
   });
-  safePlot(
-    "globalScatter",
-    [
-      {
-        type: "scattergl",
-        mode: "markers",
-        x: state.catalog.map((row) => row.x),
-        y: state.catalog.map((row) => row.y),
-        text: state.catalog.map((row) => row.label),
-        customdata: state.catalog.map((row) => [row.gene, row.maxR, row.promiscuity, row.description]),
-        marker: { color: colors, size: 5, opacity: 0.75 },
-        hovertemplate: "<b>%{text}</b><br>%{customdata[0]}<br>Max R=%{customdata[1]:.2f}<br>Promiscuity=%{customdata[2]:.3f}%<br>%{customdata[3]}<extra></extra>",
+}
+
+function uniqueGlobalPoints(points) {
+  const seen = new Set();
+  return points.filter((point) => {
+    const key = point.uniprot || point.gene || `${point.x}:${point.y}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function globalOverlayTrace(points, clusterMap, name, color = SPECTRAL_HIT_BLUE, glowColor = "rgba(43,131,186,0.22)") {
+  return [
+    {
+      type: "scattergl",
+      mode: "markers",
+      x: points.map((point) => point.x),
+      y: points.map((point) => point.y),
+      marker: {
+        size: 22,
+        color: glowColor,
+        line: { width: 0 },
       },
-    ],
-    baseLayout({ xaxis: { title: "log(1 + Max R), stable jitter", showgrid: false, zeroline: false }, yaxis: { title: "log(1 + Site Promiscuity), stable jitter", showgrid: false, zeroline: false }, showlegend: false })
-  );
+      hoverinfo: "skip",
+      showlegend: false,
+    },
+    {
+      type: "scattergl",
+      mode: "markers",
+      x: points.map((point) => point.x),
+      y: points.map((point) => point.y),
+      customdata: globalCustomData(points, clusterMap),
+      marker: {
+        size: 9,
+        color,
+        opacity: 0.92,
+        line: { color: "black", width: 1.1 },
+      },
+      name,
+      hoverinfo: "none",
+    },
+  ];
+}
+
+function formatClusterAnnotation(payload) {
+  if (payload.clusterId === "-1") return null;
+  const topAnnotations = (payload.clusterTopAnnotations || []).slice(0, 2);
+  if (!topAnnotations.length && payload.clusterAnnotation) {
+    topAnnotations.push({ annotation: payload.clusterAnnotation, percent: payload.clusterAnnotationPercent });
+  }
+  if (!topAnnotations.length) return null;
+  return topAnnotations
+    .map((item) => {
+      const percent = Number(item.percent);
+      const percentLabel = Number.isFinite(percent) ? `${percent.toFixed(1)}%` : "N/A";
+      return `${escapeHtml(item.annotation || "N/A")} (${percentLabel})`;
+    })
+    .join("; ");
+}
+
+function formatProteinAnnotations(payload) {
+  const clusterTerms =
+    payload.clusterId === "-1"
+      ? new Set()
+      : new Set((payload.clusterTopAnnotations || []).slice(0, 2).map((item) => String(item.annotation || "").toLowerCase()));
+  const annotations = payload.annotations || [];
+  if (!annotations.length) return "N/A";
+  return annotations
+    .map((annotation) => {
+      const escaped = escapeHtml(annotation);
+      return clusterTerms.has(String(annotation).toLowerCase()) ? `<em>${escaped}</em>` : escaped;
+    })
+    .join("; ");
+}
+
+function showGlobalProteinTooltip(payload, event) {
+  if (!payload || !event?.event) {
+    hideMoleculeTooltip();
+    return;
+  }
+  const tooltip = el("moleculeTooltip");
+  const description = cleanDescription(payload.description);
+  const annotations = formatProteinAnnotations(payload);
+  const clusterAnnotation = formatClusterAnnotation(payload);
+  tooltip.innerHTML = `
+    <strong>${escapeHtml(payload.gene || payload.uniprot)}</strong>
+    <div class="tooltip-uniprot">${escapeHtml(payload.uniprot || "N/A")}</div>
+    <div class="tooltip-detail">${escapeHtml(description || "No description available.")}</div>
+    <div class="tooltip-stats one-row">
+      <div><strong>Max R</strong><span>${roundLabel(payload.maxR)}</span></div>
+      <div><strong>Sites hit</strong><span>${payload.hitCount ?? 0}</span></div>
+      <div><strong>Seen</strong><span>${payload.seen ? "True" : "False"}</span></div>
+    </div>
+    <div class="tooltip-cluster">${escapeHtml(payload.clusterLabel || "Cluster N/A")}</div>
+    ${clusterAnnotation ? `<div class="tooltip-detail"><strong>Cluster annotations:</strong> ${clusterAnnotation}</div>` : ""}
+    <div class="tooltip-detail"><strong>Annotations:</strong> ${annotations}</div>
+  `;
+  tooltip.style.display = "block";
+  positionTooltip(tooltip, event.event, 360, 300);
+}
+
+function bindGlobalProteinHover() {
+  const plot = el("globalScatter");
+  if (typeof plot.on !== "function") return;
+  plot.removeAllListeners?.("plotly_hover");
+  plot.removeAllListeners?.("plotly_unhover");
+  plot.on("plotly_hover", (event) => showGlobalProteinTooltip(event.points[0].customdata, event));
+  plot.on("plotly_unhover", hideMoleculeTooltip);
+}
+
+function globalSquareRange(points) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const point of points) {
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
+  }
+  if (![minX, maxX, minY, maxY].every(Number.isFinite)) return null;
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+  const span = Math.max(maxX - minX, maxY - minY) * 1.06;
+  return {
+    x: [centerX - span / 2, centerX + span / 2],
+    y: [centerY - span / 2, centerY + span / 2],
+  };
+}
+
+async function renderGlobalProteome() {
+  if (!state.globalProteome) plotMessage("globalScatter", "Loading global proteome embedding...");
+  const payload = await loadGlobalProteome();
+  if (!payload) return;
+  try {
+    const threshold = numericValue("globalThreshold", 2);
+    const showHits = checkboxChecked("globalShowHits");
+    const seenOnly = checkboxChecked("globalSeenOnly");
+    const showCancer = checkboxChecked("globalShowCancer");
+    const showCustom = checkboxChecked("globalShowCustom");
+    const customGenes = customGeneSet(el("globalCustomGenes").value);
+    const points = payload.points || [];
+    const fixedRange = globalSquareRange(points);
+    const clusterMap = new Map((payload.clusters || []).map((cluster) => [String(cluster.id), cluster]));
+    const traces = [];
+
+    const backgroundColors = points.map((point) =>
+      seenOnly && !pointSeen(point) ? "rgba(200,200,200,0.3)" : clusterMap.get(String(point.cluster))?.color || MORANDI.blueLight
+    );
+    traces.push({
+      type: "scattergl",
+      mode: "markers",
+      x: points.map((point) => point.x),
+      y: points.map((point) => point.y),
+      customdata: globalCustomData(points, clusterMap),
+      marker: { color: backgroundColors, size: 5.6, opacity: 0.56, line: { width: 0 } },
+      name: "Protein clusters",
+      hoverinfo: "none",
+    });
+
+    const hitHighlighted = points
+      .filter((point) => showHits && (pointMaxR(point) ?? 0) >= threshold)
+      .sort((a, b) => (pointMaxR(a) ?? 0) - (pointMaxR(b) ?? 0));
+    traces.push(...globalOverlayTrace(hitHighlighted, clusterMap, "Hits"));
+
+    const cancerHighlighted = points.filter((point) => showCancer && isCancerGene(point.gene));
+    traces.push(
+      ...globalOverlayTrace(
+        cancerHighlighted,
+        clusterMap,
+        "Cancer-driver genes",
+        SPECTRAL_CANCER_RED,
+        "rgba(215,25,28,0.2)"
+      )
+    );
+
+    const customHighlighted = uniqueGlobalPoints(
+      points.filter((point) => showCustom && customGenes.has(String(point.gene || "").toUpperCase()))
+    );
+    traces.push(
+      ...globalOverlayTrace(
+        customHighlighted,
+        clusterMap,
+        "Custom genes",
+        CUSTOM_GENE_PURPLE,
+        "rgba(123,50,148,0.22)"
+      )
+    );
+
+    safePlot(
+      "globalScatter",
+      traces,
+      baseLayout({
+        margin: { l: 18, r: 18, t: 18, b: 18 },
+        xaxis: { visible: false, showgrid: false, zeroline: false, constrain: "domain", range: fixedRange?.x },
+        yaxis: { visible: false, showgrid: false, zeroline: false, scaleanchor: "x", scaleratio: 1, range: fixedRange?.y },
+        showlegend: false,
+        uirevision: "global-proteome-fixed-range",
+      })
+    );
+    bindGlobalProteinHover();
+  } catch (err) {
+    plotMessage("globalScatter", `Unable to render global proteome data: ${err.message}`);
+  }
 }
 
 function renderBioTable() {
@@ -1590,9 +1853,10 @@ function switchTab(tabName) {
     panel.classList.toggle("active", panel.id === tabName);
   });
   updateConditionalFields();
-  if (tabName === "global") renderGlobalProteome();
+  if (tabName === "summary") renderGlobalProteome();
   if (tabName === "bio") renderBioTable();
   if (tabName === "site") autoLoadStructures();
+  document.querySelectorAll(`#${tabName} .plot`).forEach((plot) => schedulePlotResize(plot));
 }
 
 window.switchTab = switchTab;
@@ -1646,7 +1910,11 @@ function bindEvents() {
     if (el("site").classList.contains("active")) renderContactViewer();
   });
 
-  ["globalThreshold", "globalHighlightMode", "globalCustomGenes"].forEach((id) => el(id).addEventListener("input", () => renderGlobalProteome()));
+  ["globalThreshold", "globalCustomGenes"].forEach((id) => el(id).addEventListener("input", () => renderGlobalProteome()));
+  ["globalShowHits", "globalSeenOnly", "globalShowCancer", "globalShowCustom"].forEach((id) => el(id).addEventListener("input", () => {
+    updateConditionalFields();
+    renderGlobalProteome();
+  }));
   el("bioGeneFilter").addEventListener("input", () => renderBioTable());
 }
 

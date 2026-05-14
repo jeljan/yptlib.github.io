@@ -70,6 +70,25 @@ h3 {
   font-weight: 650;
 }
 
+.dataset-toggle.loading {
+  color: var(--ink);
+}
+
+.dataset-toggle.loading .switch-track::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-top-color: var(--blue-dark);
+  border-radius: 999px;
+  animation: spin 0.8s linear infinite;
+}
+
+.dataset-toggle input:disabled + .switch-track {
+  cursor: wait;
+  opacity: 0.74;
+}
+
 .switch {
   display: inline-flex;
   cursor: pointer;
@@ -311,6 +330,17 @@ button:hover {
   overflow: hidden;
 }
 
+.plot .js-plotly-plot,
+.plot .plot-container,
+.plot .svg-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.plot .main-svg {
+  width: 100% !important;
+}
+
 .plot .js-placeholder,
 .gtitle.js-placeholder,
 .gtitle-subtitle.js-placeholder {
@@ -335,6 +365,46 @@ button:hover {
 
 .plot.tall {
   min-height: 640px;
+}
+
+.plot.square {
+  width: min(100%, 920px);
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.plot.square .js-plotly-plot,
+.plot.square .plot-container,
+.plot.square .svg-container {
+  height: 100% !important;
+}
+
+.global-proteome-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 16px;
+  align-items: center;
+}
+
+.global-proteome-controls {
+  display: grid;
+  grid-template-rows: 64px auto 72px;
+  gap: 10px;
+  align-content: center;
+}
+
+.global-proteome-controls label {
+  margin: 0;
+}
+
+.global-control-slot {
+  min-height: 0;
+}
+
+.global-control-checks {
+  display: grid;
+  gap: 10px;
 }
 
 .molecule {
@@ -495,11 +565,22 @@ th {
   text-align: center;
 }
 
+.tooltip-stats.one-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
 .tooltip-stats strong {
   display: block;
   margin-bottom: 2px;
   color: var(--ink);
   font-size: 11px;
+}
+
+.tooltip-stats.one-row strong,
+.tooltip-stats.one-row span {
+  display: block;
+  overflow-wrap: anywhere;
 }
 
 .tooltip-detail {
@@ -515,6 +596,14 @@ th {
   color: var(--ink);
   font-size: 12px;
   font-weight: 750;
+}
+
+.tooltip-cluster {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
 }
 
 .tooltip-detail strong {
@@ -615,12 +704,24 @@ th {
   }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 1000px) {
   .two,
   .three,
   .sidebar-layout,
-  .plot-with-side {
+  .plot-with-side,
+  .global-proteome-layout {
     grid-template-columns: 1fr;
+  }
+
+  .global-proteome-controls {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    align-items: end;
   }
 
   .toolbar,
@@ -651,7 +752,8 @@ th {
   .toolbar,
   .summary-controls,
   .four,
-  .filter-box {
+  .filter-box,
+  .global-proteome-controls {
     grid-template-columns: 1fr;
   }
 

@@ -1,0 +1,1 @@
+{"209":[{"pdb":"6MDX","method":"X-RAY","resolution":1.55,"chain":"A","authSeq":209,"mappingStatus":"OK","contacts":["Dna"],"minDist":2.963,"neighbors":[]},{"pdb":"6MDW","method":"X-RAY","resolution":1.5,"chain":"A","authSeq":209,"mappingStatus":"OK","contacts":["Cofactor"],"minDist":3.4,"neighbors":[{"chain":"A","residue":802,"label":"A/ADP802/C2"}]}]}
