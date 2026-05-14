@@ -16,13 +16,16 @@
         <h1>Tyrosine Library Screening</h1>
         <p id="statusText">Loading static assets...</p>
       </div>
-      <div class="dataset-toggle" role="group" aria-label="Dataset">
-        <span>One-Shot</span>
-        <label class="switch">
-          <input id="datasetSwitch" type="checkbox">
-          <span class="switch-track"></span>
-        </label>
-        <span>Fractionated</span>
+      <div class="dataset-controls">
+        <div class="dataset-toggle" role="group" aria-label="Dataset">
+          <span>One-Shot</span>
+          <label class="switch">
+            <input id="datasetSwitch" type="checkbox">
+            <span class="switch-track"></span>
+          </label>
+          <span>Fractionated</span>
+        </div>
+        <label class="check dataset-replicate-filter"><input id="dropNoReplicates" type="checkbox"> Drop compounds with no replicates</label>
       </div>
     </header>
 
@@ -97,7 +100,13 @@
         <div class="grid sidebar-layout">
           <aside class="panel">
             <div id="compoundMolecule" class="molecule compact"></div>
-            <label>Compound<select id="compoundSelect"></select></label>
+            <div class="field compound-select-field">
+              <div class="field-label-row">
+                <label for="compoundSelect">Compound</label>
+                <button id="compoundRefreshList" class="inline-refresh" type="button"><em>Update list</em></button>
+              </div>
+              <select id="compoundSelect"></select>
+            </div>
             <label>Hit threshold<input id="compoundThreshold" type="number" step="0.1" value="2"></label>
             <label>Label top<input id="compoundLabels" type="number" min="0" max="30" step="1" value="5"></label>
             <label>Color by<select id="compoundColorMode"></select></label>
@@ -110,10 +119,10 @@
               <label class="narrow">Min SN<input id="compoundMinSn" type="number" min="0" step="10" value="0"></label>
             </fieldset>
           </aside>
-          <section class="panel">
-            <h2>Proteome Engagement Profile</h2>
+          <section class="panel compound-plot-panel">
+            <h2>Engagement profile</h2>
             <div id="compoundScatter" class="plot medium"></div>
-            <h2 class="section-gap">Volcano Plot</h2>
+            <h2 class="section-gap">Volcano plot</h2>
             <div id="compoundVolcano" class="plot medium"></div>
           </section>
         </div>
@@ -139,18 +148,22 @@
         </div>
         <section class="panel site-structure-panel">
           <div class="structure-toolbar">
-            <label>Structure<select id="structureSelect"></select></label>
-            <label>Contact neighborhood<select id="contactPdbSelect"></select></label>
+            <label>Protein structure<select id="structureSelect"></select></label>
+            <label>Intermolecular interactors<select id="contactPdbSelect"></select></label>
           </div>
           <div class="grid two structure-grid">
             <section>
-              <div id="structureMessage" class="viewer-message"></div>
-              <p class="viewer-link"><a id="structureSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+              <div class="viewer-meta">
+                <p class="viewer-link"><a id="structureSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+                <div id="structureMessage" class="viewer-message"></div>
+              </div>
               <div id="structureViewer" class="molstar-viewer"></div>
             </section>
             <section>
-              <div id="contactMessage" class="viewer-message"></div>
-              <p class="viewer-link"><a id="contactSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+              <div class="viewer-meta">
+                <p class="viewer-link"><a id="contactSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+                <div id="contactMessage" class="viewer-message"></div>
+              </div>
               <div id="contactViewer" class="molstar-viewer"></div>
             </section>
           </div>
@@ -176,6 +189,14 @@
     </main>
 
     <div id="moleculeTooltip" class="molecule-tooltip" aria-hidden="true"></div>
-    <script src="assets/app.js?v=pages-data-v7"></script>
+    <div id="summaryDetailModal" class="detail-modal" aria-hidden="true">
+      <div class="detail-modal__panel" role="dialog" aria-modal="true" aria-labelledby="summaryDetailTitle">
+        <button id="summaryDetailClose" class="detail-modal__close" type="button" aria-label="Close">×</button>
+        <h2 id="summaryDetailTitle"></h2>
+        <p id="summaryDetailMeta" class="muted"></p>
+        <div id="summaryDetailBody" class="detail-modal__body"></div>
+      </div>
+    </div>
+    <script src="assets/app.js?v=pages-data-v9"></script>
   </body>
 </html>

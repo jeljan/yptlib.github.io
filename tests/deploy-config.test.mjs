@@ -42,13 +42,13 @@ assert.match(
 
 assert.match(
   appJs,
-  /const ASSET_VERSION = "pages-data-v7";/,
+  /const ASSET_VERSION = "pages-data-v9";/,
   "data fetches should use the current deployment cache key"
 );
 
 assert.match(
   indexHtml,
-  /<script src="assets\/app\.js\?v=pages-data-v7"><\/script>/,
+  /<script src="assets\/app\.js\?v=pages-data-v9"><\/script>/,
   "index.html should load app.js with the current cache-busting key"
 );
 
