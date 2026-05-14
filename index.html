@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-light.css">
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.57/dist/zip.min.js"></script>
   </head>
   <body>
     <header class="app-header">
@@ -30,7 +29,6 @@
       <button class="tab-button active" data-tab="summary">Summary</button>
       <button class="tab-button" data-tab="compound">Compound</button>
       <button class="tab-button" data-tab="site">Site</button>
-      <button class="tab-button" data-tab="global">Global Proteome</button>
       <button class="tab-button" data-tab="bio">Bioinformatics</button>
     </nav>
 
@@ -42,20 +40,40 @@
             <div id="siteReactivityBinary" class="plot compact-plot"></div>
           </section>
           <section class="panel">
-            <h2>Site Reactivity Distribution</h2>
+            <h2>Reactive Site Distribution</h2>
             <div id="siteReactivityDist" class="plot compact-plot"></div>
           </section>
           <section class="panel">
-            <h2>Compound Hits By Warhead</h2>
+            <h2>Hits by Warhead</h2>
             <div id="compoundHitsBinary" class="plot compact-plot"></div>
           </section>
           <section class="panel">
-            <h2>Compound Selectivity Profiles</h2>
+            <h2>Reactive Compound Selectivity</h2>
             <div id="compoundHitsBinned" class="plot compact-plot"></div>
           </section>
         </div>
         <section class="panel">
-          <h2>Target Engagement</h2>
+          <h2>Proteome Explorer</h2>
+          <div class="global-proteome-layout">
+            <div id="globalScatter" class="plot square"></div>
+            <div id="globalProteomeControls" class="global-proteome-controls">
+              <div class="global-control-slot global-control-top">
+                <label id="globalThresholdWrap" class="conditional-field">Hit threshold<input id="globalThreshold" type="number" step="0.1" value="2"></label>
+              </div>
+              <div class="global-control-checks">
+                <label class="check"><input id="globalShowHits" type="checkbox" checked> Hits</label>
+                <label class="check"><input id="globalSeenOnly" type="checkbox"> Seen only</label>
+                <label class="check"><input id="globalShowCancer" type="checkbox"> Cancer-driver genes</label>
+                <label class="check"><input id="globalShowCustom" type="checkbox"> Custom genes</label>
+              </div>
+              <div class="global-control-slot global-control-bottom">
+                <label id="globalCustomGenesWrap" class="conditional-field">Custom genes<input id="globalCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Target Explorer</h2>
           <div class="toolbar summary-controls">
             <label>Target list<select id="summaryTargetList"></select></label>
             <label>Site<select id="summarySiteSelect"></select></label>
@@ -135,17 +153,6 @@
             </div>
           </section>
         </div>
-      </section>
-
-      <section id="global" class="tab-panel">
-        <section class="panel">
-          <div class="toolbar">
-            <label>Hit threshold<input id="globalThreshold" type="number" step="0.1" value="2"></label>
-            <label>Highlight<select id="globalHighlightMode"></select></label>
-            <label class="wide">Custom genes<input id="globalCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
-          </div>
-          <div id="globalScatter" class="plot tall"></div>
-        </section>
       </section>
 
       <section id="bio" class="tab-panel">

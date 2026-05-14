@@ -1,0 +1,1 @@
+{"100":[{"pdb":"3TSO","method":"X-RAY","resolution":1.8,"chain":"A","authSeq":100,"mappingStatus":"OK","contacts":["PPI"],"minDist":1.328,"neighbors":[{"chain":"A","residue":101,"label":"A/ALA101/N"}]}]}

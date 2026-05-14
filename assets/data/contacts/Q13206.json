@@ -1,0 +1,1 @@
+{"89":[{"pdb":"2PL3","method":"X-RAY","resolution":2.15,"chain":"A","authSeq":89,"mappingStatus":"OK","contacts":["Cofactor"],"minDist":2.83,"neighbors":[{"chain":"A","residue":300,"label":"A/ADP300/O2'"}]}]}

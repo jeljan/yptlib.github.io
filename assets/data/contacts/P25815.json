@@ -1,0 +1,1 @@
+{"18":[{"pdb":"7NMI","method":"X-RAY","resolution":2.1,"chain":"B","authSeq":121,"mappingStatus":"OK","contacts":["PPI"],"minDist":1.33,"neighbors":[{"chain":"B","residue":122,"label":"B/SER122/N"}]},{"pdb":"1J55","method":"X-RAY","resolution":2.0,"chain":"A","authSeq":18,"mappingStatus":"OK","contacts":[],"minDist":null,"neighbors":[]}]}
