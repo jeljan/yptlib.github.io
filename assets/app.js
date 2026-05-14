@@ -1,5 +1,17 @@
-const DATA_ROOT = "assets/data/";
-const ASSET_VERSION = "proteome-v14";
+const DATA_ROOTS = window.YPTLIB_DATA_ROOT
+  ? [window.YPTLIB_DATA_ROOT]
+  : [
+      "https://cdn.jsdelivr.net/gh/jeljan/yptlib@a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
+      "https://cdn.statically.io/gh/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
+      "https://raw.githubusercontent.com/jeljan/yptlib/a7e92171d1e6127153f516a19d37a9dceddb5cad/assets/data/",
+    ];
+const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
+const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
+let releaseArchivePromise = null;
+const ASSET_VERSION = "pages-data-v5";
+const FETCH_RETRIES_PER_ROOT = 2;
+const FETCH_TIMEOUT_MS = 12000;
+const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CONTACT_LABELS = {
   PPI: "PPI",
@@ -65,11 +77,29 @@ function setStatus(text) {
 
 async function fetchJson(path) {
   const separator = path.includes("?") ? "&" : "?";
-  const response = await fetch(`${DATA_ROOT}${path}${separator}v=${ASSET_VERSION}`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Unable to load ${path}: ${response.status}`);
+  let lastError = null;
+  for (const root of DATA_ROOTS) {
+    for (let attempt = 0; attempt < FETCH_RETRIES_PER_ROOT; attempt += 1) {
+      let timeout = null;
+      try {
+        const controller = new AbortController();
+        timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+        const response = await fetch(`${root}${path}${separator}v=${ASSET_VERSION}`, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) {
+          throw new Error(`${response.status}`);
+        }
+        return response.json();
+      } catch (err) {
+        lastError = err;
+        if (attempt + 1 < FETCH_RETRIES_PER_ROOT) {
+          await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+        }
+      } finally {
+        if (timeout) clearTimeout(timeout);
+      }
+    }
   }
-  return response.json();
+  throw new Error(`Unable to load ${path}: ${lastError?.message || "network error"}`);
 }
 
 function setOptions(select, options, selected = null) {
@@ -799,6 +829,20 @@ function rowMatchesTarget(row, targetList, customGenes) {
   return true;
 }
 
+async function mapWithConcurrency(items, concurrency, worker) {
+  const results = [];
+  let index = 0;
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (index < items.length) {
+      const currentIndex = index;
+      index += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
 async function renderSummary() {
   updateConditionalFields();
   const targetList = el("summaryTargetList").value;
@@ -806,7 +850,7 @@ async function renderSummary() {
   const maxHits = hitCountLimit("summaryMaxHits");
   const candidates = state.catalog.filter((row) => rowMatchesTarget(row, targetList, customGenes));
   const uniqueGenes = [...new Set(candidates.map((row) => row.gene))];
-  await Promise.all(uniqueGenes.map((gene) => loadGeneSites(gene)));
+  await mapWithConcurrency(uniqueGenes, SUMMARY_GENE_FETCH_CONCURRENCY, (gene) => loadGeneSites(gene));
   const scoredRows = candidates
     .map((row) => {
       const payload = state.geneSiteCache.get(row.gene);
@@ -849,9 +893,15 @@ async function loadGeneSites(gene) {
   if (state.geneSiteCache.has(gene)) return state.geneSiteCache.get(gene);
   const path = state.dataset.geneFiles[gene];
   if (!path) return null;
-  const payload = await fetchJson(path.replace(/%/g, "%25"));
-  state.geneSiteCache.set(gene, payload);
-  return payload;
+  try {
+    const payload = await fetchJson(path.replace(/%/g, "%25"));
+    state.geneSiteCache.set(gene, payload);
+    return payload;
+  } catch (err) {
+    state.geneSiteCache.set(gene, null);
+    console.warn(`Unable to load target data for ${gene}: ${err.message}`);
+    return null;
+  }
 }
 
 async function siteSummaryForRow(row) {
