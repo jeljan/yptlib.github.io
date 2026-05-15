@@ -9,7 +9,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v9";
+const ASSET_VERSION = "pages-data-v10";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
 const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
@@ -62,6 +62,7 @@ const state = {
   filteredSitesByGene: new Map(),
   compoundChoiceCountCache: new Map(),
   compoundChoiceRefreshToken: 0,
+  compoundChoiceRefreshTimer: null,
   currentSiteRow: null,
   currentSiteSummary: null,
   currentPdbEntries: [],
@@ -298,6 +299,16 @@ function compoundQualityFiltersActive() {
 
 function invalidateCompoundChoiceCounts() {
   state.compoundChoiceCountCache.clear();
+}
+
+function yieldToBrowser() {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(resolve, { timeout: 50 });
+      return;
+    }
+    setTimeout(resolve, 0);
+  });
 }
 
 function qualityPassFromCompound(row, ids) {
@@ -918,6 +929,19 @@ async function refreshCompoundChoiceLabelsInPlace(refreshToken = state.compoundC
   }));
 }
 
+async function dynamicCompoundHitCounts(drugs, refreshToken = null) {
+  const counts = new Map();
+  const batchSize = 16;
+  for (let i = 0; i < drugs.length; i += batchSize) {
+    if (refreshToken != null && refreshToken !== state.compoundChoiceRefreshToken) return null;
+    const batch = drugs.slice(i, i + batchSize);
+    const entries = await Promise.all(batch.map(async (drug) => [drug, await filteredCompoundHitCount(drug)]));
+    for (const [drug, count] of entries) counts.set(drug, count);
+    await yieldToBrowser();
+  }
+  return counts;
+}
+
 async function populateCompoundChoices(refreshToken = null) {
   const activeOnly = checkboxChecked("compoundActiveOnly");
   const dropNoReplicates = checkboxChecked("dropNoReplicates");
@@ -925,7 +949,8 @@ async function populateCompoundChoices(refreshToken = null) {
   const current = el("compoundSelect").value || state.dataset.defaultDrug;
   let dynamicCounts = null;
   if (compoundQualityFiltersActive() || numericValue("compoundThreshold", 2) !== 2) {
-    dynamicCounts = new Map(await Promise.all(state.dataset.rawDrugs.map(async (drug) => [drug, await filteredCompoundHitCount(drug)])));
+    dynamicCounts = await dynamicCompoundHitCounts(state.dataset.rawDrugs, refreshToken);
+    if (!dynamicCounts) return false;
   }
   const shownHitCount = (drug) => dynamicCounts?.get(drug) ?? drugHitCount(drug);
   const drugOptions = state.dataset.rawDrugs
@@ -944,19 +969,28 @@ async function populateCompoundChoices(refreshToken = null) {
   return true;
 }
 
-async function refreshCompoundChoiceList() {
-  const button = el("compoundRefreshList");
+function scheduleCompoundChoiceListRefresh({ invalidate = false } = {}) {
   const refreshToken = ++state.compoundChoiceRefreshToken;
-  invalidateCompoundChoiceCounts();
+  if (state.compoundChoiceRefreshTimer) clearTimeout(state.compoundChoiceRefreshTimer);
+  state.compoundChoiceRefreshTimer = setTimeout(() => {
+    state.compoundChoiceRefreshTimer = null;
+    refreshCompoundChoiceList({ refreshToken, invalidate });
+  }, 0);
+}
+
+async function refreshCompoundChoiceList({ refreshToken = null, invalidate = true } = {}) {
+  const button = el("compoundRefreshList");
+  const activeRefreshToken = refreshToken ?? ++state.compoundChoiceRefreshToken;
+  if (invalidate) invalidateCompoundChoiceCounts();
   if (button) {
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
   }
   try {
-    const updated = await populateCompoundChoices(refreshToken);
+    const updated = await populateCompoundChoices(activeRefreshToken);
     if (updated) await renderCompound();
   } finally {
-    if (button) {
+    if (button && activeRefreshToken === state.compoundChoiceRefreshToken) {
       button.disabled = false;
       button.removeAttribute("aria-busy");
     }
@@ -2275,8 +2309,10 @@ function bindEvents() {
     el(id).addEventListener("input", () => renderCompound())
   );
   el("compoundThreshold").addEventListener("input", async () => {
+    invalidateCompoundChoiceCounts();
     await renderCompound();
-    await refreshCompoundChoiceList();
+    await updateSelectedCompoundChoiceLabel();
+    scheduleCompoundChoiceListRefresh({ invalidate: false });
   });
   el("compoundRefreshList").addEventListener("click", refreshCompoundChoiceList);
   el("compoundActiveOnly").addEventListener("input", async () => {
