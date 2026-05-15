@@ -2,7 +2,7 @@ const DATA_ROOT = window.YPTLIB_DATA_ROOT || "https://raw.githubusercontent.com/
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "raw-hover-v3";
+const ASSET_VERSION = "raw-hover-v4";
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CONTACT_LABELS = {
   PPI: "PPI",
@@ -135,11 +135,11 @@ function compoundTypeLabel(rawType, drug = "") {
   if (String(drug).toUpperCase().includes("SRPKIN-1")) return "Sulfonyl Fluorides";
   return (
     {
-      FS: "Sulfonyl Fluorides",
-      SuFEx: "Fluorosulfates",
+      FS: "Fluorosulfates",
+      SuFEx: "Sulfonyl Fluorides",
       SuTEx: "Sulfonyl Triazoles",
-      "Sulfonyl Fluorides": "Sulfonyl Fluorides",
-      Fluorosulfates: "Fluorosulfates",
+      "Sulfonyl Fluorides": "Fluorosulfates",
+      Fluorosulfates: "Sulfonyl Fluorides",
       "Sulfonyl Triazoles": "Sulfonyl Triazoles",
     }[rawType] || "Sulfonyl Fluorides"
   );
