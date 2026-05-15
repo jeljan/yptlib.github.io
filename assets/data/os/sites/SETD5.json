@@ -1,1 +1,1 @@
-{"gene":"SETD5","sites":[{"row":27515,"label":"SETD5_Y1400","site":"1400","gene":"SETD5","uniprot":"Q9C0A6","positions":["1400"],"maxR":null,"hits":[]},{"row":27514,"label":"SETD5_Y838","site":"838","gene":"SETD5","uniprot":"Q9C0A6","positions":["838"],"maxR":null,"hits":[]}]}
+{"gene":"SETD5","sites":[{"row":27515,"label":"SETD5_Y1400","site":"1400","gene":"SETD5","uniprot":"Q9C0A6","positions":["1400"],"maxR":0.0,"hits":[]},{"row":27514,"label":"SETD5_Y838","site":"838","gene":"SETD5","uniprot":"Q9C0A6","positions":["838"],"maxR":0.0,"hits":[]}]}

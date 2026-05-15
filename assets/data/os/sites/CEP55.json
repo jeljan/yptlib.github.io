@@ -1,1 +1,1 @@
-{"gene":"CEP55","sites":[{"row":15567,"label":"CEP55_Y187","site":"187","gene":"CEP55","uniprot":"Q53EZ4","positions":["187"],"maxR":null,"hits":[]},{"row":23185,"label":"CEP55_Y75","site":"75","gene":"CEP55","uniprot":"Q53EZ4","positions":["75"],"maxR":null,"hits":[]}]}
+{"gene":"CEP55","sites":[{"row":15567,"label":"CEP55_Y187","site":"187","gene":"CEP55","uniprot":"Q53EZ4","positions":["187"],"maxR":0.0,"hits":[]},{"row":23185,"label":"CEP55_Y75","site":"75","gene":"CEP55","uniprot":"Q53EZ4","positions":["75"],"maxR":0.0,"hits":[]}]}

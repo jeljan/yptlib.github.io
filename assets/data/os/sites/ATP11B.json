@@ -1,1 +1,1 @@
-{"gene":"ATP11B","sites":[{"row":24985,"label":"ATP11B_Y1160","site":"1160","gene":"ATP11B","uniprot":"Q9Y2G3","positions":["1160"],"maxR":null,"hits":[]},{"row":17807,"label":"ATP11B_Y23","site":"23","gene":"ATP11B","uniprot":"Q9Y2G3","positions":["23"],"maxR":null,"hits":[]}]}
+{"gene":"ATP11B","sites":[{"row":24985,"label":"ATP11B_Y1160","site":"1160","gene":"ATP11B","uniprot":"Q9Y2G3","positions":["1160"],"maxR":0.0,"hits":[]},{"row":17807,"label":"ATP11B_Y23","site":"23","gene":"ATP11B","uniprot":"Q9Y2G3","positions":["23"],"maxR":0.0,"hits":[]}]}

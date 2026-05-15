@@ -1,1 +1,1 @@
-{"gene":"CEMIP","sites":[{"row":24036,"label":"CEMIP_Y1123","site":"1123","gene":"CEMIP","uniprot":"Q8WUJ3","positions":["1123"],"maxR":null,"hits":[]},{"row":31503,"label":"CEMIP_Y222","site":"222","gene":"CEMIP","uniprot":"Q8WUJ3","positions":["222"],"maxR":null,"hits":[]}]}
+{"gene":"CEMIP","sites":[{"row":24036,"label":"CEMIP_Y1123","site":"1123","gene":"CEMIP","uniprot":"Q8WUJ3","positions":["1123"],"maxR":0.0,"hits":[]},{"row":31503,"label":"CEMIP_Y222","site":"222","gene":"CEMIP","uniprot":"Q8WUJ3","positions":["222"],"maxR":0.0,"hits":[]}]}

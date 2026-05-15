@@ -1,1 +1,1 @@
-{"gene":"IFRD2","sites":[{"row":23183,"label":"IFRD2_Y419","site":"419","gene":"IFRD2","uniprot":"Q12894","positions":["419"],"maxR":null,"hits":[]},{"row":9930,"label":"IFRD2_Y80","site":"80","gene":"IFRD2","uniprot":"Q12894","positions":["80"],"maxR":null,"hits":[]}]}
+{"gene":"IFRD2","sites":[{"row":23183,"label":"IFRD2_Y419","site":"419","gene":"IFRD2","uniprot":"Q12894","positions":["419"],"maxR":0.0,"hits":[]},{"row":9930,"label":"IFRD2_Y80","site":"80","gene":"IFRD2","uniprot":"Q12894","positions":["80"],"maxR":0.0,"hits":[]}]}

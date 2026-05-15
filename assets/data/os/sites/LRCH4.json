@@ -1,1 +1,1 @@
-{"gene":"LRCH4","sites":[{"row":13557,"label":"LRCH4_Y257","site":"257","gene":"LRCH4","uniprot":"O75427","positions":["257"],"maxR":null,"hits":[]},{"row":20746,"label":"LRCH4_Y65","site":"65","gene":"LRCH4","uniprot":"O75427","positions":["65"],"maxR":null,"hits":[]}]}
+{"gene":"LRCH4","sites":[{"row":13557,"label":"LRCH4_Y257","site":"257","gene":"LRCH4","uniprot":"O75427","positions":["257"],"maxR":0.0,"hits":[]},{"row":20746,"label":"LRCH4_Y65","site":"65","gene":"LRCH4","uniprot":"O75427","positions":["65"],"maxR":0.0,"hits":[]}]}

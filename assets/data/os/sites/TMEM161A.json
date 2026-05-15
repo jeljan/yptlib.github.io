@@ -1,1 +1,1 @@
-{"gene":"TMEM161A","sites":[{"row":17427,"label":"TMEM161A_Y158","site":"158","gene":"TMEM161A","uniprot":"Q9NX61","positions":["158"],"maxR":null,"hits":[]},{"row":30872,"label":"TMEM161A_Y398","site":"398","gene":"TMEM161A","uniprot":"Q9NX61","positions":["398"],"maxR":null,"hits":[]}]}
+{"gene":"TMEM161A","sites":[{"row":17427,"label":"TMEM161A_Y158","site":"158","gene":"TMEM161A","uniprot":"Q9NX61","positions":["158"],"maxR":0.0,"hits":[]},{"row":30872,"label":"TMEM161A_Y398","site":"398","gene":"TMEM161A","uniprot":"Q9NX61","positions":["398"],"maxR":0.0,"hits":[]}]}

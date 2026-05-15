@@ -1,1 +1,1 @@
-{"gene":"SH2B3","sites":[{"row":57731,"label":"SH2B3_Y45","site":"45","gene":"SH2B3","uniprot":"Q9UQQ2","positions":["45"],"maxR":null,"hits":[]},{"row":53929,"label":"SH2B3_Y572","site":"572","gene":"SH2B3","uniprot":"Q9UQQ2","positions":["572"],"maxR":null,"hits":[]}]}
+{"gene":"SH2B3","sites":[{"row":57731,"label":"SH2B3_Y45","site":"45","gene":"SH2B3","uniprot":"Q9UQQ2","positions":["45"],"maxR":0.0,"hits":[]},{"row":53929,"label":"SH2B3_Y572","site":"572","gene":"SH2B3","uniprot":"Q9UQQ2","positions":["572"],"maxR":0.0,"hits":[]}]}

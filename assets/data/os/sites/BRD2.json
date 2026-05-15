@@ -1,1 +1,1 @@
-{"gene":"BRD2","sites":[{"row":30184,"label":"BRD2_Y702","site":"702","gene":"BRD2","uniprot":"P25440","positions":["702"],"maxR":null,"hits":[]},{"row":15873,"label":"BRD2_Y81","site":"81","gene":"BRD2","uniprot":"P25440","positions":["81"],"maxR":null,"hits":[]}]}
+{"gene":"BRD2","sites":[{"row":30184,"label":"BRD2_Y702","site":"702","gene":"BRD2","uniprot":"P25440","positions":["702"],"maxR":0.0,"hits":[]},{"row":15873,"label":"BRD2_Y81","site":"81","gene":"BRD2","uniprot":"P25440","positions":["81"],"maxR":0.0,"hits":[]}]}

@@ -1,1 +1,1 @@
-{"gene":"BUB1B","sites":[{"row":13234,"label":"BUB1B_Y69","site":"69","gene":"BUB1B","uniprot":"O60566","positions":["69"],"maxR":null,"hits":[]},{"row":28518,"label":"BUB1B_Y726","site":"726","gene":"BUB1B","uniprot":"O60566","positions":["726"],"maxR":null,"hits":[]}]}
+{"gene":"BUB1B","sites":[{"row":13234,"label":"BUB1B_Y69","site":"69","gene":"BUB1B","uniprot":"O60566","positions":["69"],"maxR":0.0,"hits":[]},{"row":28518,"label":"BUB1B_Y726","site":"726","gene":"BUB1B","uniprot":"O60566","positions":["726"],"maxR":0.0,"hits":[]}]}

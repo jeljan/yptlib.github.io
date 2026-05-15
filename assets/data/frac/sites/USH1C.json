@@ -1,1 +1,1 @@
-{"gene":"USH1C","sites":[{"row":56802,"label":"USH1C_Y485","site":"485","gene":"USH1C","uniprot":"Q9Y6N9","positions":["485"],"maxR":null,"hits":[]},{"row":52467,"label":"USH1C_Y74","site":"74","gene":"USH1C","uniprot":"Q9Y6N9","positions":["74"],"maxR":null,"hits":[]}]}
+{"gene":"USH1C","sites":[{"row":56802,"label":"USH1C_Y485","site":"485","gene":"USH1C","uniprot":"Q9Y6N9","positions":["485"],"maxR":0.0,"hits":[]},{"row":52467,"label":"USH1C_Y74","site":"74","gene":"USH1C","uniprot":"Q9Y6N9","positions":["74"],"maxR":0.0,"hits":[]}]}

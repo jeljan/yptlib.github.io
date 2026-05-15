@@ -1,1 +1,1 @@
-{"gene":"CFAP36","sites":[{"row":13572,"label":"CFAP36_Y57","site":"57","gene":"CFAP36","uniprot":"Q96G28","positions":["57"],"maxR":null,"hits":[]},{"row":31365,"label":"CFAP36_Y68","site":"68","gene":"CFAP36","uniprot":"Q96G28","positions":["68"],"maxR":null,"hits":[]}]}
+{"gene":"CFAP36","sites":[{"row":13572,"label":"CFAP36_Y57","site":"57","gene":"CFAP36","uniprot":"Q96G28","positions":["57"],"maxR":0.0,"hits":[]},{"row":31365,"label":"CFAP36_Y68","site":"68","gene":"CFAP36","uniprot":"Q96G28","positions":["68"],"maxR":0.0,"hits":[]}]}

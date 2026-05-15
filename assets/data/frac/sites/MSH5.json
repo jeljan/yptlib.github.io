@@ -1,1 +1,1 @@
-{"gene":"MSH5","sites":[{"row":32854,"label":"MSH5_Y341","site":"341","gene":"MSH5","uniprot":"O43196","positions":["341"],"maxR":null,"hits":[]},{"row":50196,"label":"MSH5_Y549","site":"549","gene":"MSH5","uniprot":"O43196","positions":["549"],"maxR":null,"hits":[]}]}
+{"gene":"MSH5","sites":[{"row":32854,"label":"MSH5_Y341","site":"341","gene":"MSH5","uniprot":"O43196","positions":["341"],"maxR":0.0,"hits":[]},{"row":50196,"label":"MSH5_Y549","site":"549","gene":"MSH5","uniprot":"O43196","positions":["549"],"maxR":0.0,"hits":[]}]}

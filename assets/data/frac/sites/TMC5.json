@@ -1,1 +1,1 @@
-{"gene":"TMC5","sites":[{"row":50539,"label":"TMC5_Y47;55","site":"47;55","gene":"TMC5","uniprot":"Q6UXY8","positions":["47","55"],"maxR":null,"hits":[]},{"row":31393,"label":"TMC5_Y91","site":"91","gene":"TMC5","uniprot":"Q6UXY8","positions":["91"],"maxR":null,"hits":[]}]}
+{"gene":"TMC5","sites":[{"row":50539,"label":"TMC5_Y47_55","site":"47;55","gene":"TMC5","uniprot":"Q6UXY8","positions":["47","55"],"maxR":0.0,"hits":[]},{"row":31393,"label":"TMC5_Y91","site":"91","gene":"TMC5","uniprot":"Q6UXY8","positions":["91"],"maxR":0.0,"hits":[]}]}

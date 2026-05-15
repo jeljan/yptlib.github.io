@@ -1,1 +1,1 @@
-{"gene":"ABCC10","sites":[{"row":17784,"label":"ABCC10_Y1124","site":"1124","gene":"ABCC10","uniprot":"Q5T3U5","positions":["1124"],"maxR":null,"hits":[]},{"row":26636,"label":"ABCC10_Y258","site":"258","gene":"ABCC10","uniprot":"Q5T3U5","positions":["258"],"maxR":null,"hits":[]}]}
+{"gene":"ABCC10","sites":[{"row":17784,"label":"ABCC10_Y1124","site":"1124","gene":"ABCC10","uniprot":"Q5T3U5","positions":["1124"],"maxR":0.0,"hits":[]},{"row":26636,"label":"ABCC10_Y258","site":"258","gene":"ABCC10","uniprot":"Q5T3U5","positions":["258"],"maxR":0.0,"hits":[]}]}

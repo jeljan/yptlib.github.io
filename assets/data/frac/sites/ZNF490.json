@@ -1,1 +1,1 @@
-{"gene":"ZNF490","sites":[{"row":36922,"label":"ZNF490_Y320","site":"320","gene":"ZNF490","uniprot":"Q9ULM2","positions":["320"],"maxR":null,"hits":[]},{"row":44723,"label":"ZNF490_Y404","site":"404","gene":"ZNF490","uniprot":"Q9ULM2","positions":["404"],"maxR":null,"hits":[]}]}
+{"gene":"ZNF490","sites":[{"row":36922,"label":"ZNF490_Y320","site":"320","gene":"ZNF490","uniprot":"Q9ULM2","positions":["320"],"maxR":0.0,"hits":[]},{"row":44723,"label":"ZNF490_Y404","site":"404","gene":"ZNF490","uniprot":"Q9ULM2","positions":["404"],"maxR":0.0,"hits":[]}]}

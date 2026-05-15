@@ -1,1 +1,1 @@
-{"gene":"ZNF280D","sites":[{"row":30490,"label":"ZNF280D_Y651","site":"651","gene":"ZNF280D","uniprot":"Q6N043","positions":["651"],"maxR":null,"hits":[]},{"row":25522,"label":"ZNF280D_Y69","site":"69","gene":"ZNF280D","uniprot":"Q6N043","positions":["69"],"maxR":null,"hits":[]}]}
+{"gene":"ZNF280D","sites":[{"row":30490,"label":"ZNF280D_Y651","site":"651","gene":"ZNF280D","uniprot":"Q6N043","positions":["651"],"maxR":0.0,"hits":[]},{"row":25522,"label":"ZNF280D_Y69","site":"69","gene":"ZNF280D","uniprot":"Q6N043","positions":["69"],"maxR":0.0,"hits":[]}]}

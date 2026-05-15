@@ -1,1 +1,1 @@
-{"gene":"SEC13","sites":[{"row":29368,"label":"SEC13_Y70","site":"70","gene":"SEC13","uniprot":"P55735","positions":["70"],"maxR":null,"hits":[]},{"row":29906,"label":"SEC13_Y79","site":"79","gene":"SEC13","uniprot":"P55735","positions":["79"],"maxR":null,"hits":[]}]}
+{"gene":"SEC13","sites":[{"row":29368,"label":"SEC13_Y70","site":"70","gene":"SEC13","uniprot":"P55735","positions":["70"],"maxR":0.0,"hits":[]},{"row":29906,"label":"SEC13_Y79","site":"79","gene":"SEC13","uniprot":"P55735","positions":["79"],"maxR":0.0,"hits":[]}]}

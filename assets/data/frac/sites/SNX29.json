@@ -1,1 +1,1 @@
-{"gene":"SNX29","sites":[{"row":32597,"label":"SNX29_Y358","site":"358","gene":"SNX29","uniprot":"Q8TEQ0","positions":["358"],"maxR":null,"hits":[]},{"row":46281,"label":"SNX29_Y741","site":"741","gene":"SNX29","uniprot":"Q8TEQ0","positions":["741"],"maxR":null,"hits":[]}]}
+{"gene":"SNX29","sites":[{"row":32597,"label":"SNX29_Y358","site":"358","gene":"SNX29","uniprot":"Q8TEQ0","positions":["358"],"maxR":0.0,"hits":[]},{"row":46281,"label":"SNX29_Y741","site":"741","gene":"SNX29","uniprot":"Q8TEQ0","positions":["741"],"maxR":0.0,"hits":[]}]}

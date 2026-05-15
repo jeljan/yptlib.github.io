@@ -1,1 +1,1 @@
-{"gene":"ZNF445","sites":[{"row":50125,"label":"ZNF445_Y574","site":"574","gene":"ZNF445","uniprot":"P59923","positions":["574"],"maxR":null,"hits":[]},{"row":50126,"label":"ZNF445_Y611","site":"611","gene":"ZNF445","uniprot":"P59923","positions":["611"],"maxR":null,"hits":[]}]}
+{"gene":"ZNF445","sites":[{"row":50125,"label":"ZNF445_Y574","site":"574","gene":"ZNF445","uniprot":"P59923","positions":["574"],"maxR":0.0,"hits":[]},{"row":50126,"label":"ZNF445_Y611","site":"611","gene":"ZNF445","uniprot":"P59923","positions":["611"],"maxR":0.0,"hits":[]}]}

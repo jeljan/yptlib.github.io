@@ -1,1 +1,1 @@
-{"gene":"RASA2","sites":[{"row":26231,"label":"RASA2_Y417","site":"417","gene":"RASA2","uniprot":"Q15283","positions":["417"],"maxR":null,"hits":[]},{"row":10125,"label":"RASA2_Y651","site":"651","gene":"RASA2","uniprot":"Q15283","positions":["651"],"maxR":null,"hits":[]}]}
+{"gene":"RASA2","sites":[{"row":26231,"label":"RASA2_Y417","site":"417","gene":"RASA2","uniprot":"Q15283","positions":["417"],"maxR":0.0,"hits":[]},{"row":10125,"label":"RASA2_Y651","site":"651","gene":"RASA2","uniprot":"Q15283","positions":["651"],"maxR":0.0,"hits":[]}]}

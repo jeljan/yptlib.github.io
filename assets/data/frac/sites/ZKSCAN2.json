@@ -1,1 +1,1 @@
-{"gene":"ZKSCAN2","sites":[{"row":41643,"label":"ZKSCAN2_Y531","site":"531","gene":"ZKSCAN2","uniprot":"Q63HK3","positions":["531"],"maxR":null,"hits":[]},{"row":56910,"label":"ZKSCAN2_Y677","site":"677","gene":"ZKSCAN2","uniprot":"Q63HK3","positions":["677"],"maxR":null,"hits":[]}]}
+{"gene":"ZKSCAN2","sites":[{"row":41643,"label":"ZKSCAN2_Y531","site":"531","gene":"ZKSCAN2","uniprot":"Q63HK3","positions":["531"],"maxR":0.0,"hits":[]},{"row":56910,"label":"ZKSCAN2_Y677","site":"677","gene":"ZKSCAN2","uniprot":"Q63HK3","positions":["677"],"maxR":0.0,"hits":[]}]}

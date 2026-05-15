@@ -1,1 +1,1 @@
-{"gene":"SLC9A2","sites":[{"row":57939,"label":"SLC9A2_Y503","site":"503","gene":"SLC9A2","uniprot":"Q9UBY0","positions":["503"],"maxR":null,"hits":[]},{"row":57938,"label":"SLC9A2_Y556","site":"556","gene":"SLC9A2","uniprot":"Q9UBY0","positions":["556"],"maxR":null,"hits":[]}]}
+{"gene":"SLC9A2","sites":[{"row":57939,"label":"SLC9A2_Y503","site":"503","gene":"SLC9A2","uniprot":"Q9UBY0","positions":["503"],"maxR":0.0,"hits":[]},{"row":57938,"label":"SLC9A2_Y556","site":"556","gene":"SLC9A2","uniprot":"Q9UBY0","positions":["556"],"maxR":0.0,"hits":[]}]}

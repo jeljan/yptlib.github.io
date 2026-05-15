@@ -1,1 +1,1 @@
-{"gene":"SLC4A2","sites":[{"row":19276,"label":"SLC4A2_Y1154","site":"1154","gene":"SLC4A2","uniprot":"P04920","positions":["1154"],"maxR":null,"hits":[]},{"row":9658,"label":"SLC4A2_Y233","site":"233","gene":"SLC4A2","uniprot":"P04920","positions":["233"],"maxR":null,"hits":[]}]}
+{"gene":"SLC4A2","sites":[{"row":19276,"label":"SLC4A2_Y1154","site":"1154","gene":"SLC4A2","uniprot":"P04920","positions":["1154"],"maxR":0.0,"hits":[]},{"row":9658,"label":"SLC4A2_Y233","site":"233","gene":"SLC4A2","uniprot":"P04920","positions":["233"],"maxR":0.0,"hits":[]}]}

@@ -1,1 +1,1 @@
-{"gene":"SYNPO2","sites":[{"row":31981,"label":"SYNPO2_Y164","site":"164","gene":"SYNPO2","uniprot":"Q9UMS6","positions":["164"],"maxR":null,"hits":[]},{"row":52092,"label":"SYNPO2_Y536","site":"536","gene":"SYNPO2","uniprot":"Q9UMS6","positions":["536"],"maxR":null,"hits":[]}]}
+{"gene":"SYNPO2","sites":[{"row":31981,"label":"SYNPO2_Y164","site":"164","gene":"SYNPO2","uniprot":"Q9UMS6","positions":["164"],"maxR":0.0,"hits":[]},{"row":52092,"label":"SYNPO2_Y536","site":"536","gene":"SYNPO2","uniprot":"Q9UMS6","positions":["536"],"maxR":0.0,"hits":[]}]}

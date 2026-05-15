@@ -1,1 +1,1 @@
-{"gene":"SYTL2","sites":[{"row":49386,"label":"SYTL2_Y669","site":"669","gene":"SYTL2","uniprot":"A0A8J9FM55","positions":["669"],"maxR":null,"hits":[]},{"row":58028,"label":"SYTL2_Y696","site":"696","gene":"SYTL2","uniprot":"Q9HCH5","positions":["696"],"maxR":null,"hits":[]}]}
+{"gene":"SYTL2","sites":[{"row":49386,"label":"SYTL2_Y669","site":"669","gene":"SYTL2","uniprot":"A0A8J9FM55","positions":["669"],"maxR":0.0,"hits":[]},{"row":58028,"label":"SYTL2_Y696","site":"696","gene":"SYTL2","uniprot":"Q9HCH5","positions":["696"],"maxR":0.0,"hits":[]}]}

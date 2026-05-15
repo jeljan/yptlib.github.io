@@ -1,1 +1,1 @@
-{"gene":"MPG","sites":[{"row":21035,"label":"MPG_Y71","site":"71","gene":"MPG","uniprot":"P29372","positions":["71"],"maxR":null,"hits":[]},{"row":26997,"label":"MPG_Y75","site":"75","gene":"MPG","uniprot":"P29372","positions":["75"],"maxR":null,"hits":[]}]}
+{"gene":"MPG","sites":[{"row":21035,"label":"MPG_Y71","site":"71","gene":"MPG","uniprot":"P29372","positions":["71"],"maxR":0.0,"hits":[]},{"row":26997,"label":"MPG_Y75","site":"75","gene":"MPG","uniprot":"P29372","positions":["75"],"maxR":0.0,"hits":[]}]}

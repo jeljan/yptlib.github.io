@@ -1,1 +1,1 @@
-{"gene":"ITM2C","sites":[{"row":31623,"label":"ITM2C_Y100","site":"100","gene":"ITM2C","uniprot":"Q9NQX7","positions":["100"],"maxR":null,"hits":[]},{"row":27452,"label":"ITM2C_Y121","site":"121","gene":"ITM2C","uniprot":"Q9NQX7","positions":["121"],"maxR":null,"hits":[]}]}
+{"gene":"ITM2C","sites":[{"row":31623,"label":"ITM2C_Y100","site":"100","gene":"ITM2C","uniprot":"Q9NQX7","positions":["100"],"maxR":0.0,"hits":[]},{"row":27452,"label":"ITM2C_Y121","site":"121","gene":"ITM2C","uniprot":"Q9NQX7","positions":["121"],"maxR":0.0,"hits":[]}]}

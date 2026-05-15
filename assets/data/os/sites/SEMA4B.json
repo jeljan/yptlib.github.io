@@ -1,1 +1,1 @@
-{"gene":"SEMA4B","sites":[{"row":29109,"label":"SEMA4B_Y374","site":"374","gene":"SEMA4B","uniprot":"Q9NPR2","positions":["374"],"maxR":null,"hits":[]},{"row":29193,"label":"SEMA4B_Y385","site":"385","gene":"SEMA4B","uniprot":"Q9NPR2","positions":["385"],"maxR":null,"hits":[]}]}
+{"gene":"SEMA4B","sites":[{"row":29109,"label":"SEMA4B_Y374","site":"374","gene":"SEMA4B","uniprot":"Q9NPR2","positions":["374"],"maxR":0.0,"hits":[]},{"row":29193,"label":"SEMA4B_Y385","site":"385","gene":"SEMA4B","uniprot":"Q9NPR2","positions":["385"],"maxR":0.0,"hits":[]}]}

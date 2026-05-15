@@ -1,1 +1,1 @@
-{"gene":"ZNF770","sites":[{"row":30462,"label":"ZNF770_Y494","site":"494","gene":"ZNF770","uniprot":"Q6IQ21","positions":["494"],"maxR":null,"hits":[]},{"row":23173,"label":"ZNF770_Y625","site":"625","gene":"ZNF770","uniprot":"Q6IQ21","positions":["625"],"maxR":null,"hits":[]}]}
+{"gene":"ZNF770","sites":[{"row":30462,"label":"ZNF770_Y494","site":"494","gene":"ZNF770","uniprot":"Q6IQ21","positions":["494"],"maxR":0.0,"hits":[]},{"row":23173,"label":"ZNF770_Y625","site":"625","gene":"ZNF770","uniprot":"Q6IQ21","positions":["625"],"maxR":0.0,"hits":[]}]}

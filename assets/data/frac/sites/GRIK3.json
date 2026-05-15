@@ -1,1 +1,1 @@
-{"gene":"GRIK3","sites":[{"row":50465,"label":"GRIK3_Y765;775","site":"765;775","gene":"GRIK3","uniprot":"Q13003","positions":["765","775"],"maxR":null,"hits":[]}]}
+{"gene":"GRIK3","sites":[{"row":50465,"label":"GRIK3_Y765_775","site":"765;775","gene":"GRIK3","uniprot":"Q13003","positions":["765","775"],"maxR":0.0,"hits":[]}]}

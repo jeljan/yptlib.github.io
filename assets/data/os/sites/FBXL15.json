@@ -1,1 +1,1 @@
-{"gene":"FBXL15","sites":[{"row":26939,"label":"FBXL15_Y186","site":"186","gene":"FBXL15","uniprot":"Q9H469","positions":["186"],"maxR":null,"hits":[]},{"row":11856,"label":"FBXL15_Y243","site":"243","gene":"FBXL15","uniprot":"Q9H469","positions":["243"],"maxR":null,"hits":[]}]}
+{"gene":"FBXL15","sites":[{"row":26939,"label":"FBXL15_Y186","site":"186","gene":"FBXL15","uniprot":"Q9H469","positions":["186"],"maxR":0.0,"hits":[]},{"row":11856,"label":"FBXL15_Y243","site":"243","gene":"FBXL15","uniprot":"Q9H469","positions":["243"],"maxR":0.0,"hits":[]}]}

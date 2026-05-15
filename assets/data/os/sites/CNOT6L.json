@@ -1,1 +1,1 @@
-{"gene":"CNOT6L","sites":[{"row":29093,"label":"CNOT6L_Y119","site":"119","gene":"CNOT6L","uniprot":"Q96LI5","positions":["119"],"maxR":null,"hits":[]},{"row":30881,"label":"CNOT6L_Y259","site":"259","gene":"CNOT6L","uniprot":"Q96LI5","positions":["259"],"maxR":null,"hits":[]}]}
+{"gene":"CNOT6L","sites":[{"row":29093,"label":"CNOT6L_Y119","site":"119","gene":"CNOT6L","uniprot":"Q96LI5","positions":["119"],"maxR":0.0,"hits":[]},{"row":30881,"label":"CNOT6L_Y259","site":"259","gene":"CNOT6L","uniprot":"Q96LI5","positions":["259"],"maxR":0.0,"hits":[]}]}

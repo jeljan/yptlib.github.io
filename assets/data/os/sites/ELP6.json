@@ -1,1 +1,1 @@
-{"gene":"ELP6","sites":[{"row":17175,"label":"ELP6_Y245","site":"245","gene":"ELP6","uniprot":"Q0PNE2","positions":["245"],"maxR":null,"hits":[]},{"row":8904,"label":"ELP6_Y247","site":"247","gene":"ELP6","uniprot":"Q0PNE2","positions":["247"],"maxR":null,"hits":[]}]}
+{"gene":"ELP6","sites":[{"row":17175,"label":"ELP6_Y245","site":"245","gene":"ELP6","uniprot":"Q0PNE2","positions":["245"],"maxR":0.0,"hits":[]},{"row":8904,"label":"ELP6_Y247","site":"247","gene":"ELP6","uniprot":"Q0PNE2","positions":["247"],"maxR":0.0,"hits":[]}]}

@@ -1,1 +1,1 @@
-{"gene":"ZSCAN25","sites":[{"row":41948,"label":"ZSCAN25_Y375","site":"375","gene":"ZSCAN25","uniprot":"Q6NSZ9","positions":["375"],"maxR":null,"hits":[]},{"row":45718,"label":"ZSCAN25_Y50","site":"50","gene":"ZSCAN25","uniprot":"Q6NSZ9","positions":["50"],"maxR":null,"hits":[]}]}
+{"gene":"ZSCAN25","sites":[{"row":41948,"label":"ZSCAN25_Y375","site":"375","gene":"ZSCAN25","uniprot":"Q6NSZ9","positions":["375"],"maxR":0.0,"hits":[]},{"row":45718,"label":"ZSCAN25_Y50","site":"50","gene":"ZSCAN25","uniprot":"Q6NSZ9","positions":["50"],"maxR":0.0,"hits":[]}]}

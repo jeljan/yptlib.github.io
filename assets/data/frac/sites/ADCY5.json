@@ -1,1 +1,1 @@
-{"gene":"ADCY5","sites":[{"row":46605,"label":"ADCY5_Y520","site":"520","gene":"ADCY5","uniprot":"O95622","positions":["520"],"maxR":null,"hits":[]},{"row":29650,"label":"ADCY5_Y521","site":"521","gene":"ADCY5","uniprot":"O95622","positions":["521"],"maxR":null,"hits":[]}]}
+{"gene":"ADCY5","sites":[{"row":46605,"label":"ADCY5_Y520","site":"520","gene":"ADCY5","uniprot":"O95622","positions":["520"],"maxR":0.0,"hits":[]},{"row":29650,"label":"ADCY5_Y521","site":"521","gene":"ADCY5","uniprot":"O95622","positions":["521"],"maxR":0.0,"hits":[]}]}

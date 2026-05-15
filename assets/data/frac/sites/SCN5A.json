@@ -1,1 +1,1 @@
-{"gene":"SCN5A","sites":[{"row":17706,"label":"SCN5A_Y1889","site":"1889","gene":"SCN5A","uniprot":"Q14524","positions":["1889"],"maxR":null,"hits":[]},{"row":57981,"label":"SCN5A_Y378","site":"378","gene":"SCN5A","uniprot":"Q14524","positions":["378"],"maxR":null,"hits":[]}]}
+{"gene":"SCN5A","sites":[{"row":17706,"label":"SCN5A_Y1889","site":"1889","gene":"SCN5A","uniprot":"Q14524","positions":["1889"],"maxR":0.0,"hits":[]},{"row":57981,"label":"SCN5A_Y378","site":"378","gene":"SCN5A","uniprot":"Q14524","positions":["378"],"maxR":0.0,"hits":[]}]}

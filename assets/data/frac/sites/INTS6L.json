@@ -1,1 +1,1 @@
-{"gene":"INTS6L","sites":[{"row":29064,"label":"INTS6L_Y111","site":"111","gene":"INTS6L","uniprot":"Q5JSJ4","positions":["111"],"maxR":null,"hits":[]},{"row":52313,"label":"INTS6L_Y419","site":"419","gene":"INTS6L","uniprot":"Q5JSJ4","positions":["419"],"maxR":null,"hits":[]}]}
+{"gene":"INTS6L","sites":[{"row":29064,"label":"INTS6L_Y111","site":"111","gene":"INTS6L","uniprot":"Q5JSJ4","positions":["111"],"maxR":0.0,"hits":[]},{"row":52313,"label":"INTS6L_Y419","site":"419","gene":"INTS6L","uniprot":"Q5JSJ4","positions":["419"],"maxR":0.0,"hits":[]}]}

@@ -1,1 +1,1 @@
-{"gene":"DOK1","sites":[{"row":31699,"label":"DOK1_Y30","site":"30","gene":"DOK1","uniprot":"Q99704","positions":["30"],"maxR":null,"hits":[]},{"row":28225,"label":"DOK1_Y315","site":"315","gene":"DOK1","uniprot":"Q99704","positions":["315"],"maxR":null,"hits":[]}]}
+{"gene":"DOK1","sites":[{"row":31699,"label":"DOK1_Y30","site":"30","gene":"DOK1","uniprot":"Q99704","positions":["30"],"maxR":0.0,"hits":[]},{"row":28225,"label":"DOK1_Y315","site":"315","gene":"DOK1","uniprot":"Q99704","positions":["315"],"maxR":0.0,"hits":[]}]}

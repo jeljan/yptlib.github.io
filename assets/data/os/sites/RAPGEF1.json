@@ -1,1 +1,1 @@
-{"gene":"RAPGEF1","sites":[{"row":31578,"label":"RAPGEF1_Y159","site":"159","gene":"RAPGEF1","uniprot":"Q13905","positions":["159"],"maxR":null,"hits":[]},{"row":27389,"label":"RAPGEF1_Y957","site":"957","gene":"RAPGEF1","uniprot":"Q13905","positions":["957"],"maxR":null,"hits":[]}]}
+{"gene":"RAPGEF1","sites":[{"row":31578,"label":"RAPGEF1_Y159","site":"159","gene":"RAPGEF1","uniprot":"Q13905","positions":["159"],"maxR":0.0,"hits":[]},{"row":27389,"label":"RAPGEF1_Y957","site":"957","gene":"RAPGEF1","uniprot":"Q13905","positions":["957"],"maxR":0.0,"hits":[]}]}

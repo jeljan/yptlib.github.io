@@ -1,1 +1,1 @@
-{"gene":"MAP3K2","sites":[{"row":9456,"label":"MAP3K2_Y452","site":"452","gene":"MAP3K2","uniprot":"Q9Y2U5","positions":["452"],"maxR":null,"hits":[]},{"row":30186,"label":"MAP3K2_Y618","site":"618","gene":"MAP3K2","uniprot":"Q9Y2U5","positions":["618"],"maxR":null,"hits":[]}]}
+{"gene":"MAP3K2","sites":[{"row":9456,"label":"MAP3K2_Y452","site":"452","gene":"MAP3K2","uniprot":"Q9Y2U5","positions":["452"],"maxR":0.0,"hits":[]},{"row":30186,"label":"MAP3K2_Y618","site":"618","gene":"MAP3K2","uniprot":"Q9Y2U5","positions":["618"],"maxR":0.0,"hits":[]}]}

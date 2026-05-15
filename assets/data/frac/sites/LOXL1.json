@@ -1,1 +1,1 @@
-{"gene":"LOXL1","sites":[{"row":57525,"label":"LOXL1_Y391","site":"391","gene":"LOXL1","uniprot":"Q08397","positions":["391"],"maxR":null,"hits":[]},{"row":54802,"label":"LOXL1_Y407","site":"407","gene":"LOXL1","uniprot":"Q08397","positions":["407"],"maxR":null,"hits":[]}]}
+{"gene":"LOXL1","sites":[{"row":57525,"label":"LOXL1_Y391","site":"391","gene":"LOXL1","uniprot":"Q08397","positions":["391"],"maxR":0.0,"hits":[]},{"row":54802,"label":"LOXL1_Y407","site":"407","gene":"LOXL1","uniprot":"Q08397","positions":["407"],"maxR":0.0,"hits":[]}]}

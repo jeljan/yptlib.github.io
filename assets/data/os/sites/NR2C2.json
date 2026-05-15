@@ -1,1 +1,1 @@
-{"gene":"NR2C2","sites":[{"row":28075,"label":"NR2C2_Y533","site":"533","gene":"NR2C2","uniprot":"P49116","positions":["533"],"maxR":null,"hits":[]},{"row":31063,"label":"NR2C2_Y538","site":"538","gene":"NR2C2","uniprot":"P49116","positions":["538"],"maxR":null,"hits":[]}]}
+{"gene":"NR2C2","sites":[{"row":28075,"label":"NR2C2_Y533","site":"533","gene":"NR2C2","uniprot":"P49116","positions":["533"],"maxR":0.0,"hits":[]},{"row":31063,"label":"NR2C2_Y538","site":"538","gene":"NR2C2","uniprot":"P49116","positions":["538"],"maxR":0.0,"hits":[]}]}

@@ -1,1 +1,1 @@
-{"gene":"UQCC5","sites":[{"row":22656,"label":"UQCC5_Y51","site":"51","gene":"UQCC5","uniprot":"Q8WVI0","positions":["51"],"maxR":null,"hits":[]},{"row":24391,"label":"UQCC5_Y51;54","site":"51;54","gene":"UQCC5","uniprot":"Q8WVI0","positions":["51","54"],"maxR":null,"hits":[]}]}
+{"gene":"UQCC5","sites":[{"row":22656,"label":"UQCC5_Y51","site":"51","gene":"UQCC5","uniprot":"Q8WVI0","positions":["51"],"maxR":0.0,"hits":[]},{"row":24391,"label":"UQCC5_Y51_54","site":"51;54","gene":"UQCC5","uniprot":"Q8WVI0","positions":["51","54"],"maxR":0.0,"hits":[]}]}

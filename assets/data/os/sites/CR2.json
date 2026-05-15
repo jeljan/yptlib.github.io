@@ -1,1 +1,1 @@
-{"gene":"CR2","sites":[{"row":24018,"label":"CR2_Y1029","site":"1029","gene":"CR2","uniprot":"P20023","positions":["1029"],"maxR":null,"hits":[]},{"row":27610,"label":"CR2_Y37","site":"37","gene":"CR2","uniprot":"P20023","positions":["37"],"maxR":null,"hits":[]}]}
+{"gene":"CR2","sites":[{"row":24018,"label":"CR2_Y1029","site":"1029","gene":"CR2","uniprot":"P20023","positions":["1029"],"maxR":0.0,"hits":[]},{"row":27610,"label":"CR2_Y37","site":"37","gene":"CR2","uniprot":"P20023","positions":["37"],"maxR":0.0,"hits":[]}]}

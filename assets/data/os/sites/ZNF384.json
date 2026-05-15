@@ -1,1 +1,1 @@
-{"gene":"ZNF384","sites":[{"row":22503,"label":"ZNF384_Y270","site":"270","gene":"ZNF384","uniprot":"Q8TF68","positions":["270"],"maxR":null,"hits":[]},{"row":20952,"label":"ZNF384_Y331","site":"331","gene":"ZNF384","uniprot":"Q8TF68","positions":["331"],"maxR":null,"hits":[]}]}
+{"gene":"ZNF384","sites":[{"row":22503,"label":"ZNF384_Y270","site":"270","gene":"ZNF384","uniprot":"Q8TF68","positions":["270"],"maxR":0.0,"hits":[]},{"row":20952,"label":"ZNF384_Y331","site":"331","gene":"ZNF384","uniprot":"Q8TF68","positions":["331"],"maxR":0.0,"hits":[]}]}

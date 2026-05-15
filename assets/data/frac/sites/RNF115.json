@@ -1,1 +1,1 @@
-{"gene":"RNF115","sites":[{"row":46838,"label":"RNF115_Y235","site":"235","gene":"RNF115","uniprot":"Q9Y4L5","positions":["235"],"maxR":null,"hits":[]},{"row":31890,"label":"RNF115_Y36","site":"36","gene":"RNF115","uniprot":"Q9Y4L5","positions":["36"],"maxR":null,"hits":[]}]}
+{"gene":"RNF115","sites":[{"row":46838,"label":"RNF115_Y235","site":"235","gene":"RNF115","uniprot":"Q9Y4L5","positions":["235"],"maxR":0.0,"hits":[]},{"row":31890,"label":"RNF115_Y36","site":"36","gene":"RNF115","uniprot":"Q9Y4L5","positions":["36"],"maxR":0.0,"hits":[]}]}

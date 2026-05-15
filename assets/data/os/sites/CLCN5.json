@@ -1,1 +1,1 @@
-{"gene":"CLCN5","sites":[{"row":27614,"label":"CLCN5_Y234","site":"234","gene":"CLCN5","uniprot":"P51795","positions":["234"],"maxR":null,"hits":[]},{"row":8248,"label":"CLCN5_Y473","site":"473","gene":"CLCN5","uniprot":"P51795","positions":["473"],"maxR":null,"hits":[]}]}
+{"gene":"CLCN5","sites":[{"row":27614,"label":"CLCN5_Y234","site":"234","gene":"CLCN5","uniprot":"P51795","positions":["234"],"maxR":0.0,"hits":[]},{"row":8248,"label":"CLCN5_Y473","site":"473","gene":"CLCN5","uniprot":"P51795","positions":["473"],"maxR":0.0,"hits":[]}]}

@@ -1,1 +1,1 @@
-{"gene":"ANKRD13D","sites":[{"row":32806,"label":"ANKRD13D_Y268","site":"268","gene":"ANKRD13D","uniprot":"Q6ZTN6","positions":["268"],"maxR":null,"hits":[]},{"row":42188,"label":"ANKRD13D_Y527","site":"527","gene":"ANKRD13D","uniprot":"Q6ZTN6","positions":["527"],"maxR":null,"hits":[]}]}
+{"gene":"ANKRD13D","sites":[{"row":32806,"label":"ANKRD13D_Y268","site":"268","gene":"ANKRD13D","uniprot":"Q6ZTN6","positions":["268"],"maxR":0.0,"hits":[]},{"row":42188,"label":"ANKRD13D_Y527","site":"527","gene":"ANKRD13D","uniprot":"Q6ZTN6","positions":["527"],"maxR":0.0,"hits":[]}]}
