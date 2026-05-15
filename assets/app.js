@@ -9,7 +9,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v13";
+const ASSET_VERSION = "pages-data-v14";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
 const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
@@ -188,11 +188,11 @@ function compoundTypeLabel(rawType, drug = "") {
   if (String(drug).toUpperCase().includes("SRPKIN-1")) return "Sulfonyl Fluorides";
   return (
     {
-      FS: "Sulfonyl Fluorides",
-      SuFEx: "Fluorosulfates",
+      FS: "Fluorosulfates",
+      SuFEx: "Sulfonyl Fluorides",
       SuTEx: "Sulfonyl Triazoles",
-      "Sulfonyl Fluorides": "Sulfonyl Fluorides",
-      Fluorosulfates: "Fluorosulfates",
+      "Sulfonyl Fluorides": "Fluorosulfates",
+      Fluorosulfates: "Sulfonyl Fluorides",
       "Sulfonyl Triazoles": "Sulfonyl Triazoles",
     }[rawType] || "Sulfonyl Fluorides"
   );
