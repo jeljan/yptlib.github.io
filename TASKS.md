@@ -5,7 +5,9 @@
 Completed and shipped-review-ready in this workspace:
 
 - Fixed the initial Compound `Hit threshold` dropdown freeze by updating the selected compound label immediately and rebuilding full dropdown counts in cancellable, browser-yielded batches.
-- Bumped the shipped static asset cache key to `pages-data-v10`.
+- Added background compound-row cache warming after dataset load so the first threshold change can use hot compound data instead of cold-loading every compound.
+- Removed the Compound `Update list` fallback control.
+- Bumped the shipped static asset cache key to `pages-data-v11`.
 - Changed Compound tab inline fallback action from `Refresh list` to `Update list`.
 - Tightened Site tab structure panel spacing so the structure box sits one standard 16px gap below the site analysis row.
 - Synced the local review copy in `output/local-review/`.
@@ -20,7 +22,7 @@ node tests\deploy-config.test.mjs
 node tests\global-proteome-static.test.mjs
 ```
 
-Browser smoke verified `assets/app.js?v=pages-data-v10`, a 1 ms threshold input dispatch, immediate selected-label update to the new count, and async list rebuild with all 740 options retained.
+Browser smoke verified `assets/app.js?v=pages-data-v11`, no `Update list` control, a 0 ms warmed threshold input dispatch, immediate selected-label update to the new count, and all 740 options retained.
 
 ## Immediate Next Tasks - 2026-05-14
 

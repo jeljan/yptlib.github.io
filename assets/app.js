@@ -9,7 +9,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v10";
+const ASSET_VERSION = "pages-data-v11";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
 const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
@@ -54,6 +54,7 @@ const state = {
   catalog: [],
   rowById: new Map(),
   compoundCache: new Map(),
+  compoundLoadPromises: new Map(),
   rawHoverCache: new Map(),
   rawHoverAliasCache: new Map(),
   geneSiteCache: new Map(),
@@ -63,6 +64,7 @@ const state = {
   compoundChoiceCountCache: new Map(),
   compoundChoiceRefreshToken: 0,
   compoundChoiceRefreshTimer: null,
+  compoundWarmupToken: 0,
   currentSiteRow: null,
   currentSiteSummary: null,
   currentPdbEntries: [],
@@ -790,7 +792,9 @@ async function loadDataset(datasetKey) {
   try {
     state.catalog = await fetchJson(state.dataset.catalog);
     state.rowById = new Map(state.catalog.map((row) => [row.i, row]));
-  state.compoundCache.clear();
+    state.compoundCache.clear();
+    state.compoundLoadPromises.clear();
+    state.compoundWarmupToken++;
     invalidateCompoundChoiceCounts();
     state.geneSiteCache.clear();
     state.filteredSitesByGene.clear();
@@ -802,6 +806,7 @@ async function loadDataset(datasetKey) {
     renderDatasetStaticPlots();
     await renderSummary();
     await renderCompound();
+    scheduleCompoundCacheWarmup();
     await refreshSiteControls();
     if (el("summary")?.classList.contains("active")) await renderGlobalProteome();
     renderBioTable();
@@ -942,6 +947,24 @@ async function dynamicCompoundHitCounts(drugs, refreshToken = null) {
   return counts;
 }
 
+function scheduleCompoundCacheWarmup() {
+  const datasetKey = state.datasetKey;
+  const warmupToken = ++state.compoundWarmupToken;
+  setTimeout(() => warmCompoundCache(datasetKey, warmupToken), 100);
+}
+
+async function warmCompoundCache(datasetKey, warmupToken) {
+  const dataset = state.manifest?.datasets?.[datasetKey];
+  if (!dataset) return;
+  const drugs = [...(dataset.rawDrugs || [])];
+  const batchSize = 12;
+  for (let i = 0; i < drugs.length; i += batchSize) {
+    if (warmupToken !== state.compoundWarmupToken || datasetKey !== state.datasetKey) return;
+    await Promise.allSettled(drugs.slice(i, i + batchSize).map((drug) => loadCompoundFromDataset(datasetKey, dataset, drug)));
+    await yieldToBrowser();
+  }
+}
+
 async function populateCompoundChoices(refreshToken = null) {
   const activeOnly = checkboxChecked("compoundActiveOnly");
   const dropNoReplicates = checkboxChecked("dropNoReplicates");
@@ -979,21 +1002,13 @@ function scheduleCompoundChoiceListRefresh({ invalidate = false } = {}) {
 }
 
 async function refreshCompoundChoiceList({ refreshToken = null, invalidate = true } = {}) {
-  const button = el("compoundRefreshList");
   const activeRefreshToken = refreshToken ?? ++state.compoundChoiceRefreshToken;
   if (invalidate) invalidateCompoundChoiceCounts();
-  if (button) {
-    button.disabled = true;
-    button.setAttribute("aria-busy", "true");
-  }
   try {
     const updated = await populateCompoundChoices(activeRefreshToken);
     if (updated) await renderCompound();
-  } finally {
-    if (button && activeRefreshToken === state.compoundChoiceRefreshToken) {
-      button.disabled = false;
-      button.removeAttribute("aria-busy");
-    }
+  } catch (err) {
+    console.warn("Unable to refresh compound choice list", err);
   }
 }
 
@@ -1337,14 +1352,25 @@ async function renderSummaryBar() {
   renderHitBar("summaryBar", hits, 2.0, row?.i ?? null);
 }
 
-async function loadCompound(drug) {
-  const key = `${state.datasetKey}:${drug}`;
+async function loadCompoundFromDataset(datasetKey, dataset, drug) {
+  const key = `${datasetKey}:${drug}`;
   if (state.compoundCache.has(key)) return state.compoundCache.get(key);
-  const parts = state.dataset.compoundParts[drug] || [];
-  const payloads = await Promise.all(parts.map((path) => fetchJson(path)));
-  const rows = payloads.flatMap((payload) => payload.rows || []);
-  state.compoundCache.set(key, rows);
-  return rows;
+  if (state.compoundLoadPromises.has(key)) return state.compoundLoadPromises.get(key);
+  const promise = Promise.all((dataset.compoundParts[drug] || []).map((path) => fetchJson(path)))
+    .then((payloads) => {
+      const rows = payloads.flatMap((payload) => payload.rows || []);
+      state.compoundCache.set(key, rows);
+      return rows;
+    })
+    .finally(() => {
+      state.compoundLoadPromises.delete(key);
+    });
+  state.compoundLoadPromises.set(key, promise);
+  return promise;
+}
+
+async function loadCompound(drug) {
+  return loadCompoundFromDataset(state.datasetKey, state.dataset, drug);
 }
 
 function colorForCompound(row, catalogRow, mode, threshold, customGenes) {
@@ -2314,7 +2340,6 @@ function bindEvents() {
     await updateSelectedCompoundChoiceLabel();
     scheduleCompoundChoiceListRefresh({ invalidate: false });
   });
-  el("compoundRefreshList").addEventListener("click", refreshCompoundChoiceList);
   el("compoundActiveOnly").addEventListener("input", async () => {
     await refreshCompoundChoiceList();
   });

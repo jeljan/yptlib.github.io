@@ -47,11 +47,11 @@ assert(js.includes("domain: { x: [0, 0.82]"), "site hit donut should be enlarged
 assert(js.includes("margin: { l: 52, r: 2, t: 4, b: 58 }"), "compound summary plots should use reduced internal bottom margin");
 assert(js.includes("dynamicCompoundHitCounts") && js.includes("await yieldToBrowser()"), "compound dropdown count refresh should run in cancellable browser-yielded batches");
 assert(js.includes('el("compoundThreshold").addEventListener("input"') && js.includes("await updateSelectedCompoundChoiceLabel()") && js.includes("scheduleCompoundChoiceListRefresh({ invalidate: false })"), "compound threshold changes should update the selected label immediately and rebuild the full list asynchronously");
-assert(html.includes('id="compoundRefreshList"'), "compound controls should expose a manual refresh-list action next to the label");
-assert(html.includes("<em>Update list</em>"), "manual compound list update should be italicized");
-assert(css.includes(".field-label-row") && css.includes(".inline-refresh"), "manual refresh action should align with the compound label");
-assert(js.includes("refreshCompoundChoiceList"), "manual refresh action should rebuild compound dropdown counts on demand");
-assert(js.includes("const updated = await populateCompoundChoices(activeRefreshToken)") && js.includes("if (updated) await renderCompound()"), "manual refresh should use the same select rebuild path as compound filters");
+assert(js.includes("scheduleCompoundCacheWarmup") && js.includes("warmCompoundCache") && js.includes("loadCompoundFromDataset"), "compound rows should warm in the background so first threshold changes use hot caches");
+assert(js.includes("compoundLoadPromises"), "compound row loads should be de-duplicated between warmup and foreground refreshes");
+assert(!html.includes('id="compoundRefreshList"') && !html.includes("Update list"), "manual refresh-list action should be removed");
+assert(!css.includes(".inline-refresh"), "manual refresh styling should be removed with the control");
+assert(js.includes("const updated = await populateCompoundChoices(activeRefreshToken)") && js.includes("if (updated) await renderCompound()"), "automatic refresh should use the same select rebuild path as compound filters");
 assert(js.includes("qualityPassFromCompoundSnapshot"), "dynamic compound hit counts should use a stable filter snapshot during async loads");
 assert(js.includes("PROTEOME_MUTED_GREY"), "compound plots should use the same muted grey as proteome explorer");
 assert(js.includes("size: 46"), "global proteome overlays should have a large hover-capture layer");

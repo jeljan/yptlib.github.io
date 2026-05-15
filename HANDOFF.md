@@ -5,7 +5,9 @@
 Latest completed polish before shipping:
 
 - Compound `Hit threshold` changes no longer synchronously rebuild every dropdown count on the input event. The selected option label updates immediately, then the full list refresh runs in cancellable batches that yield back to the browser.
-- Static asset cache key bumped to `pages-data-v10`.
+- Compound rows now warm in the background after dataset load, with load de-duplication between warmup and foreground refreshes, so the first threshold edit gets the same hot-cache behavior as later edits.
+- Removed the Compound `Update list` fallback control.
+- Static asset cache key bumped to `pages-data-v11`.
 - Compound tab inline fallback action now reads `Update list`.
 - Site tab structure/contact panel now has a 16px top gap from the site analysis row, with `.site-structure-panel` margin reset to `0`.
 - Local review mirror refreshed under `output/local-review/`.
@@ -20,7 +22,7 @@ node tests\deploy-config.test.mjs
 node tests\global-proteome-static.test.mjs
 ```
 
-Browser smoke verified `assets/app.js?v=pages-data-v10`, immediate selected-label threshold count update, and a non-blocking async list refresh.
+Browser smoke verified `assets/app.js?v=pages-data-v11`, no `Update list` control, immediate selected-label threshold count update, and a warmed first threshold dispatch.
 
 ## Immediate Continuation - 2026-05-14
 

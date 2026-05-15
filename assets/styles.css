@@ -273,43 +273,6 @@ label {
   gap: 6px;
 }
 
-.field-label-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.field-label-row label {
-  display: block;
-  gap: 0;
-}
-
-.inline-refresh {
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--blue-dark);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.inline-refresh:hover {
-  border-color: transparent;
-  text-decoration: underline;
-}
-
-.inline-refresh:disabled {
-  color: var(--muted);
-  cursor: wait;
-  text-decoration: none;
-}
-
 .sidebar-layout > aside.panel > label {
   margin-bottom: 14px;
 }
