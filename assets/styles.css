@@ -273,6 +273,23 @@ label {
   gap: 6px;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.field-label-row label {
+  display: block;
+}
+
+.inline-status {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .sidebar-layout > aside.panel > label {
   margin-bottom: 14px;
 }

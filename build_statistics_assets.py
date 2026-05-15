@@ -238,6 +238,7 @@ def build_dataset(
     hits_by_row: dict[int, list[list]] = defaultdict(list)
     max_r_by_row: dict[int, float] = defaultdict(lambda: -math.inf)
     hit_count_by_row: dict[int, int] = defaultdict(int)
+    observed_count_by_row: dict[int, int] = defaultdict(int)
     drug_hit_counts: dict[str, int] = {drug: 0 for drug in drugs}
     compound_parts: dict[str, list[str]] = {}
     raw_hover_parts: dict[str, str] = {}
@@ -314,6 +315,7 @@ def build_dataset(
 
             for idx in np.where(finite)[0]:
                 row_id = current_row_ids[int(idx)]
+                observed_count_by_row[row_id] += 1
                 pval = float(p[idx]) if math.isfinite(float(p[idx])) else 1.0
                 neglog = -math.log10(max(pval, PVALUE_FLOOR))
                 compound_row = [
@@ -360,7 +362,8 @@ def build_dataset(
         row_hits.sort(key=lambda item: item[1], reverse=True)
         max_r = max_r_by_row.get(row_id, 0)
         row["maxR"] = rounded(max_r if math.isfinite(max_r) and max_r > 0 else 0)
-        row["promiscuity"] = rounded(100 * hit_count_by_row.get(row_id, 0) / total_drugs, 12)
+        observed = observed_count_by_row.get(row_id, 0)
+        row["promiscuity"] = rounded(100 * hit_count_by_row.get(row_id, 0) / max(observed, 1), 12)
         if row.get("x") is None:
             row["x"] = rounded(math.log2(max(row["maxR"], 1e-6))) if row["maxR"] else 0
         if row.get("y") is None:
@@ -405,8 +408,8 @@ def build_dataset(
         for drug in drugs
     }
     default_drug = manifest["datasets"].get(dataset_key, {}).get("defaultDrug")
-    if default_drug not in drug_set or drug_hit_counts.get(default_drug, 0) == 0:
-        default_drug = max(drugs, key=lambda drug: (drug_hit_counts.get(drug, 0), drug)) if drugs else ""
+    if default_drug not in drug_set or drug_hit_counts.get(default_drug, 0) != min(drug_hit_counts.values() or [0]):
+        default_drug = min(drugs, key=lambda drug: (drug_hit_counts.get(drug, 0), drugs.index(drug))) if drugs else ""
     default_gene = manifest["datasets"].get(dataset_key, {}).get("defaultGene")
     if default_gene not in gene_files or not any(site.get("maxR", 0) > HIT_R for site in sites_by_gene.get(default_gene, [])):
         default_gene = max(

@@ -101,7 +101,10 @@
           <aside class="panel">
             <div id="compoundMolecule" class="molecule compact"></div>
             <div class="field compound-select-field">
-              <label for="compoundSelect">Compound</label>
+              <div class="field-label-row">
+                <label for="compoundSelect">Compound</label>
+                <span id="compoundListStatus" class="inline-status" hidden><em>Updating list</em></span>
+              </div>
               <select id="compoundSelect"></select>
             </div>
             <label>Hit threshold<input id="compoundThreshold" type="number" step="0.1" value="2"></label>
@@ -194,6 +197,6 @@
         <div id="summaryDetailBody" class="detail-modal__body"></div>
       </div>
     </div>
-    <script src="assets/app.js?v=pages-data-v12"></script>
+    <script src="assets/app.js?v=pages-data-v13"></script>
   </body>
 </html>

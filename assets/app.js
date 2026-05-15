@@ -9,7 +9,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v12";
+const ASSET_VERSION = "pages-data-v13";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
 const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
@@ -236,7 +236,7 @@ function hitCountLimit(id) {
 function formatPValue(value) {
   const num = Number(value);
   if (!Number.isFinite(num)) return "N/A";
-  if (num === 0) return "0.00000";
+  if (num === 0) return "0.00e+0";
   return num < 0.00001 ? num.toExponential(2) : num.toFixed(5);
 }
 
@@ -920,6 +920,12 @@ async function updateSelectedCompoundChoiceLabel(drug = el("compoundSelect").val
   option.label = label;
 }
 
+function setCompoundListUpdating(isUpdating) {
+  const status = el("compoundListStatus");
+  if (!status) return;
+  status.hidden = !isUpdating;
+}
+
 async function refreshCompoundChoiceLabelsInPlace(refreshToken = state.compoundChoiceRefreshToken) {
   const select = el("compoundSelect");
   const options = [...select.options].map((option) => option.value).filter(Boolean);
@@ -994,6 +1000,7 @@ async function populateCompoundChoices(refreshToken = null) {
 
 function scheduleCompoundChoiceListRefresh({ invalidate = false } = {}) {
   const refreshToken = ++state.compoundChoiceRefreshToken;
+  setCompoundListUpdating(true);
   if (state.compoundChoiceRefreshTimer) clearTimeout(state.compoundChoiceRefreshTimer);
   state.compoundChoiceRefreshTimer = setTimeout(() => {
     state.compoundChoiceRefreshTimer = null;
@@ -1003,12 +1010,15 @@ function scheduleCompoundChoiceListRefresh({ invalidate = false } = {}) {
 
 async function refreshCompoundChoiceList({ refreshToken = null, invalidate = true } = {}) {
   const activeRefreshToken = refreshToken ?? ++state.compoundChoiceRefreshToken;
+  setCompoundListUpdating(true);
   if (invalidate) invalidateCompoundChoiceCounts();
   try {
     const updated = await populateCompoundChoices(activeRefreshToken);
     if (updated) await renderCompound();
   } catch (err) {
     console.warn("Unable to refresh compound choice list", err);
+  } finally {
+    if (activeRefreshToken === state.compoundChoiceRefreshToken) setCompoundListUpdating(false);
   }
 }
 
