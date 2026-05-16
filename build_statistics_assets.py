@@ -21,6 +21,40 @@ SOURCE_DATASETS = {
     "frac": ("frac_0.7", "Fractionated"),
 }
 META_COLUMNS = ["Protein Id", "gene_symbol", "prot_description", "Site Position", "sequence"]
+TMT_CHANNELS = [
+    "126",
+    "127n",
+    "127c",
+    "128n",
+    "128c",
+    "129n",
+    "129c",
+    "130n",
+    "130c",
+    "131n",
+    "131c",
+    "132n",
+    "132c",
+    "133n",
+    "133c",
+    "134",
+    "127cD",
+    "128nD",
+    "128cD",
+    "129nD",
+    "129cD",
+    "130nD",
+    "130cD",
+    "131nD",
+    "131cD",
+    "132nD",
+    "132cD",
+    "133nD",
+    "133cD",
+    "134nD",
+    "134cD",
+    "135nD",
+]
 PART_SIZE = 8000
 HIT_R = 2.0
 SIG_NEGLOG10 = -math.log10(0.05)
@@ -36,6 +70,49 @@ def write_json(path: Path, payload) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(payload, handle, separators=(",", ":"), allow_nan=False)
+
+
+def read_sample_channel_map(path: Path) -> dict[int, dict[str, list[str]]]:
+    if not path.exists():
+        return {}
+    samples = pd.read_csv(path)
+    channel_map: dict[int, dict[str, list[str]]] = {}
+    for plex, group in samples.groupby("Plex Number", sort=False):
+        try:
+            plex_id = int(plex)
+        except (TypeError, ValueError):
+            continue
+        assignments: dict[str, list[str]] = defaultdict(list)
+        for channel, (_, row) in zip(TMT_CHANNELS, group.iterrows()):
+            sample_id = str(row.get("Sample ID") or "").strip()
+            if sample_id:
+                assignments[sample_id].append(f"default~{channel}_sn_sum")
+        channel_map[plex_id] = dict(assignments)
+    return channel_map
+
+
+def plex_number_from_path(path: Path) -> int | None:
+    match = re.search(r"plex_(\d+)_processed\.csv$", path.name)
+    return int(match.group(1)) if match else None
+
+
+def numeric_matrix(df: pd.DataFrame, columns: list[str]) -> np.ndarray:
+    present = [column for column in columns if column in df.columns]
+    if not present:
+        return np.empty((len(df), 0), dtype=float)
+    return df[present].apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)
+
+
+def rounded_finite_values(values) -> list[float]:
+    cleaned: list[float] = []
+    for value in values:
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(numeric):
+            cleaned.append(rounded(numeric))
+    return cleaned
 
 
 def clean_sequence(value) -> str:
@@ -223,6 +300,7 @@ def build_dataset(
     out_dir: Path,
     manifest: dict,
     existing_meta: dict[tuple[str, ...], dict],
+    sample_channel_map: dict[int, dict[str, list[str]]],
 ) -> dict:
     files = sorted(source_dir.glob("*_processed.csv"))
     if not files:
@@ -263,6 +341,8 @@ def build_dataset(
             )
         df = pd.read_csv(path, usecols=[column for column in usecols if column in header], low_memory=False)
         print(f"[{dataset_key}] {index}/{len(files)} {path.name}: {len(df):,} rows, {len(file_drugs)} compounds")
+        plex_channels = sample_channel_map.get(plex_number_from_path(path) or -1, {})
+        dmso_matrix = numeric_matrix(df, plex_channels.get("DMSO", []))
 
         current_row_ids: list[int] = []
         for _, source_row in df[META_COLUMNS].iterrows():
@@ -300,6 +380,7 @@ def build_dataset(
             f_cpd = numeric_series(df, f"{drug}_F_pvalue_cpd", 1).to_numpy(dtype=float)
             contamination = bool_series(df.get(f"{drug}_contamination"))
             dmso_outlier = bool_series(df.get(f"{drug}_dmso_outlier"))
+            compound_matrix = numeric_matrix(df, plex_channels.get(drug, []))
             if contamination.size == 0:
                 contamination = np.zeros(len(df), dtype=bool)
             if dmso_outlier.size == 0:
@@ -329,12 +410,9 @@ def build_dataset(
                     bool(hide_cpd[idx]),
                 ]
                 rows.append(compound_row)
-                hover[str(row_id)] = [
-                    rounded(dmso_1[idx]),
-                    rounded(dmso_2[idx]),
-                    rounded(mean_sn[idx]),
-                    rounded(mean_sn[idx]),
-                ]
+                dmso_hover = rounded_finite_values(dmso_matrix[idx]) if dmso_matrix.shape[1] else [rounded(dmso_1[idx]), rounded(dmso_2[idx])]
+                compound_hover = rounded_finite_values(compound_matrix[idx]) if compound_matrix.shape[1] else [rounded(mean_sn[idx]), rounded(mean_sn[idx])]
+                hover[str(row_id)] = [dmso_hover, compound_hover]
                 if ratio[idx] > HIT_R:
                     hit = [
                         drug,
@@ -449,12 +527,22 @@ def main() -> None:
         type=Path,
         help="Directory containing os_0.7 and frac_0.7 processed plex folders.",
     )
+    parser.add_argument(
+        "--samples-csv",
+        default=None,
+        type=Path,
+        help="YPT sample sheet with plex-to-TMT-channel assignments. Defaults to ../../ypt/ypt_samples.csv from source-root.",
+    )
     parser.add_argument("--asset-root", default=Path("assets/data"), type=Path)
     args = parser.parse_args()
 
     manifest_path = args.asset_root / "manifest.json"
     manifest = read_json(manifest_path)
     existing_meta = build_existing_metadata(args.asset_root, manifest)
+    samples_csv = args.samples_csv or args.source_root.parents[1] / "ypt" / "ypt_samples.csv"
+    sample_channel_map = read_sample_channel_map(samples_csv)
+    if not sample_channel_map:
+        print(f"Warning: no sample channel assignments found at {samples_csv}; raw hover will use summary fallbacks.")
     new_manifest = dict(manifest)
     new_manifest["datasets"] = {}
     new_manifest["counts"] = {}
@@ -466,6 +554,7 @@ def main() -> None:
             args.asset_root,
             manifest,
             existing_meta,
+            sample_channel_map,
         )
         new_manifest["datasets"][dataset_key] = dataset
         new_manifest["counts"][dataset_key] = {

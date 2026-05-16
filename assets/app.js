@@ -9,7 +9,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v14";
+const ASSET_VERSION = "pages-data-v15";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
 const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
@@ -438,11 +438,16 @@ function currentTooltipRowId(fallback = null) {
 }
 
 function rawHoverChartHtml(values) {
-  if (!values || values.length < 4) return `<div class="raw-hover-empty muted">Raw intensities unavailable.</div>`;
-  const [d1, d2, c1, c2] = values.map((v) => Number(v));
+  if (!values) return `<div class="raw-hover-empty muted">Raw intensities unavailable.</div>`;
+  const normalized = Array.isArray(values?.[0])
+    ? { dmso: values[0], compound: values[1] }
+    : { dmso: [values[0], values[1]], compound: [values[2], values[3]] };
+  const dmsoVals = (normalized.dmso || []).map((v) => Number(v)).filter(Number.isFinite);
+  const compoundVals = (normalized.compound || []).map((v) => Number(v)).filter(Number.isFinite);
+  if (!dmsoVals.length || !compoundVals.length) return `<div class="raw-hover-empty muted">Raw intensities unavailable.</div>`;
   const groups = [
-    { label: "DMSO", vals: [d1, d2], color: MORANDI.gray },
-    { label: "Compound", vals: [c1, c2], color: MORANDI.blueDark },
+    { label: "DMSO", vals: dmsoVals, color: MORANDI.gray },
+    { label: "Compound", vals: compoundVals, color: MORANDI.blueDark },
   ];
   const maxVal = Math.max(...groups.flatMap((g) => g.vals).filter((v) => Number.isFinite(v)), 1);
   const axisMax = Math.max(10, Math.ceil(maxVal / 10) * 10);
