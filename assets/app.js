@@ -9,7 +9,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v15";
+const ASSET_VERSION = "pages-data-v18";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
 const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
@@ -729,7 +729,11 @@ function showCompoundBinModal(payload) {
 function showSiteBinModal(payload) {
   const sites = payload?.sites || [];
   const rows = sites
-    .map((site) => `<li><strong>${escapeHtml(site.label)}</strong><span>${roundLabel(site.value)}%</span></li>`)
+    .map((site) => {
+      const hitCount = Number(site.hitCount || 0);
+      const observedCount = Number(site.observedCount || 0);
+      return `<li><strong>${escapeHtml(site.label)}</strong><span>${roundLabel(site.value)}%, ${hitCount.toLocaleString()}/${observedCount.toLocaleString()}</span></li>`;
+    })
     .join("");
   openSummaryDetailModal(
     payload?.title || "Reactive Sites",
@@ -837,7 +841,7 @@ async function populateDatasetControls() {
   await populateCompoundChoices();
 
   const geneOptions = state.dataset.geneChoices.map((gene) => ({ value: gene, label: gene }));
-  setOptions(el("siteGeneSelect"), geneOptions, state.dataset.defaultGene);
+  setOptions(el("siteGeneSelect"), geneOptions, state.dataset.geneChoices[0] || state.dataset.defaultGene);
 
   const hitCounts = [...new Set(Object.values(state.dataset.drugHitCounts || {}).map((v) => Number(v)).filter((v) => Number.isFinite(v) && v > 0))].sort(
     (a, b) => a - b
@@ -1094,10 +1098,14 @@ function renderDatasetStaticPlots() {
     if (!Number.isFinite(value) || value <= 0) return;
     const binIndex = Math.min(49, Math.max(0, Math.floor(value / 2)));
     const row = state.catalog[idx];
+    const hitCount = Number(state.dataset.siteHitCounts?.[idx] ?? row?.hitCount ?? 0);
+    const observedCount = Number(state.dataset.siteObservedCounts?.[idx] ?? row?.observedCount ?? 0);
     siteBins[binIndex].sites.push({
       label: row?.label || `Site ${idx + 1}`,
       gene: row?.gene || "",
       value,
+      hitCount,
+      observedCount,
     });
   });
   const activeBins = siteBins.filter((bin) => bin.sites.length);
@@ -1240,7 +1248,7 @@ async function renderSummary() {
       const payload = state.geneSiteCache.get(row.gene);
       const summary = payload?.sites.find((site) => site.row === row.i || site.label === row.label);
       const hits = filteredHits(summary, summaryFilterIds(), maxHits);
-      const filteredMaxR = hits[0]?.[1] ?? null;
+      const filteredMaxR = hits[0]?.[1] ?? Number(summary?.maxR ?? row.maxR);
       return { ...row, filteredMaxR };
     })
     .filter((row) => Number.isFinite(Number(row.filteredMaxR)));
@@ -1617,6 +1625,7 @@ async function computeFilteredSitesForGene(gene, activeOnly) {
   const payload = await loadGeneSites(gene);
   return (payload?.sites || [])
     .map((site) => {
+      if (!activeOnly) return { ...site, filteredMaxR: Number(site.maxR) };
       const hits = filteredHits(site, siteFilterIds(), maxHits);
       const filteredMaxR = hits[0]?.[1] ?? null;
       return { ...site, filteredMaxR };
@@ -1690,6 +1699,8 @@ async function refreshSiteControls(preferredGene = null, { allowFallback = false
   if (!geneStats) {
     geneStats = new Map();
     for (const row of state.catalog) {
+      if (Number(row.observedCount || 0) <= 0) continue;
+      if (activeOnly && Number(row.hitCount || 0) <= 0) continue;
       if (!Number.isFinite(Number(row.maxR))) continue;
       const stats = geneStats.get(row.gene) || { count: 0, maxR: -Infinity };
       stats.count += 1;

@@ -758,8 +758,8 @@ th {
 
 .detail-modal__panel {
   position: relative;
-  width: min(920px, calc(100vw - 48px));
-  max-height: min(760px, calc(100vh - 48px));
+  width: min(720px, calc(100vw - 48px));
+  max-height: min(680px, calc(100vh - 48px));
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 8px;
@@ -775,7 +775,11 @@ th {
   top: 10px;
   right: 10px;
   width: 34px;
+  height: 34px;
   min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border-radius: 50%;
   font-size: 20px;
@@ -788,7 +792,7 @@ th {
 
 .compound-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 10px;
 }
 
