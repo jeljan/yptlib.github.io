@@ -1,0 +1,1 @@
+{"385":[{"pdb":"6TP5","method":"X-RAY","resolution":2.25,"chain":"A","authSeq":385,"mappingStatus":"OK","contacts":["PPI","Ligand"],"minDist":1.33,"neighbors":[{"chain":"A","residue":386,"label":"A/ASP386/N"},{"chain":"D","residue":1,"label":"D/NAG1/O7"}]}]}

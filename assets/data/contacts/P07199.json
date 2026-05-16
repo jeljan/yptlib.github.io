@@ -1,0 +1,1 @@
+{"557":[{"pdb":"1UFI","method":"X-RAY","resolution":1.65,"chain":"A","authSeq":22,"mappingStatus":"OK","contacts":["PPI"],"minDist":1.303,"neighbors":[{"chain":"A","residue":23,"label":"A/LEU23/N"}]}],"59":[{"pdb":"1HLV","method":"X-RAY","resolution":2.5,"chain":"A","authSeq":59,"mappingStatus":"OK","contacts":[],"minDist":null,"neighbors":[]}]}

@@ -70,6 +70,36 @@ h3 {
   font-weight: 650;
 }
 
+.dataset-controls {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.dataset-replicate-filter {
+  min-height: 24px;
+  font-size: 12px;
+}
+
+.dataset-toggle.loading {
+  color: var(--ink);
+}
+
+.dataset-toggle.loading .switch-track::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-top-color: var(--blue-dark);
+  border-radius: 999px;
+  animation: spin 0.8s linear infinite;
+}
+
+.dataset-toggle input:disabled + .switch-track {
+  cursor: wait;
+  opacity: 0.74;
+}
+
 .switch {
   display: inline-flex;
   cursor: pointer;
@@ -172,6 +202,30 @@ main {
   grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
 }
 
+.site-analysis-layout {
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.site-analysis-layout > .panel {
+  height: auto;
+}
+
+.site-analysis-layout > section.panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.site-analysis-layout #siteBar {
+  flex: 1;
+  min-height: 480px;
+}
+
+.compound-plot-panel #compoundScatter,
+.compound-plot-panel #compoundVolcano {
+  min-height: 360px;
+}
+
 .plot-with-side {
   grid-template-columns: minmax(0, 1fr) 280px;
 }
@@ -208,10 +262,40 @@ main {
 
 label {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 650;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.field-label-row label {
+  display: block;
+}
+
+.inline-status {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sidebar-layout > aside.panel > label {
+  margin-bottom: 14px;
+}
+
+.sidebar-layout > aside.panel > .field {
+  margin-bottom: 14px;
 }
 
 .filter-box {
@@ -311,6 +395,17 @@ button:hover {
   overflow: hidden;
 }
 
+.plot .js-plotly-plot,
+.plot .plot-container,
+.plot .svg-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.plot .main-svg {
+  width: 100% !important;
+}
+
 .plot .js-placeholder,
 .gtitle.js-placeholder,
 .gtitle-subtitle.js-placeholder {
@@ -337,6 +432,46 @@ button:hover {
   min-height: 640px;
 }
 
+.plot.square {
+  width: min(100%, 920px);
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.plot.square .js-plotly-plot,
+.plot.square .plot-container,
+.plot.square .svg-container {
+  height: 100% !important;
+}
+
+.global-proteome-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 16px;
+  align-items: center;
+}
+
+.global-proteome-controls {
+  display: grid;
+  grid-template-rows: 64px auto 72px;
+  gap: 10px;
+  align-content: center;
+}
+
+.global-proteome-controls label {
+  margin: 0;
+}
+
+.global-control-slot {
+  min-height: 0;
+}
+
+.global-control-checks {
+  display: grid;
+  gap: 10px;
+}
+
 .molecule {
   min-height: 280px;
   text-align: center;
@@ -344,7 +479,7 @@ button:hover {
 
 .molecule.compact {
   min-height: 220px;
-  margin-top: 16px;
+  margin: 0 0 18px;
 }
 
 .molecule img {
@@ -367,7 +502,11 @@ button:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px 12px;
   align-items: end;
-  margin: 12px 0 8px;
+  margin: 0 0 8px;
+}
+
+.site-structure-panel {
+  margin-top: 0;
 }
 
 .structure-toolbar label {
@@ -383,7 +522,7 @@ button:hover {
 .structure-grid section {
   display: grid;
   align-content: start;
-  gap: 4px;
+  gap: 6px;
 }
 
 .molstar-viewer {
@@ -408,16 +547,25 @@ button:hover {
   height: 100% !important;
 }
 
+.viewer-meta {
+  display: grid;
+  grid-template-columns: minmax(80px, max-content) minmax(0, 1fr);
+  align-items: center;
+  min-height: 24px;
+  gap: 12px;
+  margin: 0 0 6px;
+}
+
 .viewer-message {
-  min-height: 0;
   margin: 0;
   color: var(--muted);
   font-size: 12px;
+  line-height: 1.2;
+  text-align: right;
 }
 
 .viewer-link {
-  min-height: 0;
-  margin: 5px 0;
+  margin: 0;
   font-size: 12px;
   line-height: 1.2;
 }
@@ -472,6 +620,12 @@ th {
   pointer-events: none;
 }
 
+.molecule-tooltip.compact-tooltip {
+  width: auto;
+  min-width: 0;
+  padding: 7px 9px;
+}
+
 .molecule-tooltip strong {
   display: block;
   margin-bottom: 6px;
@@ -485,6 +639,11 @@ th {
   object-fit: contain;
 }
 
+.molecule-tooltip.hit-tooltip img {
+  width: 87%;
+  max-height: 144px;
+}
+
 .tooltip-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -495,11 +654,30 @@ th {
   text-align: center;
 }
 
+.tooltip-stats.one-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
 .tooltip-stats strong {
   display: block;
   margin-bottom: 2px;
   color: var(--ink);
   font-size: 11px;
+}
+
+.tooltip-stats.one-row strong,
+.tooltip-stats.one-row span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.tooltip-compact-value {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: center;
 }
 
 .tooltip-detail {
@@ -510,6 +688,11 @@ th {
   text-align: left;
 }
 
+.tooltip-click-hint {
+  margin-bottom: 0;
+  text-align: center;
+}
+
 .tooltip-uniprot {
   margin: -2px 0 6px;
   color: var(--ink);
@@ -517,10 +700,121 @@ th {
   font-weight: 750;
 }
 
+.tooltip-cluster {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
 .tooltip-detail strong {
   display: inline;
   margin: 0;
   font-size: 11px;
+}
+
+.site-bin-detail {
+  max-height: 260px;
+  overflow: auto;
+  margin-bottom: 0;
+}
+
+.site-bin-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-bin-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(216, 213, 206, 0.7);
+  padding-bottom: 3px;
+}
+
+.site-bin-list span {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(47, 49, 54, 0.38);
+}
+
+.detail-modal.open {
+  display: flex;
+}
+
+.detail-modal__panel {
+  position: relative;
+  width: min(720px, calc(100vw - 48px));
+  max-height: min(680px, calc(100vh - 48px));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 18px 48px rgba(47, 49, 54, 0.24);
+}
+
+.detail-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.detail-modal__body {
+  overflow: auto;
+}
+
+.compound-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.compound-card {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  text-align: center;
+}
+
+.compound-card img {
+  width: 100%;
+  height: 92px;
+  object-fit: contain;
+}
+
+.compound-card strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
 }
 
 .raw-hover {
@@ -615,12 +909,24 @@ th {
   }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 1000px) {
   .two,
   .three,
   .sidebar-layout,
-  .plot-with-side {
+  .plot-with-side,
+  .global-proteome-layout {
     grid-template-columns: 1fr;
+  }
+
+  .global-proteome-controls {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    align-items: end;
   }
 
   .toolbar,
@@ -651,7 +957,8 @@ th {
   .toolbar,
   .summary-controls,
   .four,
-  .filter-box {
+  .filter-box,
+  .global-proteome-controls {
     grid-template-columns: 1fr;
   }
 

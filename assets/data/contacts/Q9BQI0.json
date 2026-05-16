@@ -1,0 +1,1 @@
+{"39":[{"pdb":"2JJZ","method":"X-RAY","resolution":2.15,"chain":"A","authSeq":39,"mappingStatus":"OK","contacts":["PPI"],"minDist":1.324,"neighbors":[{"chain":"A","residue":38,"label":"A/LYS38/C"}]},{"pdb":"2VTG","method":"X-RAY","resolution":2.45,"chain":"A","authSeq":39,"mappingStatus":"OK","contacts":[],"minDist":null,"neighbors":[]}]}

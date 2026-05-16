@@ -16,13 +16,16 @@
         <h1>Tyrosine Library Screening</h1>
         <p id="statusText">Loading static assets...</p>
       </div>
-      <div class="dataset-toggle" role="group" aria-label="Dataset">
-        <span>One-Shot</span>
-        <label class="switch">
-          <input id="datasetSwitch" type="checkbox">
-          <span class="switch-track"></span>
-        </label>
-        <span>Fractionated</span>
+      <div class="dataset-controls">
+        <div class="dataset-toggle" role="group" aria-label="Dataset">
+          <span>One-Shot</span>
+          <label class="switch">
+            <input id="datasetSwitch" type="checkbox">
+            <span class="switch-track"></span>
+          </label>
+          <span>Fractionated</span>
+        </div>
+        <label class="check dataset-replicate-filter"><input id="dropNoReplicates" type="checkbox"> Drop compounds with no replicates</label>
       </div>
     </header>
 
@@ -30,7 +33,6 @@
       <button class="tab-button active" data-tab="summary">Summary</button>
       <button class="tab-button" data-tab="compound">Compound</button>
       <button class="tab-button" data-tab="site">Site</button>
-      <button class="tab-button" data-tab="global">Global Proteome</button>
       <button class="tab-button" data-tab="bio">Bioinformatics</button>
     </nav>
 
@@ -42,20 +44,40 @@
             <div id="siteReactivityBinary" class="plot compact-plot"></div>
           </section>
           <section class="panel">
-            <h2>Site Reactivity Distribution</h2>
+            <h2>Reactive Site Distribution</h2>
             <div id="siteReactivityDist" class="plot compact-plot"></div>
           </section>
           <section class="panel">
-            <h2>Compound Hits By Warhead</h2>
+            <h2>Hits by Warhead</h2>
             <div id="compoundHitsBinary" class="plot compact-plot"></div>
           </section>
           <section class="panel">
-            <h2>Compound Selectivity Profiles</h2>
+            <h2>Reactive Compound Selectivity</h2>
             <div id="compoundHitsBinned" class="plot compact-plot"></div>
           </section>
         </div>
         <section class="panel">
-          <h2>Target Engagement</h2>
+          <h2>Proteome Explorer</h2>
+          <div class="global-proteome-layout">
+            <div id="globalScatter" class="plot square"></div>
+            <div id="globalProteomeControls" class="global-proteome-controls">
+              <div class="global-control-slot global-control-top">
+                <label id="globalThresholdWrap" class="conditional-field">Hit threshold<input id="globalThreshold" type="number" step="0.1" value="2"></label>
+              </div>
+              <div class="global-control-checks">
+                <label class="check"><input id="globalShowHits" type="checkbox" checked> Hits</label>
+                <label class="check"><input id="globalSeenOnly" type="checkbox"> Seen only</label>
+                <label class="check"><input id="globalShowCancer" type="checkbox"> Cancer-driver genes</label>
+                <label class="check"><input id="globalShowCustom" type="checkbox"> Custom genes</label>
+              </div>
+              <div class="global-control-slot global-control-bottom">
+                <label id="globalCustomGenesWrap" class="conditional-field">Custom genes<input id="globalCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Target Explorer</h2>
           <div class="toolbar summary-controls">
             <label>Target list<select id="summaryTargetList"></select></label>
             <label>Site<select id="summarySiteSelect"></select></label>
@@ -77,8 +99,15 @@
       <section id="compound" class="tab-panel">
         <div class="grid sidebar-layout">
           <aside class="panel">
-            <label>Compound<select id="compoundSelect"></select></label>
-            <label>R threshold<input id="compoundThreshold" type="number" step="0.1" value="2"></label>
+            <div id="compoundMolecule" class="molecule compact"></div>
+            <div class="field compound-select-field">
+              <div class="field-label-row">
+                <label for="compoundSelect">Compound</label>
+                <span id="compoundListStatus" class="inline-status" hidden><em>Updating list</em></span>
+              </div>
+              <select id="compoundSelect"></select>
+            </div>
+            <label>Hit threshold<input id="compoundThreshold" type="number" step="0.1" value="2"></label>
             <label>Label top<input id="compoundLabels" type="number" min="0" max="30" step="1" value="5"></label>
             <label>Color by<select id="compoundColorMode"></select></label>
             <label id="compoundCustomGenesWrap" class="conditional-field">Custom genes<input id="compoundCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
@@ -89,19 +118,18 @@
               <label class="check"><input id="compoundHideVariance" type="checkbox"> Hide high variance</label>
               <label class="narrow">Min SN<input id="compoundMinSn" type="number" min="0" step="10" value="0"></label>
             </fieldset>
-            <div id="compoundMolecule" class="molecule compact"></div>
           </aside>
-          <section class="panel">
-            <h2>Proteome Engagement Profile</h2>
+          <section class="panel compound-plot-panel">
+            <h2>Engagement profile</h2>
             <div id="compoundScatter" class="plot medium"></div>
-            <h2 class="section-gap">Volcano Plot</h2>
+            <h2 class="section-gap">Volcano plot</h2>
             <div id="compoundVolcano" class="plot medium"></div>
           </section>
         </div>
       </section>
 
       <section id="site" class="tab-panel">
-        <div class="grid sidebar-layout">
+        <div class="grid sidebar-layout site-analysis-layout">
           <aside class="panel">
             <label>Gene<select id="siteGeneSelect"></select></label>
             <label>Site<select id="siteSelect"></select></label>
@@ -115,36 +143,30 @@
             </fieldset>
           </aside>
           <section class="panel">
-            <h2>Compound Engagement Profile</h2>
             <div id="siteBar" class="plot medium"></div>
-            <div class="structure-toolbar">
-              <label>Structure<select id="structureSelect"></select></label>
-              <label>Contact neighborhood<select id="contactPdbSelect"></select></label>
-            </div>
-            <div class="grid two structure-grid">
-              <section>
-                <div id="structureMessage" class="viewer-message"></div>
-                <p class="viewer-link"><a id="structureSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
-                <div id="structureViewer" class="molstar-viewer"></div>
-              </section>
-              <section>
-                <div id="contactMessage" class="viewer-message"></div>
-                <p class="viewer-link"><a id="contactSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
-                <div id="contactViewer" class="molstar-viewer"></div>
-              </section>
-            </div>
           </section>
         </div>
-      </section>
-
-      <section id="global" class="tab-panel">
-        <section class="panel">
-          <div class="toolbar">
-            <label>Hit threshold<input id="globalThreshold" type="number" step="0.1" value="2"></label>
-            <label>Highlight<select id="globalHighlightMode"></select></label>
-            <label class="wide">Custom genes<input id="globalCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
+        <section class="panel site-structure-panel">
+          <div class="structure-toolbar">
+            <label>Protein structure<select id="structureSelect"></select></label>
+            <label>Intermolecular interactors<select id="contactPdbSelect"></select></label>
           </div>
-          <div id="globalScatter" class="plot tall"></div>
+          <div class="grid two structure-grid">
+            <section>
+              <div class="viewer-meta">
+                <p class="viewer-link"><a id="structureSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+                <div id="structureMessage" class="viewer-message"></div>
+              </div>
+              <div id="structureViewer" class="molstar-viewer"></div>
+            </section>
+            <section>
+              <div class="viewer-meta">
+                <p class="viewer-link"><a id="contactSourceLink" href="#" target="_blank" rel="noreferrer">Source</a></p>
+                <div id="contactMessage" class="viewer-message"></div>
+              </div>
+              <div id="contactViewer" class="molstar-viewer"></div>
+            </section>
+          </div>
         </section>
       </section>
 
@@ -167,6 +189,14 @@
     </main>
 
     <div id="moleculeTooltip" class="molecule-tooltip" aria-hidden="true"></div>
-    <script src="assets/app.js?v=raw-hover-v4"></script>
+    <div id="summaryDetailModal" class="detail-modal" aria-hidden="true">
+      <div class="detail-modal__panel" role="dialog" aria-modal="true" aria-labelledby="summaryDetailTitle">
+        <button id="summaryDetailClose" class="detail-modal__close" type="button" aria-label="Close">×</button>
+        <h2 id="summaryDetailTitle"></h2>
+        <p id="summaryDetailMeta" class="muted"></p>
+        <div id="summaryDetailBody" class="detail-modal__body"></div>
+      </div>
+    </div>
+    <script src="assets/app.js?v=pages-data-v18"></script>
   </body>
 </html>
