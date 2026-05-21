@@ -324,6 +324,33 @@ label {
   align-items: stretch;
 }
 
+.bio-data-filter-box {
+  grid-template-columns: minmax(150px, 190px) max-content max-content max-content minmax(120px, 150px);
+}
+
+.bio-atlas-filter-box {
+  grid-template-columns: max-content minmax(120px, 150px) minmax(130px, 160px) minmax(150px, 180px) minmax(110px, 130px);
+}
+
+.bio-atlas-filter-box select,
+.bio-atlas-filter-box input,
+.bio-data-filter-box input {
+  width: 100%;
+}
+
+.compact-filter-box label:not(.check),
+.filter-box label.inline-number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-filter-box label:not(.check) select,
+.compact-filter-box label:not(.check) input,
+.filter-box label.inline-number input {
+  min-width: 0;
+}
+
 .filter-box legend {
   padding: 0 6px;
   color: var(--muted);
@@ -404,6 +431,130 @@ button:hover {
 
 .plot .main-svg {
   width: 100% !important;
+}
+
+.circular-atlas-layout {
+  display: block;
+}
+
+.circular-atlas-stage {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  justify-content: center;
+}
+
+.circular-layer-labels {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  display: grid;
+  gap: 3px;
+  padding: 7px 9px;
+  border: 1px solid rgba(207, 202, 193, 0.78);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+#circularCompoundAtlas {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  display: block;
+  cursor: crosshair;
+}
+
+.circular-atlas-tooltip {
+  position: absolute;
+  z-index: 4;
+  max-width: 280px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(31, 49, 54, 0.18);
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.circular-atlas-meta {
+  margin: 2px 0 10px;
+}
+
+.circular-atlas-legend {
+  display: grid;
+  grid-template-columns: repeat(4, 34px auto);
+  gap: 10px 12px;
+  align-items: center;
+  justify-content: center;
+  margin: 12px auto 0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.circular-atlas-legend span {
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid rgba(31, 49, 54, 0.12);
+}
+
+.circular-drilldown-title {
+  font-weight: 700;
+}
+
+.circular-drilldown-heatmap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  min-height: 260px;
+}
+
+.circular-heatmap-grid {
+  display: grid;
+  min-width: max-content;
+  font-size: 11px;
+}
+
+.circular-heatmap-grid > div {
+  min-width: 18px;
+  min-height: 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.circular-heatmap-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 160px;
+  max-width: 220px;
+  padding: 3px 6px;
+  background: #fff;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.circular-heatmap-compound {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  min-height: 86px;
+  padding: 4px 2px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .plot .js-placeholder,
@@ -586,6 +737,262 @@ button:hover {
   border-radius: 6px;
 }
 
+.bio-table-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin: 4px 0 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.bio-pagination {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.bio-table-tools {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  justify-content: flex-end;
+}
+
+.bio-table-tools label {
+  display: grid;
+  gap: 5px;
+  min-width: 260px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.bio-table-tools input {
+  min-height: 34px;
+}
+
+.bio-visual-panel {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #faf9f7;
+}
+
+.bio-visual-header,
+.bio-visual-filter-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bio-visual-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.bio-visual-tabs button {
+  min-height: 30px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.bio-visual-tabs button.active {
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-weight: 750;
+}
+
+.bio-visual-filter-status {
+  padding: 8px 10px;
+  border: 1px solid var(--blue-soft);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--blue-dark);
+  font-size: 13px;
+}
+
+.bio-visual-view {
+  display: none;
+}
+
+.bio-visual-view.active {
+  display: block;
+}
+
+.bio-landscape-grid {
+  display: grid;
+  grid-template-columns: minmax(110px, 150px) repeat(5, minmax(90px, 1fr));
+  gap: 6px;
+}
+
+.bio-landscape-head,
+.bio-landscape-row-label,
+.bio-landscape-cell {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.bio-landscape-head {
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  text-align: center;
+}
+
+.bio-landscape-row-label {
+  display: grid;
+  align-content: center;
+  padding: 7px 9px;
+}
+
+.bio-landscape-row-label span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.bio-landscape-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.bio-landscape-cell i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.24;
+}
+
+.bio-landscape-cell span {
+  position: relative;
+  z-index: 1;
+}
+
+.bio-family-catalytic,
+.bio-family-catalytic i {
+  background: var(--red);
+}
+
+.bio-family-regulatory,
+.bio-family-regulatory i {
+  background: var(--mauve);
+}
+
+.bio-family-variant,
+.bio-family-variant i {
+  background: var(--blue-dark);
+}
+
+.bio-family-structure,
+.bio-family-structure i {
+  background: var(--green);
+}
+
+.bio-family-constraint,
+.bio-family-constraint i {
+  background: var(--amber);
+}
+
+.bio-landscape-cell.bio-family-catalytic,
+.bio-landscape-cell.bio-family-regulatory,
+.bio-landscape-cell.bio-family-variant,
+.bio-landscape-cell.bio-family-structure,
+.bio-landscape-cell.bio-family-constraint {
+  background: #fff;
+}
+
+.bio-overlap-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(260px, 1.1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.bio-overlap-circles {
+  position: relative;
+  min-height: 180px;
+}
+
+.bio-overlap-circle {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.bio-overlap-circle span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.bio-overlap-os {
+  left: 0;
+  top: 34px;
+  width: 130px;
+  height: 130px;
+  background: color-mix(in srgb, var(--blue-soft), white 20%);
+}
+
+.bio-overlap-frac {
+  left: 96px;
+  top: 20px;
+  width: 158px;
+  height: 158px;
+  background: color-mix(in srgb, var(--green), white 76%);
+}
+
+.bio-overlap-atlas {
+  left: 220px;
+  top: 0;
+  width: 186px;
+  height: 186px;
+  background: color-mix(in srgb, var(--amber), white 74%);
+}
+
+.bio-overlap-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.bio-overlap-bar {
+  display: grid;
+  grid-template-columns: 150px minmax(80px, 1fr) 80px;
+  gap: 10px;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+
+.bio-overlap-bar i {
+  display: block;
+  height: 12px;
+  border-radius: 999px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -605,9 +1012,389 @@ th {
   background: #eef2f7;
 }
 
+th button {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+th button.active-sort {
+  color: var(--blue);
+}
+
+th button.active-sort::after {
+  content: " " attr(data-direction);
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+#bioTable tbody tr[data-bio-row] {
+  cursor: pointer;
+}
+
+#bioTable tbody tr[data-bio-row]:hover {
+  background: #f7f9fb;
+}
+
+.bio-detail-panel {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.bio-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.bio-detail-header h3 {
+  margin: 0 0 4px;
+}
+
+.bio-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bio-detail-grid section {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.bio-detail-grid section div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.bio-detail-grid span {
+  color: var(--muted);
+}
+
+.bio-protein-track-section {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.bio-protein-track-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.bio-protein-track-header h4 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.bio-protein-track-header p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.bio-protein-track-axis {
+  position: relative;
+  height: 92px;
+  margin: 10px 12px 8px;
+  border-bottom: 8px solid var(--blue-soft);
+}
+
+.bio-protein-domain {
+  position: absolute;
+  height: 12px;
+  border: 1px solid rgba(47, 95, 143, 0.28);
+  border-radius: 999px;
+  background: rgba(111, 131, 114, 0.28);
+}
+
+.bio-protein-domain.lane-0 {
+  bottom: 36px;
+}
+
+.bio-protein-domain.lane-1 {
+  bottom: 54px;
+  background: rgba(95, 127, 154, 0.22);
+}
+
+.bio-protein-domain.lane-2 {
+  bottom: 72px;
+  background: rgba(180, 154, 106, 0.22);
+}
+
+.bio-protein-marker {
+  position: absolute;
+  bottom: -12px;
+  width: 14px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+  transform: translateX(-50%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--muted);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.bio-protein-marker span {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  display: none;
+  transform: translateX(-50%);
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.bio-protein-marker:hover span,
+.bio-protein-marker.current span {
+  display: block;
+}
+
+.bio-protein-marker.seen {
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+.bio-protein-marker.hit {
+  border-color: var(--ink);
+}
+
+.bio-protein-marker.current {
+  width: 18px;
+  height: 18px;
+  bottom: -14px;
+  z-index: 2;
+  box-shadow: 0 0 0 3px var(--blue-dark);
+}
+
+.bio-protein-track-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 34px;
+  font-size: 13px;
+}
+
+.bio-protein-track-detail span {
+  color: var(--muted);
+}
+
+.bio-protein-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.bio-protein-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bio-protein-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+.bio-protein-legend .hit {
+  background: var(--ink);
+}
+
+.bio-protein-legend .current {
+  background: var(--blue-dark);
+}
+
+.bio-protein-legend .evidence {
+  background: var(--amber);
+}
+
+.bio-protein-legend .domain {
+  width: 16px;
+  border-radius: 999px;
+  background: rgba(111, 131, 114, 0.55);
+}
+
+.domain-evidence-matrix {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.domain-evidence-matrix div {
+  min-height: 58px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.domain-evidence-matrix span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.domain-evidence-matrix strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.domain-original-annotations {
+  grid-column: 1 / -1;
+}
+
+.domain-original-annotations ul {
+  display: grid;
+  gap: 4px;
+  max-height: 116px;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.domain-original-annotations li {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 2px 8px;
+  font-size: 12px;
+}
+
+.domain-original-annotations small {
+  grid-column: 2;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.domain-original-annotations li > span {
+  overflow-wrap: anywhere;
+}
+
+.domain-alignment {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.domain-align-axis,
+.domain-align-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.domain-align-axis {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.domain-align-row strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.domain-align-track {
+  position: relative;
+  height: 28px;
+  border-bottom: 7px solid var(--blue-soft);
+}
+
+.domain-align-domain {
+  position: absolute;
+  bottom: 3px;
+  z-index: 1;
+  height: 8px;
+  min-width: 5px;
+  border: 1px solid rgba(36, 104, 128, 0.5);
+  border-radius: 999px;
+  background: rgba(60, 139, 165, 0.38);
+}
+
+.domain-align-domain.lane-1 {
+  bottom: 12px;
+  background: rgba(221, 178, 92, 0.42);
+  border-color: rgba(176, 128, 43, 0.55);
+}
+
+.domain-align-domain.lane-2 {
+  bottom: 21px;
+  background: rgba(136, 122, 168, 0.34);
+  border-color: rgba(97, 84, 132, 0.5);
+}
+
+.domain-site-marker {
+  position: absolute;
+  bottom: -8px;
+  z-index: 2;
+  width: 13px;
+  height: 13px;
+  min-height: 13px;
+  padding: 0;
+  transform: translateX(-50%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--muted);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.domain-site-marker.seen {
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+.domain-site-marker.hit {
+  border-color: var(--ink);
+}
+
+.domain-site-table tbody tr {
+  cursor: pointer;
+}
+
+.domain-site-table tbody tr:hover {
+  background: #f7f9fb;
+}
+
 .molecule-tooltip {
   position: fixed;
-  z-index: 1000;
+  z-index: 1200;
   display: none;
   width: 286px;
   max-width: calc(100vw - 24px);
@@ -758,8 +1545,8 @@ th {
 
 .detail-modal__panel {
   position: relative;
-  width: min(920px, calc(100vw - 48px));
-  max-height: min(760px, calc(100vh - 48px));
+  width: min(720px, calc(100vw - 48px));
+  max-height: min(680px, calc(100vh - 48px));
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 8px;
@@ -775,11 +1562,19 @@ th {
   top: 10px;
   right: 10px;
   width: 34px;
+  height: 34px;
   min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border-radius: 50%;
   font-size: 20px;
   line-height: 1;
+}
+
+.detail-modal.circular-heatmap-modal .detail-modal__panel {
+  width: min(1160px, calc(100vw - 48px));
 }
 
 .detail-modal__body {
@@ -788,7 +1583,7 @@ th {
 
 .compound-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 10px;
 }
 
@@ -927,7 +1722,10 @@ th {
 
   .toolbar,
   .summary-controls,
-  .filter-box {
+  .filter-box,
+  .bio-data-filter-box,
+  .bio-atlas-filter-box,
+  .bio-detail-grid {
     grid-template-columns: repeat(2, minmax(150px, 1fr));
   }
 
@@ -954,8 +1752,22 @@ th {
   .summary-controls,
   .four,
   .filter-box,
-  .global-proteome-controls {
+  .bio-data-filter-box,
+  .bio-atlas-filter-box,
+  .global-proteome-controls,
+  .bio-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .bio-table-status,
+  .bio-table-tools,
+  .bio-detail-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bio-table-tools label {
+    min-width: 0;
   }
 
   .structure-toolbar {

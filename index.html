@@ -25,7 +25,7 @@
           </label>
           <span>Fractionated</span>
         </div>
-        <label class="check dataset-replicate-filter"><input id="dropNoReplicates" type="checkbox"> Drop compounds with no replicates</label>
+        <label class="check dataset-replicate-filter"><input id="dropNoReplicates" type="checkbox"> Drop compounds with low quality replicates</label>
       </div>
     </header>
 
@@ -33,6 +33,7 @@
       <button class="tab-button active" data-tab="summary">Summary</button>
       <button class="tab-button" data-tab="compound">Compound</button>
       <button class="tab-button" data-tab="site">Site</button>
+      <button class="tab-button" data-tab="domain">Domain</button>
       <button class="tab-button" data-tab="bio">Bioinformatics</button>
     </nav>
 
@@ -74,6 +75,19 @@
                 <label id="globalCustomGenesWrap" class="conditional-field">Custom genes<input id="globalCustomGenes" type="text" placeholder="MAPK1, EGFR, SRC"></label>
               </div>
             </div>
+          </div>
+        </section>
+        <section class="panel circular-atlas-panel">
+          <h2>Ligandability Map</h2>
+          <div class="circular-atlas-meta" hidden>
+            <div id="circularAtlasStatus" class="muted">Loading compound-domain matrix...</div>
+          </div>
+          <div class="circular-atlas-layout">
+            <div class="circular-atlas-stage">
+              <canvas id="circularCompoundAtlas" width="760" height="760" aria-label="Circular compound by biological hierarchy heatmap"></canvas>
+              <div id="circularAtlasTooltip" class="circular-atlas-tooltip" hidden></div>
+            </div>
+            <div id="circularAtlasLegend" class="circular-atlas-legend" aria-label="Circular atlas color legend"></div>
           </div>
         </section>
         <section class="panel">
@@ -170,20 +184,104 @@
         </section>
       </section>
 
+      <section id="domain" class="tab-panel">
+        <div class="grid sidebar-layout">
+          <aside class="panel">
+            <label>Domain search<input id="domainSearch" type="text" placeholder="kinase, SH2, phosphatase"></label>
+            <label>Domain<select id="domainSelect"></select></label>
+            <fieldset class="filter-box vertical domain-filter-box">
+              <legend>Filters</legend>
+              <label>Compound selectivity<select id="domainMaxHits"></select></label>
+              <label class="check"><input id="domainSeenOnly" type="checkbox" checked> Seen only</label>
+              <label class="check"><input id="domainHitOnly" type="checkbox"> ≥ 1 Compound hit only</label>
+              <label class="check"><input id="domainSigOnly" type="checkbox"> Significant only</label>
+              <label class="check"><input id="domainHideVariance" type="checkbox"> Hide high variance</label>
+              <label class="inline-number">Min SN<input id="domainMinSn" type="number" min="0" step="1" value="0"></label>
+            </fieldset>
+            <div id="domainListStatus" class="inline-status">Loading domains...</div>
+          </aside>
+          <section class="panel">
+            <div class="bio-detail-header">
+              <div>
+                <h2>Domain View</h2>
+                <p id="domainStatus" class="muted">Select a domain to compare targeted tyrosines across proteins.</p>
+              </div>
+            </div>
+            <div id="domainMeasurementSummary" class="domain-evidence-matrix"></div>
+            <div id="domainAlignment" class="domain-alignment"></div>
+            <div id="domainSiteTable" class="table-wrap domain-site-table"></div>
+            <div id="domainDetailPanel" class="bio-detail-panel" hidden></div>
+          </section>
+        </div>
+      </section>
+
       <section id="bio" class="tab-panel">
         <section class="panel">
-          <div class="toolbar">
-            <label>Gene filter<input id="bioGeneFilter" type="text" placeholder="Gene"></label>
-            <label>Trait<select id="bioTraitSelect"><option>Evolutionary conservedness</option><option>Structure contacts</option><option>Promiscuity</option></select></label>
+          <section id="bioVisualPanel" class="bio-visual-panel" aria-label="Bioinformatics atlas visualizations">
+            <div class="bio-visual-header">
+              <div class="bio-visual-tabs" role="tablist" aria-label="Bio visualization mode">
+                <button type="button" class="active" data-bio-visual="landscape" role="tab" aria-selected="true">Evidence Landscape</button>
+                <button type="button" data-bio-visual="quadrant" role="tab" aria-selected="false">YPT x Atlas</button>
+                <button type="button" data-bio-visual="overlap" role="tab" aria-selected="false">Dataset Overlap</button>
+              </div>
+              <div id="bioVisualStatus" class="muted">Loading atlas visuals...</div>
+            </div>
+            <div id="bioVisualFilterStatus" class="bio-visual-filter-status" hidden></div>
+            <div id="bioEvidenceLandscape" class="bio-visual-view active"></div>
+            <div id="bioQuadrant" class="bio-visual-view">
+              <div id="bioQuadrantPlot" class="plot short"></div>
+            </div>
+            <div id="bioDatasetOverlap" class="bio-visual-view"></div>
+          </section>
+          <fieldset class="filter-box bio-data-filter-box compact-filter-box">
+            <legend>Data filters</legend>
+            <label>Compound selectivity<select id="bioMaxHits"></select></label>
+            <label class="check"><input id="bioHitOnly" type="checkbox"> &gt;= 1 Compound hit</label>
+            <label class="check"><input id="bioSigOnly" type="checkbox"> Significant only</label>
+            <label class="check"><input id="bioHideVariance" type="checkbox"> Hide high variance</label>
+            <label class="inline-number">Min SN<input id="bioMinSn" type="number" min="0" step="1" value="0"></label>
+          </fieldset>
+          <fieldset class="filter-box bio-atlas-filter-box compact-filter-box">
+            <legend>Atlas filters</legend>
+            <label class="check"><input id="bioSeenOnly" type="checkbox" checked> Seen only</label>
+            <label>Tier<select id="bioTierFilter"><option value="all">All tiers</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option></select></label>
+            <label>Evidence<select id="bioEvidenceFamily"><option value="all">All evidence</option></select></label>
+            <label>Context<select id="bioContextFilter"><option value="all">All context</option></select></label>
+            <label class="inline-number">Min score<input id="bioMinScore" type="number" min="0" max="1" step="0.01" value="0"></label>
+          </fieldset>
+          <div class="bio-table-status">
+            <span id="bioResultStatus">Loading atlas...</span>
+            <div class="bio-table-tools">
+              <label>Search<input id="bioSearch" type="text" placeholder="Gene, UniProt, or site"></label>
+              <div class="bio-pagination">
+                <button id="bioPrevPage" type="button">Previous</button>
+                <span id="bioPageStatus">Page 1</span>
+                <button id="bioNextPage" type="button">Next</button>
+              </div>
+            </div>
           </div>
           <div class="table-wrap">
             <table id="bioTable">
               <thead>
-                <tr><th>Gene</th><th>Site</th><th>Max R</th><th>Conservedness</th><th>Status</th></tr>
+                <tr>
+                  <th><button type="button" data-bio-sort="gene">Gene</button></th>
+                  <th><button type="button" data-bio-sort="site">Tyr site</button></th>
+                  <th><button type="button" data-bio-sort="uniprot">UniProt</button></th>
+                  <th><button type="button" data-bio-sort="seen">Seen</button></th>
+                  <th><button type="button" data-bio-sort="maxR">YPT max R</button></th>
+                  <th><button type="button" data-bio-sort="hits">YPT hits</button></th>
+                  <th><button type="button" data-bio-sort="tier">Tier</button></th>
+                  <th><button type="button" data-bio-sort="catalytic">Catalytic/active-site</button></th>
+                  <th><button type="button" data-bio-sort="regulatory">PTM/regulatory</button></th>
+                  <th><button type="button" data-bio-sort="variant">Variant evidence</button></th>
+                  <th><button type="button" data-bio-sort="structure">Structure/contact</button></th>
+                  <th><button type="button" data-bio-sort="constraint">Constraint/conservation</button></th>
+                </tr>
               </thead>
               <tbody></tbody>
             </table>
           </div>
+          <div id="bioDetailPanel" class="bio-detail-panel" hidden></div>
         </section>
       </section>
     </main>
@@ -197,6 +295,7 @@
         <div id="summaryDetailBody" class="detail-modal__body"></div>
       </div>
     </div>
-    <script src="assets/app.js?v=pages-data-v15"></script>
+    <script src="assets/app.js?v=pages-data-v26"></script>
   </body>
 </html>
+
