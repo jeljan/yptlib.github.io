@@ -9,12 +9,35 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
 const RELEASE_DATA_ARCHIVE_ENABLED = Boolean(RELEASE_DATA_ARCHIVE_URL);
 let releaseArchivePromise = null;
-const ASSET_VERSION = "pages-data-v26";
+const ASSET_VERSION = "pages-data-v29";
 const FETCH_RETRIES_PER_ROOT = 2;
 const FETCH_TIMEOUT_MS = 12000;
-const SUMMARY_GENE_FETCH_CONCURRENCY = 8;
+const COMPOUND_CACHE_WARMUP_LIMIT = 24;
+const SUMMARY_RENDER_DEFER_MS = 5000;
+const SEARCHABLE_OPTION_LIMIT = 80;
 const CONTACT_TYPES = ["PPI", "Dna", "Rna", "Metal", "Ligand", "Cofactor"];
 const CIRCULAR_WARHEAD_CLASS_ORDER = ["FS", "SuFEx", "SuTEx"];
+const MIN_CLUSTER_SITE_ROWS = 3;
+const MIN_CLUSTER_SHARED_COMPOUNDS = 10;
+const MIN_CLUSTER_VALID_PAIR_FRACTION = 0.5;
+const MIN_COMPLETE_CLUSTER_COMPOUNDS = 3;
+const MIN_VISIBLE_DENDROGRAM_SITES = 8;
+const MIN_DENDROGRAM_STROKE_PX = 0.55;
+const CIRCULAR_RING_WIDTH = 0.0775;
+const CIRCULAR_RING_GAP = 0.0175;
+const CIRCULAR_BANDS = {
+  superfamily: [0.47 - CIRCULAR_RING_WIDTH, 0.47],
+  family: [0.47 - CIRCULAR_RING_WIDTH * 2 - CIRCULAR_RING_GAP, 0.47 - CIRCULAR_RING_WIDTH - CIRCULAR_RING_GAP],
+  domain: [0.47 - CIRCULAR_RING_WIDTH * 3 - CIRCULAR_RING_GAP * 2, 0.47 - CIRCULAR_RING_WIDTH * 2 - CIRCULAR_RING_GAP * 2],
+  site: [0.47 - CIRCULAR_RING_WIDTH * 4 - CIRCULAR_RING_GAP * 3, 0.47 - CIRCULAR_RING_WIDTH * 3 - CIRCULAR_RING_GAP * 3],
+};
+const CIRCULAR_LAYER_LABELS = [
+  { level: "superfamily", label: "Superfamily" },
+  { level: "family", label: "Family" },
+  { level: "domain", label: "Domain" },
+  { level: "site", label: "Site" },
+];
+const CIRCULAR_LAYER_LABEL_ANGLE = Math.PI;
 const CONTACT_LABELS = {
   PPI: "PPI",
   Dna: "DNA",
@@ -23,6 +46,17 @@ const CONTACT_LABELS = {
   Ligand: "Ligand",
   Cofactor: "Cofactor",
 };
+const TARGET_LIST_OPTIONS = [
+  { value: "all", label: "Whole proteome" },
+  { value: "cancer", label: "Cancer-driver genes" },
+  { value: "PPI", label: "Sites at PPI interface" },
+  { value: "Metal", label: "Sites near metal" },
+  { value: "Cofactor", label: "Sites near cofactor" },
+  { value: "Dna", label: "Sites near DNA" },
+  { value: "Rna", label: "Sites near RNA" },
+  { value: "Ligand", label: "Sites near ligand" },
+  { value: "custom", label: "Custom gene list" },
+];
 const SIG_NEGLOG10 = -Math.log10(0.05);
 const MORANDI = {
   blueDark: "#2f5f8f",
@@ -59,6 +93,10 @@ const state = {
   rawHoverCache: new Map(),
   rawHoverAliasCache: new Map(),
   geneSiteCache: new Map(),
+  contactFileIndex: null,
+  contactFileIndexPromise: null,
+  contactTargetRowCache: new Map(),
+  contactTargetRowSetCache: new Map(),
   activeGeneFilterIndexCache: new Map(),
   contactCache: new Map(),
   filteredSitesByGene: new Map(),
@@ -66,6 +104,12 @@ const state = {
   compoundChoiceRefreshToken: 0,
   compoundChoiceRefreshTimer: null,
   compoundWarmupToken: 0,
+  searchableControls: new Map(),
+  persistentHitTooltip: null,
+  copyToastTimer: null,
+  summaryDatasetRenderToken: 0,
+  summaryDatasetRenderTimer: null,
+  summaryRenderTimer: null,
   currentSiteRow: null,
   currentSiteSummary: null,
   currentPdbEntries: [],
@@ -74,23 +118,16 @@ const state = {
   siteRefreshSeq: 0,
   globalProteome: null,
   globalProteomePromise: null,
-  bioWorker: null,
-  bioRequestSeq: 0,
-  bioVisualSeq: 0,
-  bioProteinSeq: 0,
-  bioActiveVisual: "landscape",
-  bioBinFilter: null,
-  bioPage: 0,
-  bioSort: { column: "score", direction: "desc" },
-  bioLastRows: [],
-  bioCurrentDetailRow: null,
-  domainListSeq: 0,
-  domainRequestSeq: 0,
-  domainRows: [],
-  domainCurrentEntry: null,
   circularAtlas: null,
   circularSectors: [],
   circularCellMap: new Map(),
+  circularVisibleSiteDendrogram: null,
+  circularVisibleSiteDendrogramKey: "",
+  circularVisibleSiteDendrogramPromise: null,
+  circularConstrainedOrderMap: new Map(),
+  circularConstrainedOrderKey: "",
+  circularConstrainedOrderPromise: null,
+  circularConstrainedOrderStatus: "",
   circularZoom: { scale: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 },
 };
 const BIO_FAMILY_META = {
@@ -190,11 +227,173 @@ function setOptions(select, options, selected = null) {
     const node = document.createElement("option");
     node.value = option.value;
     node.textContent = option.label;
+    node.label = option.label;
     select.appendChild(node);
   }
   if (selected != null) {
     select.value = selected;
   }
+  syncSearchableControl(select.id);
+}
+
+function searchableLabel(option) {
+  return option?.label || option?.textContent || option?.value || "";
+}
+
+function searchableOptions(select) {
+  return [...(select?.options || [])].filter((option) => option.value || searchableLabel(option));
+}
+
+function searchableElements(selectId) {
+  const select = el(selectId);
+  const root = document.querySelector(`[data-searchable-for="${selectId}"]`);
+  const input = root?.querySelector(".searchable-input");
+  const list = root?.querySelector(".searchable-list");
+  return { select, root, input, list };
+}
+
+function syncSearchableControl(selectId) {
+  const { select, input, list } = searchableElements(selectId);
+  if (!select || !input) return;
+  const control = state.searchableControls.get(selectId);
+  if (control?.open) {
+    openSearchableList(selectId, input.value);
+    return;
+  }
+  const selected = [...select.options].find((option) => option.value === select.value) || select.options[select.selectedIndex];
+  input.value = searchableLabel(selected);
+  input.title = input.value;
+  input.setAttribute("aria-expanded", "false");
+  if (list) list.hidden = true;
+}
+
+function closeSearchableList(selectId, { restore = true } = {}) {
+  const { input, list } = searchableElements(selectId);
+  const control = state.searchableControls.get(selectId);
+  if (control) {
+    control.open = false;
+    control.activeIndex = -1;
+  }
+  if (list) {
+    list.hidden = true;
+    list.innerHTML = "";
+  }
+  if (input) input.setAttribute("aria-expanded", "false");
+  if (restore) syncSearchableControl(selectId);
+}
+
+function searchableMatches(option, query) {
+  if (!query) return true;
+  const text = `${option.value} ${searchableLabel(option)}`.toLowerCase();
+  return text.includes(query);
+}
+
+function searchableHighlightedLabel(option, query) {
+  const label = searchableLabel(option);
+  const needle = String(query || "").trim().toLowerCase();
+  if (!needle) return escapeHtml(label);
+  const haystack = label.toLowerCase();
+  let cursor = 0;
+  let html = "";
+  while (cursor < label.length) {
+    const index = haystack.indexOf(needle, cursor);
+    if (index < 0) {
+      html += escapeHtml(label.slice(cursor));
+      break;
+    }
+    html += escapeHtml(label.slice(cursor, index));
+    const end = index + needle.length;
+    html += `<span class="searchable-match">${escapeHtml(label.slice(index, end))}</span>`;
+    cursor = end;
+  }
+  return html;
+}
+
+function chooseSearchableOption(selectId, value) {
+  const { select } = searchableElements(selectId);
+  if (!select || select.value === value && value === "") return;
+  select.value = value;
+  closeSearchableList(selectId, { restore: true });
+  select.dispatchEvent(new Event("input", { bubbles: true }));
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function setSearchableActiveOption(selectId, nextIndex) {
+  const { list } = searchableElements(selectId);
+  const control = state.searchableControls.get(selectId);
+  if (!list || !control) return;
+  const options = [...list.querySelectorAll(".searchable-option")];
+  if (!options.length) {
+    control.activeIndex = -1;
+    return;
+  }
+  control.activeIndex = Math.max(0, Math.min(nextIndex, options.length - 1));
+  options.forEach((option, idx) => option.classList.toggle("active", idx === control.activeIndex));
+  options[control.activeIndex]?.scrollIntoView({ block: "nearest" });
+}
+
+function openSearchableList(selectId, rawQuery = "") {
+  const { select, input, list } = searchableElements(selectId);
+  if (!select || !input || !list) return;
+  const control = state.searchableControls.get(selectId) || { open: false, activeIndex: -1 };
+  state.searchableControls.set(selectId, control);
+  const query = String(rawQuery || "").trim().toLowerCase();
+  const matches = searchableOptions(select)
+    .filter((option) => searchableMatches(option, query))
+    .slice(0, SEARCHABLE_OPTION_LIMIT);
+  control.open = true;
+  control.activeIndex = matches.length ? 0 : -1;
+  input.setAttribute("aria-expanded", "true");
+  list.hidden = false;
+  list.innerHTML = matches.length
+    ? matches.map((option, idx) => `<button type="button" class="searchable-option${idx === 0 ? " active" : ""}" role="option" data-value="${escapeHtml(option.value)}">${searchableHighlightedLabel(option, query)}</button>`).join("")
+    : `<div class="searchable-empty">No matches</div>`;
+  list.querySelectorAll(".searchable-option").forEach((option) => {
+    option.addEventListener("mousedown", (event) => event.preventDefault());
+    option.addEventListener("click", () => chooseSearchableOption(selectId, option.dataset.value || ""));
+  });
+}
+
+function initSearchableControl(selectId) {
+  const { input, list } = searchableElements(selectId);
+  if (!input || !list || input.dataset.searchableReady === "true") return;
+  input.dataset.searchableReady = "true";
+  state.searchableControls.set(selectId, { open: false, activeIndex: -1 });
+  input.addEventListener("focus", () => {
+    const control = state.searchableControls.get(selectId);
+    if (!control?.open) input.value = "";
+    openSearchableList(selectId, input.value);
+  });
+  input.addEventListener("click", () => {
+    const control = state.searchableControls.get(selectId);
+    if (!control?.open) input.value = "";
+    openSearchableList(selectId, input.value);
+  });
+  input.addEventListener("input", () => openSearchableList(selectId, input.value));
+  input.addEventListener("keydown", (event) => {
+    const control = state.searchableControls.get(selectId);
+    const options = [...list.querySelectorAll(".searchable-option")];
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (!control?.open) openSearchableList(selectId, input.value);
+      else setSearchableActiveOption(selectId, (control.activeIndex ?? -1) + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSearchableActiveOption(selectId, (control?.activeIndex ?? 0) - 1);
+    } else if (event.key === "Enter") {
+      if (control?.open && options[control.activeIndex]) {
+        event.preventDefault();
+        chooseSearchableOption(selectId, options[control.activeIndex].dataset.value || "");
+      }
+    } else if (event.key === "Escape") {
+      closeSearchableList(selectId, { restore: true });
+      input.blur();
+    }
+  });
+  input.addEventListener("blur", () => {
+    window.setTimeout(() => closeSearchableList(selectId, { restore: true }), 120);
+  });
+  syncSearchableControl(selectId);
 }
 
 function customGeneSet(value) {
@@ -278,14 +477,6 @@ function contactLabel(type) {
   return CONTACT_LABELS[type] || type;
 }
 
-function summaryFilterIds() {
-  return {
-    sigOnly: "summarySigOnly",
-    hideVariance: "summaryHideVariance",
-    minSn: "summaryMinSn",
-  };
-}
-
 function siteFilterIds() {
   return {
     sigOnly: "siteSigOnly",
@@ -304,7 +495,7 @@ function viewFilterIds(view) {
 
 function copySharedFilterValues(sourceView) {
   const source = viewFilterIds(sourceView);
-  for (const view of ["summary", "compound", "site", "bio"]) {
+  for (const view of ["compound", "site", "bio"]) {
     if (view === sourceView) continue;
     const target = viewFilterIds(view);
     if (el(target.sigOnly)) el(target.sigOnly).checked = el(source.sigOnly).checked;
@@ -409,7 +600,7 @@ function baseLayout(extra = {}) {
     paper_bgcolor: "white",
     plot_bgcolor: "white",
     hovermode: "closest",
-    font: { family: "system-ui, sans-serif", size: 12 },
+    font: { family: "Helvetica, Arial, sans-serif", size: 12 },
     xaxis: { showgrid: false, zeroline: false, linecolor: "#cfcac1" },
     yaxis: { showgrid: false, zeroline: false, linecolor: "#cfcac1" },
     ...extra,
@@ -459,8 +650,7 @@ async function loadRawHover(drug) {
 function currentTooltipRowId(fallback = null) {
   if (Number.isFinite(Number(fallback))) return Number(fallback);
   if (el("site")?.classList.contains("active") && state.currentSiteRow?.i != null) return Number(state.currentSiteRow.i);
-  const summaryRow = Number(el("summarySiteSelect")?.value);
-  return Number.isFinite(summaryRow) ? summaryRow : null;
+  return null;
 }
 
 function rawHoverChartHtml(values) {
@@ -639,6 +829,93 @@ function showHitTooltip(payload, event) {
   hydrateHitTooltip(drug, rowId);
 }
 
+function showTransientHitTooltip(payload, event) {
+  if (state.persistentHitTooltip) return;
+  showHitTooltip(payload, event);
+}
+
+function hideTransientHitTooltip() {
+  if (state.persistentHitTooltip) return;
+  hideMoleculeTooltip();
+}
+
+function ensureCopyToast() {
+  let toast = document.querySelector(".copy-toast");
+  if (toast) return toast;
+  toast = document.createElement("div");
+  toast.className = "copy-toast";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  document.body.appendChild(toast);
+  return toast;
+}
+
+function showCopyToast(message = "Compound ID copied to clipboard") {
+  const toast = ensureCopyToast();
+  toast.textContent = message;
+  toast.classList.add("show");
+  if (state.copyToastTimer) window.clearTimeout(state.copyToastTimer);
+  state.copyToastTimer = window.setTimeout(() => {
+    toast.classList.remove("show");
+    state.copyToastTimer = null;
+  }, 1600);
+}
+
+function fallbackCopyText(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch {
+    copied = false;
+  }
+  textarea.remove();
+  return copied;
+}
+
+function copyPersistentHitCompoundId(payload) {
+  const hit = payload?.hit || payload;
+  const drug = hit?.[0] ? String(hit[0]) : "";
+  if (!drug) return;
+  const fallbackCopied = fallbackCopyText(drug);
+  if (fallbackCopied) showCopyToast();
+  const write = window.navigator?.clipboard?.writeText?.(drug);
+  if (!write) {
+    if (!fallbackCopied) showCopyToast("Unable to copy compound ID");
+    return;
+  }
+  write
+    .then(() => {
+      if (!fallbackCopied) showCopyToast();
+    })
+    .catch(() => {
+      if (!fallbackCopied) showCopyToast("Unable to copy compound ID");
+    });
+}
+
+function pinHitTooltip(payload, event) {
+  if (!payload) return;
+  event?.event?.stopPropagation?.();
+  state.persistentHitTooltip = { payload };
+  copyPersistentHitCompoundId(payload);
+  showHitTooltip(payload, event);
+}
+
+function clearPersistentHitTooltip({ hide = true } = {}) {
+  if (!state.persistentHitTooltip) return;
+  state.persistentHitTooltip = null;
+  if (hide) hideMoleculeTooltip();
+}
+
 function showCompoundPointTooltip(payload, event) {
   if (!payload || !event?.event) {
     hideMoleculeTooltip();
@@ -735,10 +1012,13 @@ function openSummaryDetailModal(title, meta, bodyHtml) {
   modal.setAttribute("aria-hidden", "false");
 }
 
-function openCircularHeatmapModal(title, meta, rows, compounds, cells) {
+async function openCircularHeatmapModal(title, meta, rows, compounds, cells) {
+  const clustered = await clusterCircularHeatmapSites(rows, cells);
+  const clusterMeta = clustered.status ? `${meta || ""}${meta ? " · " : ""}${clustered.status}` : meta;
   openSummaryDetailModal(title, meta, '<canvas id="circularFlatHeatmap" aria-label="Flat compound by biology heatmap"></canvas>');
+  el("summaryDetailMeta").textContent = clusterMeta || "";
   el("summaryDetailModal").classList.add("circular-heatmap-modal");
-  drawFlatHeatmap(el("circularFlatHeatmap"), rows, compounds, cells);
+  drawFlatHeatmap(el("circularFlatHeatmap"), clustered.rows, compounds, clustered.cells, { dendrogram: clustered.dendrogram });
 }
 
 async function circularSiteHit(drug, rowId) {
@@ -913,18 +1193,69 @@ function bindBarHover(targetId, payloads) {
   const nodes = [...plot.querySelectorAll(".barlayer .bars .point")];
   nodes.forEach((node, idx) => {
     const payload = payloads[idx];
-    node.onmouseenter = (event) => showHitTooltip(payload, { event });
-    node.onmousemove = (event) => showHitTooltip(payload, { event });
-    node.onclick = (event) => showHitTooltip(payload, { event });
-    node.onmouseleave = hideMoleculeTooltip;
+    node.onmouseenter = (event) => showTransientHitTooltip(payload, { event });
+    node.onmousemove = (event) => showTransientHitTooltip(payload, { event });
+    node.onclick = (event) => pinHitTooltip(payload, { event });
+    node.onmouseleave = hideTransientHitTooltip;
   });
   const dragLayer = plot.querySelector(".nsewdrag");
   if (dragLayer) {
-    dragLayer.onmouseleave = hideMoleculeTooltip;
+    dragLayer.onmouseleave = hideTransientHitTooltip;
   }
 }
 
+function scheduleSummaryRender() {
+  if (state.summaryRenderTimer) {
+    window.clearTimeout(state.summaryRenderTimer);
+    state.summaryRenderTimer = null;
+  }
+  state.summaryRenderTimer = window.setTimeout(() => {
+    state.summaryRenderTimer = null;
+    if (!el("summary")?.classList.contains("active")) return;
+    const render = () => renderGlobalProteome();
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(render, { timeout: 3000 });
+    } else {
+      window.setTimeout(render, 0);
+    }
+  }, SUMMARY_RENDER_DEFER_MS);
+}
+
+function cancelScheduledSummaryRenders() {
+  state.summaryDatasetRenderToken++;
+  if (state.summaryDatasetRenderTimer) {
+    window.clearTimeout(state.summaryDatasetRenderTimer);
+    state.summaryDatasetRenderTimer = null;
+  }
+  if (state.summaryRenderTimer) {
+    window.clearTimeout(state.summaryRenderTimer);
+    state.summaryRenderTimer = null;
+  }
+}
+
+function scheduleSummaryDatasetRender() {
+  if (state.summaryDatasetRenderTimer) {
+    window.clearTimeout(state.summaryDatasetRenderTimer);
+    state.summaryDatasetRenderTimer = null;
+  }
+  const datasetKey = state.datasetKey;
+  const renderToken = ++state.summaryDatasetRenderToken;
+  state.summaryDatasetRenderTimer = window.setTimeout(async () => {
+    state.summaryDatasetRenderTimer = null;
+    if (!el("summary")?.classList.contains("active")) return;
+    if (renderToken !== state.summaryDatasetRenderToken || datasetKey !== state.datasetKey) return;
+    renderDatasetStaticPlots();
+    await loadCircularCompoundAtlas();
+    if (renderToken !== state.summaryDatasetRenderToken || datasetKey !== state.datasetKey) return;
+    renderCircularCompoundAtlas();
+    await renderCompound();
+    if (renderToken !== state.summaryDatasetRenderToken || datasetKey !== state.datasetKey) return;
+    scheduleSummaryRender();
+  }, SUMMARY_RENDER_DEFER_MS);
+}
+
 async function loadDataset(datasetKey) {
+  cancelScheduledSummaryRenders();
   setDatasetLoading(true, datasetKey);
   state.datasetKey = datasetKey;
   state.dataset = state.manifest.datasets[datasetKey];
@@ -937,26 +1268,18 @@ async function loadDataset(datasetKey) {
     state.compoundWarmupToken++;
     invalidateCompoundChoiceCounts();
     state.geneSiteCache.clear();
+    state.contactTargetRowCache.clear();
+    state.contactTargetRowSetCache.clear();
     state.filteredSitesByGene.clear();
     state.rawHoverAliasCache.clear();
     state.currentSiteRow = null;
     state.currentSiteSummary = null;
-    state.bioPage = 0;
-    state.bioBinFilter = null;
-    renderBioVisualFilterStatus();
-    renderBioDetail(null);
 
     await populateDatasetControls();
-    renderDatasetStaticPlots();
-    await loadCircularCompoundAtlas();
-    renderCircularCompoundAtlas();
-    await renderSummary();
-    await renderCompound();
     scheduleCompoundCacheWarmup();
     await refreshSiteControls();
-    if (el("summary")?.classList.contains("active")) await renderGlobalProteome();
-    renderBioTable();
-    if (el("domain")?.classList.contains("active")) requestDomainView();
+    if (el("summary")?.classList.contains("active")) scheduleSummaryDatasetRender();
+    if (el("compound")?.classList.contains("active")) await renderCompound();
     updateDatasetStatus();
   } finally {
     setDatasetLoading(false, datasetKey);
@@ -985,48 +1308,11 @@ async function populateDatasetControls() {
     (a, b) => a - b
   );
   setOptions(
-    el("summaryMaxHits"),
+    el("siteMaxHits"),
     [{ value: "all", label: "Any" }, ...hitCounts.map((v) => ({ value: String(v), label: `≤ ${v} site${v === 1 ? "" : "s"} hit` }))],
     "all"
   );
-  setOptions(
-    el("siteMaxHits"),
-    [{ value: "all", label: "Any" }, ...hitCounts.map((v) => ({ value: String(v), label: `≤ ${v} site${v === 1 ? "" : "s"} hit` }))],
-    el("summaryMaxHits").value || "all"
-  );
-  setOptions(
-    el("domainMaxHits"),
-    [{ value: "all", label: "Any" }, ...hitCounts.map((v) => ({ value: String(v), label: `≤ ${v} site${v === 1 ? "" : "s"} hit` }))],
-    el("summaryMaxHits").value || "all"
-  );
-  setOptions(
-    el("bioMaxHits"),
-    [{ value: "all", label: "Any" }, ...hitCounts.map((v) => ({ value: String(v), label: `≤ ${v} site${v === 1 ? "" : "s"} hit` }))],
-    el("summaryMaxHits").value || "all"
-  );
-
-  setOptions(el("summaryTargetList"), [
-    { value: "cancer", label: "Cancer-driver genes" },
-    { value: "PPI", label: "Sites at PPI interface" },
-    { value: "Metal", label: "Sites near metal" },
-    { value: "Cofactor", label: "Sites near cofactor" },
-    { value: "Dna", label: "Sites near DNA" },
-    { value: "Rna", label: "Sites near RNA" },
-    { value: "Ligand", label: "Sites near ligand" },
-    { value: "custom", label: "Custom gene list" },
-  ]);
-  const atlasFilters = state.manifest?.atlas?.evidenceFilters || [];
-  setOptions(
-    el("bioEvidenceFamily"),
-    [{ value: "all", label: "All evidence" }, ...atlasFilters.map((item) => ({ value: item.value, label: item.label }))]
-  );
-  const atlasContextFilters = state.manifest?.atlas?.contextFilters || [];
-  setOptions(
-    el("bioContextFilter"),
-    atlasContextFilters.length
-      ? atlasContextFilters.map((item) => ({ value: item.value, label: item.label }))
-      : [{ value: "all", label: "All context" }]
-  );
+  setOptions(el("siteTargetList"), TARGET_LIST_OPTIONS, "all");
 
   const highlightModes = [
     { value: "threshold", label: "Above threshold" },
@@ -1087,6 +1373,7 @@ async function updateSelectedCompoundChoiceLabel(drug = el("compoundSelect").val
   const label = compoundLabel(drug, count);
   option.textContent = label;
   option.label = label;
+  syncSearchableControl("compoundSelect");
 }
 
 function setCompoundListUpdating(isUpdating) {
@@ -1107,6 +1394,7 @@ async function refreshCompoundChoiceLabelsInPlace(refreshToken = state.compoundC
     option.textContent = label;
     option.label = label;
   }));
+  syncSearchableControl("compoundSelect");
 }
 
 async function dynamicCompoundHitCounts(drugs, refreshToken = null) {
@@ -1131,7 +1419,13 @@ function scheduleCompoundCacheWarmup() {
 async function warmCompoundCache(datasetKey, warmupToken) {
   const dataset = state.manifest?.datasets?.[datasetKey];
   if (!dataset) return;
-  const drugs = [...(dataset.rawDrugs || [])];
+  const selected = el("compoundSelect")?.value || dataset.defaultDrug;
+  const active = activeDatasetDrugs();
+  const drugs = [
+    selected,
+    dataset.defaultDrug,
+    ...active,
+  ].filter(Boolean).filter((drug, idx, arr) => arr.indexOf(drug) === idx).slice(0, COMPOUND_CACHE_WARMUP_LIMIT);
   const batchSize = 12;
   for (let i = 0; i < drugs.length; i += batchSize) {
     if (warmupToken !== state.compoundWarmupToken || datasetKey !== state.datasetKey) return;
@@ -1193,7 +1487,7 @@ async function refreshCompoundChoiceList({ refreshToken = null, invalidate = tru
 }
 
 function updateConditionalFields() {
-  el("summaryCustomGenesWrap").hidden = el("summaryTargetList").value !== "custom";
+  el("siteCustomGenesWrap").hidden = el("siteTargetList").value !== "custom";
   el("compoundCustomGenesWrap").hidden = el("compoundColorMode").value !== "custom";
   el("globalCustomGenesWrap").hidden = !checkboxChecked("globalShowCustom");
   el("globalThresholdWrap").hidden = !checkboxChecked("globalShowHits");
@@ -1419,11 +1713,26 @@ function renderCircularLayerLabels() {
     labels.className = "circular-layer-labels";
     stage.appendChild(labels);
   }
-  labels.innerHTML = `
-    <span>Outer: Superfamily</span>
-    <span>Family</span>
-    <span>Domain/repeat</span>
-    <span>Inner: Site</span>`;
+  const canvasRect = canvas.getBoundingClientRect();
+  const stageRect = stage.getBoundingClientRect();
+  const size = canvasRect.width || 760;
+  labels.style.left = `${canvasRect.left - stageRect.left}px`;
+  labels.style.top = `${canvasRect.top - stageRect.top}px`;
+  labels.style.width = `${size}px`;
+  labels.style.height = `${size}px`;
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const zoom = state.circularZoom;
+  labels.innerHTML = "";
+  CIRCULAR_LAYER_LABELS.forEach(({ level, label }) => {
+    const band = CIRCULAR_BANDS[level];
+    const radius = size * ((band[0] + band[1]) / 2);
+    const node = document.createElement("span");
+    node.textContent = label;
+    node.style.left = `${centerX + zoom.offsetX + Math.cos(CIRCULAR_LAYER_LABEL_ANGLE) * radius * zoom.scale}px`;
+    node.style.top = `${centerY + zoom.offsetY + Math.sin(CIRCULAR_LAYER_LABEL_ANGLE) * radius * zoom.scale}px`;
+    labels.appendChild(node);
+  });
 }
 
 function drawCircularCell(ctx, cx, cy, startAngle, endAngle, innerRadius, outerRadius, color) {
@@ -1504,18 +1813,42 @@ function circularCellsForRow(cells = [], rowIndex = -1) {
   return aggregate;
 }
 
+function circularInheritedSingleSiteCells(data, row, parentCells = null, parentRowIndex = -1) {
+  const drilldown = hierarchyChildren(data, row?.id);
+  if (!drilldown.rows?.length || drilldown.cells?.length) return null;
+  const directAggregate = circularCellsForRow(parentCells || [], parentRowIndex);
+  if (!circularAggregateHasHits(directAggregate)) return null;
+  const descendantSites = descendantCircularSiteRows(data, row);
+  if (descendantSites.length === 1) {
+    const siteRow = Number(descendantSites[0]?.siteRow ?? descendantSites[0]?.rowId);
+    const childIndex = drilldown.rows.findIndex((childRow) => (
+      childRow.level === "site" &&
+      Number(childRow.siteRow ?? childRow.rowId) === siteRow
+    ));
+    if (childIndex >= 0) return circularCellsFromAggregate(directAggregate, childIndex);
+  }
+  return null;
+}
+
+function circularDrilldownCellsForRow(data, row, parentCells = null, parentRowIndex = -1) {
+  const drilldown = hierarchyChildren(data, row?.id);
+  if (drilldown.cells?.length) return drilldown.cells;
+  return circularInheritedSingleSiteCells(data, row, parentCells, parentRowIndex) || drilldown.cells || [];
+}
+
 function circularAggregateCellsForRow(data, row, parentCells = null, parentRowIndex = -1, memo = null) {
   if (!row) return new Map();
   if (row.level === "site") return circularCellsForRow(parentCells || [], parentRowIndex);
   const cache = memo || new Map();
   if (cache.has(row.id)) return new Map(cache.get(row.id));
   const drilldown = hierarchyChildren(data, row.id);
+  const drilldownCells = circularDrilldownCellsForRow(data, row, parentCells, parentRowIndex);
   const aggregate = new Map();
   (drilldown.rows || []).forEach((childRow, childIndex) => {
     const childAggregate =
       childRow.level === "site"
-        ? circularCellsForRow(drilldown.cells || [], childIndex)
-        : circularAggregateCellsForRow(data, childRow, drilldown.cells || [], childIndex, cache);
+        ? circularCellsForRow(drilldownCells, childIndex)
+        : circularAggregateCellsForRow(data, childRow, drilldownCells, childIndex, cache);
     mergeCircularAggregateCells(aggregate, childAggregate);
   });
   cache.set(row.id, new Map(aggregate));
@@ -1541,7 +1874,7 @@ function circularAggregateHasHits(aggregate) {
 function circularClassStatsFromAggregate(data, aggregate) {
   const classes = circularWarheadClasses(data);
   const classIndex = new Map(classes.map((name, index) => [name, index]));
-  const stats = classes.map((name) => ({ className: circularWarheadLabel(name), maxR: 0, hitCount: 0 }));
+  const stats = classes.map((name) => ({ className: circularWarheadLabel(name), maxR: 0, hitCount: 0, siteCount: 0 }));
   for (const [compoundIndex, cell] of aggregate.entries()) {
     const compound = data?.compounds?.[compoundIndex] || {};
     const className = compound.type || "Unknown";
@@ -1551,6 +1884,33 @@ function circularClassStatsFromAggregate(data, aggregate) {
     current.hitCount += Number(cell.hitCount || 0);
   }
   return stats;
+}
+
+function circularClassSiteCountsForRow(data, row, parentCells = null, parentRowIndex = -1) {
+  const classes = circularWarheadClasses(data);
+  const classIndex = new Map(classes.map((name, index) => [name, index]));
+  const sitesByClass = classes.map(() => new Set());
+  const addSiteCells = (siteRow, cells = [], rowIndex = -1) => {
+    const siteKey = String(siteRow?.siteRow ?? siteRow?.rowId ?? siteRow?.id ?? rowIndex);
+    for (const [cellRowIndex, compoundIndex, , hitCount] of cells || []) {
+      if (Number(cellRowIndex) !== Number(rowIndex) || Number(hitCount || 0) <= 0) continue;
+      const compound = data?.compounds?.[compoundIndex] || {};
+      const index = classIndex.get(compound.type || "Unknown") ?? 0;
+      sitesByClass[index].add(siteKey);
+    }
+  };
+  const visit = (currentRow, cells, rowIndex) => {
+    if (!currentRow) return;
+    if (currentRow.level === "site") {
+      addSiteCells(currentRow, cells, rowIndex);
+      return;
+    }
+    const drilldown = hierarchyChildren(data, currentRow.id);
+    const drilldownCells = circularDrilldownCellsForRow(data, currentRow, cells, rowIndex);
+    (drilldown.rows || []).forEach((childRow, childIndex) => visit(childRow, drilldownCells, childIndex));
+  };
+  visit(row, parentCells || [], parentRowIndex);
+  return sitesByClass.map((sites) => sites.size);
 }
 
 function circularCellsFromAggregate(aggregate, rowIndex) {
@@ -1567,10 +1927,191 @@ function circularHitSiteSpanCount(data, row, parentCells = null, parentRowIndex 
   if (row.level === "site") return 1;
   const drilldown = hierarchyChildren(data, row.id);
   if (!drilldown.level || !drilldown.rows.length) return 0;
+  const drilldownCells = circularDrilldownCellsForRow(data, row, parentCells, parentRowIndex);
   return drilldown.rows.reduce(
-    (sum, childRow, childIndex) => sum + circularHitSiteSpanCount(data, childRow, drilldown.cells || [], childIndex, memo),
+    (sum, childRow, childIndex) => sum + circularHitSiteSpanCount(data, childRow, drilldownCells, childIndex, memo),
     0,
   );
+}
+
+const CIRCULAR_ROOT_ORDER_KEY = "__root__";
+
+function circularOrderKey(parentId) {
+  return parentId || CIRCULAR_ROOT_ORDER_KEY;
+}
+
+function orderedCircularChildren(parentId, rows) {
+  return orderedCircularChildEntries(parentId, rows).map((item) => item.row);
+}
+
+function orderedCircularChildEntries(parentId, rows) {
+  const order = state.circularConstrainedOrderMap.get(circularOrderKey(parentId));
+  const entries = (rows || []).map((row, index) => ({ row, index }));
+  if (!order?.length) return entries;
+  const byId = new Map(order.map((id, index) => [id, index]));
+  return entries
+    .sort((a, b) => {
+      const aOrder = byId.has(a.row.id) ? byId.get(a.row.id) : Number.MAX_SAFE_INTEGER;
+      const bOrder = byId.has(b.row.id) ? byId.get(b.row.id) : Number.MAX_SAFE_INTEGER;
+      return aOrder - bOrder || a.index - b.index;
+    });
+}
+
+function descendantCircularSiteRows(data, row) {
+  if (!row) return [];
+  if (row.level === "site" && Number.isFinite(Number(row.siteRow ?? row.rowId))) return [row];
+  const drilldown = hierarchyChildren(data, row.id);
+  return (drilldown.rows || []).flatMap((child) => descendantCircularSiteRows(data, child));
+}
+
+function circularPathKey(pathIds, row, rowIndex) {
+  return [...pathIds, `${row?.id || "row"}#${rowIndex}`].join(">");
+}
+
+function circularEntrySpecificity(row) {
+  if (!row) return 0;
+  if (row.level === "domain" || row.level === "repeat") return 3;
+  if (row.level === "family") return 2;
+  if (row.level === "superfamily") return 1;
+  return 0;
+}
+
+function circularBetterSiteCandidate(candidate, current) {
+  if (!current) return true;
+  if (candidate.specificity !== current.specificity) return candidate.specificity > current.specificity;
+  const candidateInformative = candidate.parentHitSites > 1;
+  const currentInformative = current.parentHitSites > 1;
+  if (candidateInformative !== currentInformative) return candidateInformative;
+  if (candidate.parentHitSites !== current.parentHitSites) return candidate.parentHitSites < current.parentHitSites;
+  if (candidate.pathDepth !== current.pathDepth) return candidate.pathDepth > current.pathDepth;
+  return candidate.pathKey.localeCompare(current.pathKey) < 0;
+}
+
+function buildCircularCanonicalSitePathMap(data) {
+  const candidates = new Map();
+  const aggregateMemo = new Map();
+  const parentSizeMemo = new Map();
+  const parentHitSiteCount = (row, parentCells, parentRowIndex, pathKey) => {
+    if (!row) return 0;
+    if (parentSizeMemo.has(pathKey)) return parentSizeMemo.get(pathKey);
+    const count = circularHitSiteSpanCount(data, row, parentCells, parentRowIndex, aggregateMemo);
+    parentSizeMemo.set(pathKey, count);
+    return count;
+  };
+  const visit = (row, parentCells = [], rowIndex = -1, path = [], pathIds = []) => {
+    const aggregate = circularAggregateCellsForRow(data, row, parentCells, rowIndex, aggregateMemo);
+    if (!circularAggregateHasHits(aggregate)) return;
+    const pathKey = circularPathKey(pathIds, row, rowIndex);
+    if (row.level === "site") {
+      const siteRow = Number(row.siteRow ?? row.rowId);
+      if (!Number.isFinite(siteRow)) return;
+      const terminal = path[path.length - 1] || null;
+      const parentHitSites = terminal
+        ? parentHitSiteCount(terminal.row, terminal.parentCells, terminal.rowIndex, terminal.pathKey)
+        : 1;
+      const candidate = {
+        pathKey,
+        specificity: circularEntrySpecificity(terminal?.row),
+        parentHitSites,
+        pathDepth: path.length,
+      };
+      if (circularBetterSiteCandidate(candidate, candidates.get(siteRow))) candidates.set(siteRow, candidate);
+      return;
+    }
+    const drilldown = hierarchyChildren(data, row.id);
+    const drilldownCells = circularDrilldownCellsForRow(data, row, parentCells, rowIndex);
+    const nextPath = [...path, { row, parentCells, rowIndex, pathKey }];
+    const nextPathIds = [...pathIds, `${row.id}#${rowIndex}`];
+    (drilldown.rows || []).forEach((childRow, childIndex) => visit(childRow, drilldownCells, childIndex, nextPath, nextPathIds));
+  };
+  (data.rows || []).forEach((row, index) => visit(row, data.cells || [], index, [], []));
+  return new Map([...candidates.entries()].map(([siteRow, candidate]) => [siteRow, candidate.pathKey]));
+}
+
+async function circularRepresentativeFeature(data, row) {
+  const siteRows = descendantCircularSiteRows(data, row);
+  const siteFeatures = await Promise.all(siteRows.map(circularSiteFeature));
+  const valuesByCompound = new Map();
+  for (const feature of siteFeatures) {
+    for (const [compound, value] of feature.values.entries()) {
+      if (!Number.isFinite(value) || value <= 0) continue;
+      const current = valuesByCompound.get(compound) || { sum: 0, count: 0 };
+      current.sum += Math.log2(value);
+      current.count += 1;
+      valuesByCompound.set(compound, current);
+    }
+  }
+  const values = new Map();
+  for (const [compound, current] of valuesByCompound.entries()) {
+    if (current.count > 0) values.set(compound, 2 ** (current.sum / current.count));
+  }
+  return { row, values };
+}
+
+async function clusteredCircularChildOrder(data, rows) {
+  if (!rows?.length || rows.length < 3) return rows.map((row) => row.id);
+  const features = await Promise.all(rows.map((row) => circularRepresentativeFeature(data, row)));
+  const usable = features
+    .map((feature, index) => ({ feature, index }))
+    .filter((item) => item.feature.values.size >= MIN_CLUSTER_SHARED_COMPOUNDS);
+  if (usable.length < 3) return rows.map((row) => row.id);
+  const usableFeatures = usable.map((item) => item.feature);
+  const root = buildMissingAwareAgglomerativeDendrogram(usableFeatures, { allowBridges: true }).root;
+  if (!root) return rows.map((row) => row.id);
+  const clustered = rotateOrderAtLargestGap(optimizeDendrogramLeafOrder(root, usableFeatures), usableFeatures)
+    .map((localIndex) => usable[localIndex].index);
+  const included = new Set(clustered);
+  const remainder = rows.map((_, index) => index).filter((index) => !included.has(index));
+  return [...clustered, ...remainder].map((index) => rows[index].id);
+}
+
+async function buildCircularConstrainedOrderMap(data) {
+  const orderMap = new Map();
+  const aggregateMemo = new Map();
+  const visitGroup = async (parentId, rows, cells = null) => {
+    const visibleRows = (rows || []).filter((row, index) => circularHitSiteSpanCount(data, row, cells || [], index, aggregateMemo) > 0);
+    if (visibleRows.length) {
+      orderMap.set(circularOrderKey(parentId), await clusteredCircularChildOrder(data, visibleRows));
+    }
+    await mapWithConcurrency(visibleRows, 8, async (row) => {
+      const drilldown = hierarchyChildren(data, row.id);
+      if (drilldown.rows?.length) await visitGroup(row.id, drilldown.rows, circularDrilldownCellsForRow(data, row, cells || [], rows.indexOf(row)));
+    });
+  };
+  await visitGroup("", data.rows || [], data.cells || []);
+  return orderMap;
+}
+
+function circularConstrainedOrderKey(data) {
+  const rows = data?.rows || [];
+  return `${state.datasetKey}:${rows.map((row) => row.id).join("|")}`;
+}
+
+function prepareCircularConstrainedOrders(data) {
+  const key = circularConstrainedOrderKey(data);
+  if (state.circularConstrainedOrderKey === key && state.circularConstrainedOrderMap.size) return state.circularConstrainedOrderStatus;
+  if (state.circularConstrainedOrderKey === key && state.circularConstrainedOrderPromise) return "ordering sectors by parent-constrained ligandability clustering...";
+  state.circularConstrainedOrderKey = key;
+  state.circularConstrainedOrderMap = new Map();
+  state.circularConstrainedOrderStatus = "ordering sectors by parent-constrained ligandability clustering...";
+  state.circularConstrainedOrderPromise = buildCircularConstrainedOrderMap(data)
+    .then((orderMap) => {
+      if (state.circularConstrainedOrderKey === key) {
+        state.circularConstrainedOrderMap = orderMap;
+        state.circularConstrainedOrderStatus = "parent-constrained ligandability sector ordering active";
+        state.circularConstrainedOrderPromise = null;
+        renderCircularCompoundAtlas();
+      }
+      return orderMap;
+    })
+    .catch((err) => {
+      console.warn(`Unable to order circular sectors by ligandability: ${err.message}`);
+      if (state.circularConstrainedOrderKey === key) {
+        state.circularConstrainedOrderStatus = "parent-constrained ligandability sector ordering unavailable";
+        state.circularConstrainedOrderPromise = null;
+      }
+    });
+  return state.circularConstrainedOrderStatus;
 }
 
 function collectCircularHierarchy(data) {
@@ -1578,6 +2119,7 @@ function collectCircularHierarchy(data) {
   const topRows = data.rows || [];
   const full = Math.PI * 2;
   const classTemplate = circularClassStatsFromAggregate(data, new Map());
+  const canonicalSitePathMap = buildCircularCanonicalSitePathMap(data);
   const addSegment = (level, row, start, end, stats, band, classCells, parentId = "", parentCells = null, parentRowIndex = -1) => {
     if (!row || end <= start) return;
     segments.push({
@@ -1597,43 +2139,97 @@ function collectCircularHierarchy(data) {
       classCells: classCells || classTemplate,
     });
   };
-  const bands = {
-    superfamily: [0.3925, 0.47],
-    family: [0.29, 0.375],
-    domain: [0.1975, 0.275],
-    site: [0.0525, 0.18],
-  };
   const bandForLevel = (level) => {
-    if (level === "superfamily") return bands.superfamily;
-    if (level === "family") return bands.family;
-    if (level === "domain" || level === "repeat") return bands.domain;
-    if (level === "site" || level === "site engagement") return bands.site;
-    return bands.domain;
+    if (level === "superfamily") return CIRCULAR_BANDS.superfamily;
+    if (level === "family") return CIRCULAR_BANDS.family;
+    if (level === "domain" || level === "repeat") return CIRCULAR_BANDS.domain;
+    if (level === "site" || level === "site engagement") return CIRCULAR_BANDS.site;
+    return CIRCULAR_BANDS.domain;
   };
   const displayLevel = (level) => (level === "site" ? "site engagement" : level);
   const aggregateMemo = new Map();
-  const siteSpanCount = (row, parentCells = null, parentRowIndex = -1) => circularHitSiteSpanCount(data, row, parentCells, parentRowIndex, aggregateMemo);
-  const retainedTopRows = topRows
-    .map((row, index) => ({ row, index, count: siteSpanCount(row, data.cells || [], index) }))
+  const localAggregate = (row, parentCells = null, parentRowIndex = -1, pathIds = []) => {
+    if (!row) return new Map();
+    const pathKey = circularPathKey(pathIds, row, parentRowIndex);
+    if (row.level === "site") {
+      const siteRow = Number(row.siteRow ?? row.rowId);
+      return canonicalSitePathMap.get(siteRow) === pathKey ? circularCellsForRow(parentCells || [], parentRowIndex) : new Map();
+    }
+    const drilldown = hierarchyChildren(data, row.id);
+    const drilldownCells = circularDrilldownCellsForRow(data, row, parentCells, parentRowIndex);
+    const nextPathIds = [...pathIds, `${row.id}#${parentRowIndex}`];
+    const aggregate = new Map();
+    (drilldown.rows || []).forEach((childRow, childIndex) => {
+      mergeCircularAggregateCells(aggregate, localAggregate(childRow, drilldownCells, childIndex, nextPathIds));
+    });
+    return aggregate;
+  };
+  const localClassSiteCounts = (row, parentCells = null, parentRowIndex = -1, pathIds = []) => {
+    const classes = circularWarheadClasses(data);
+    const classIndex = new Map(classes.map((name, index) => [name, index]));
+    const sitesByClass = classes.map(() => new Set());
+    const visit = (currentRow, cells, rowIndex, currentPathIds) => {
+      if (!currentRow) return;
+      const pathKey = circularPathKey(currentPathIds, currentRow, rowIndex);
+      if (currentRow.level === "site") {
+        const siteRow = Number(currentRow.siteRow ?? currentRow.rowId);
+        if (canonicalSitePathMap.get(siteRow) !== pathKey) return;
+        for (const [cellRowIndex, compoundIndex, , hitCount] of cells || []) {
+          if (Number(cellRowIndex) !== Number(rowIndex) || Number(hitCount || 0) <= 0) continue;
+          const compound = data?.compounds?.[compoundIndex] || {};
+          const index = classIndex.get(compound.type || "Unknown") ?? 0;
+          sitesByClass[index].add(String(siteRow));
+        }
+        return;
+      }
+      const drilldown = hierarchyChildren(data, currentRow.id);
+      const drilldownCells = circularDrilldownCellsForRow(data, currentRow, cells, rowIndex);
+      const nextPathIds = [...currentPathIds, `${currentRow.id}#${rowIndex}`];
+      (drilldown.rows || []).forEach((childRow, childIndex) => visit(childRow, drilldownCells, childIndex, nextPathIds));
+    };
+    visit(row, parentCells || [], parentRowIndex, pathIds);
+    return sitesByClass.map((sites) => sites.size);
+  };
+  const siteSpanCount = (row, parentCells = null, parentRowIndex = -1, pathIds = []) => {
+    const aggregate = localAggregate(row, parentCells, parentRowIndex, pathIds);
+    if (!circularAggregateHasHits(aggregate)) return 0;
+    if (row.level === "site") return 1;
+    const drilldown = hierarchyChildren(data, row.id);
+    const drilldownCells = circularDrilldownCellsForRow(data, row, parentCells, parentRowIndex);
+    const nextPathIds = [...pathIds, `${row.id}#${parentRowIndex}`];
+    return (drilldown.rows || []).reduce(
+      (sum, childRow, childIndex) => sum + siteSpanCount(childRow, drilldownCells, childIndex, nextPathIds),
+      0,
+    );
+  };
+  const retainedTopRows = orderedCircularChildEntries("", topRows)
+    .map(({ row, index }) => ({ row, index, count: siteSpanCount(row, data.cells || [], index, []) }))
     .filter((item) => item.count > 0);
   const totalSites = retainedTopRows.reduce((sum, item) => sum + item.count, 0);
   const anglePerSite = full / Math.max(1, totalSites);
 
-  const addHierarchyNode = (row, start, end, parentId = "", parentCells = null, parentRowIndex = -1) => {
+  const addHierarchyNode = (row, start, end, parentId = "", parentCells = null, parentRowIndex = -1, pathIds = []) => {
     const band = bandForLevel(row.level);
-    const aggregate = circularAggregateCellsForRow(data, row, parentCells, parentRowIndex, aggregateMemo);
+    const aggregate = localAggregate(row, parentCells, parentRowIndex, pathIds);
     if (!circularAggregateHasHits(aggregate)) return;
-    addSegment(displayLevel(row.level), row, start, end, circularAggregateSummary(aggregate), band, circularClassStatsFromAggregate(data, aggregate), parentId, parentCells, parentRowIndex);
+    const classCells = circularClassStatsFromAggregate(data, aggregate);
+    const siteCounts = localClassSiteCounts(row, parentCells, parentRowIndex, pathIds);
+    classCells.forEach((cell, index) => {
+      cell.siteCount = siteCounts[index] || 0;
+    });
+    addSegment(displayLevel(row.level), row, start, end, circularAggregateSummary(aggregate), band, classCells, parentId, parentCells, parentRowIndex);
     const drilldown = hierarchyChildren(data, row.id);
     if (!drilldown.level || !drilldown.rows.length) return;
+    const drilldownCells = circularDrilldownCellsForRow(data, row, parentCells, parentRowIndex);
+    const nextPathIds = [...pathIds, `${row.id}#${parentRowIndex}`];
     let localStart = start;
-    drilldown.rows.forEach((childRow, childIndex) => {
-      const count = siteSpanCount(childRow, drilldown.cells || [], childIndex);
+    orderedCircularChildEntries(row.id, drilldown.rows).forEach(({ row: childRow, index: childIndex }) => {
+      const count = siteSpanCount(childRow, drilldownCells, childIndex, nextPathIds);
       if (!count) return;
       const childStart = localStart;
       const childEnd = childStart + count * anglePerSite;
       localStart = childEnd;
-      addHierarchyNode(childRow, childStart, childEnd, row.id, drilldown.cells || [], childIndex);
+      addHierarchyNode(childRow, childStart, childEnd, row.id, drilldownCells, childIndex, nextPathIds);
     });
   };
 
@@ -1642,7 +2238,7 @@ function collectCircularHierarchy(data) {
     const start = cursor;
     const end = start + count * anglePerSite;
     cursor = end;
-    addHierarchyNode(row, start, end, "", data.cells || [], index);
+    addHierarchyNode(row, start, end, "", data.cells || [], index, []);
   });
   return { segments };
 }
@@ -1711,6 +2307,7 @@ function renderCircularCompoundAtlas() {
   const cy = size / 2;
   ctx.save();
   applyCircularTransform(ctx, size);
+  const constrainedOrderStatus = prepareCircularConstrainedOrders(data);
   const { segments } = collectCircularHierarchy(data);
 
   for (const segment of segments) {
@@ -1736,7 +2333,15 @@ function renderCircularCompoundAtlas() {
     });
     state.circularSectors.push(segment);
   }
-  const ringGaps = [0.18, 0.1975, 0.275, 0.29, 0.375, 0.3925];
+  const ringGaps = [
+    CIRCULAR_BANDS.site[0],
+    CIRCULAR_BANDS.site[1],
+    CIRCULAR_BANDS.domain[0],
+    CIRCULAR_BANDS.domain[1],
+    CIRCULAR_BANDS.family[0],
+    CIRCULAR_BANDS.family[1],
+    CIRCULAR_BANDS.superfamily[0],
+  ];
   ringGaps.forEach((radius) => {
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 2;
@@ -1745,14 +2350,20 @@ function renderCircularCompoundAtlas() {
     ctx.stroke();
   });
   ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.0475, 0, Math.PI * 2);
+  ctx.arc(cx, cy, size * Math.max(0, CIRCULAR_BANDS.site[0] - 0.005), 0, Math.PI * 2);
   ctx.fillStyle = "#fff";
   ctx.fill();
+  const visibleSiteSegments = segments.filter((segment) => segment.level === "site engagement" && Number.isFinite(Number(segment.row?.siteRow ?? segment.row?.rowId)));
+  const centerDendrogram = prepareCircularVisibleSiteDendrogram(visibleSiteSegments);
+  if (centerDendrogram?.root) drawCircularCenterDendrogram(ctx, centerDendrogram, size);
   ctx.restore();
   const siteSegments = segments.filter((segment) => segment.level === "site engagement").length;
   const familySegments = segments.filter((segment) => segment.level === "family").length;
   const domainSegments = segments.filter((segment) => segment.level === "domain" || segment.level === "repeat").length;
-  status.textContent = `${familySegments.toLocaleString()} family, ${domainSegments.toLocaleString()} domain/repeat, ${siteSegments.toLocaleString()} site sectors. ${compounds.length.toLocaleString()} hit compounds. Wheel to zoom, drag to pan, double-click to reset.`;
+  const dendrogramStatus =
+    centerDendrogram?.status ||
+    (state.circularVisibleSiteDendrogramPromise ? "center dendrogram: clustering visible sites..." : "");
+  status.textContent = `${familySegments.toLocaleString()} family, ${domainSegments.toLocaleString()} domain/repeat, ${siteSegments.toLocaleString()} site sectors. ${compounds.length.toLocaleString()} hit compounds. Wheel to zoom, drag to pan, double-click to reset.${constrainedOrderStatus ? ` ${constrainedOrderStatus}.` : ""}${dendrogramStatus ? ` ${dendrogramStatus}.` : ""}`;
   renderCircularLegend();
   renderCircularLayerLabels();
 }
@@ -1799,7 +2410,7 @@ function showCircularTooltip(event, hit) {
   }
   const className = hit.cell?.className ? `${escapeHtml(hit.cell.className)} · ` : "";
   tooltip.innerHTML = `<strong>${escapeHtml(hit.row.label || hit.row.id)}</strong><br>${escapeHtml(circularLayerLabel(hit.segment?.level))}<br>${
-    hit.cell ? `${className}Max R ${(hit.cell.maxR / 1000).toFixed(2)} · ${Number(hit.cell.hitCount || 0).toLocaleString()} hit site${hit.cell.hitCount === 1 ? "" : "s"}` : "No hit"
+    hit.cell ? `${className}Max R ${(hit.cell.maxR / 1000).toFixed(2)} · ${Number(hit.cell.siteCount || 0).toLocaleString()} hit site${hit.cell.siteCount === 1 ? "" : "s"}` : "No hit"
   }`;
   const stage = el("circularCompoundAtlas").parentElement.getBoundingClientRect();
   tooltip.style.left = `${event.clientX - stage.left + 12}px`;
@@ -1807,11 +2418,531 @@ function showCircularTooltip(event, hit) {
   tooltip.hidden = false;
 }
 
-function drawFlatHeatmap(canvas, rows, compounds, cells) {
+function rowOrderFromDendrogram(node) {
+  if (!node) return [];
+  if (node.leaf != null) return [node.leaf];
+  return [...rowOrderFromDendrogram(node.left), ...rowOrderFromDendrogram(node.right)];
+}
+
+function sharedCompoundDistance(a, b) {
+  return sharedCompoundDistanceWithMinimum(a, b, MIN_CLUSTER_SHARED_COMPOUNDS);
+}
+
+function sharedCompoundDistanceWithMinimum(a, b, minShared) {
+  let sum = 0;
+  let count = 0;
+  for (const [compound, aValue] of a.values) {
+    if (!b.values.has(compound)) continue;
+    const bValue = b.values.get(compound);
+    if (!Number.isFinite(aValue) || !Number.isFinite(bValue) || aValue <= 0 || bValue <= 0) continue;
+    const delta = Math.log2(aValue) - Math.log2(bValue);
+    sum += delta * delta;
+    count += 1;
+  }
+  return count >= minShared ? { distance: Math.sqrt(sum / count), shared: count } : null;
+}
+
+function buildMissingAwareAgglomerativeDendrogram(features, options = {}) {
+  const minValidPairFraction = options.minValidPairFraction ?? MIN_CLUSTER_VALID_PAIR_FRACTION;
+  const allowBridges = options.allowBridges ?? false;
+  const pairDistances = new Map();
+  let validPairs = 0;
+  const pairKey = (a, b) => `${Math.min(a, b)}:${Math.max(a, b)}`;
+  for (let i = 0; i < features.length; i += 1) {
+    for (let j = i + 1; j < features.length; j += 1) {
+      const result = sharedCompoundDistance(features[i], features[j]);
+      if (!result) continue;
+      pairDistances.set(pairKey(i, j), result.distance);
+      validPairs += 1;
+    }
+  }
+  const totalPairs = (features.length * (features.length - 1)) / 2;
+  if (!totalPairs || validPairs / totalPairs < minValidPairFraction) {
+    return { root: null, validPairs, totalPairs };
+  }
+  let nextId = features.length;
+  let clusters = features.map((_, index) => ({ id: index, members: [index], leaf: index, height: 0 }));
+  let maxMergeHeight = 0;
+  let bridgedMerges = 0;
+  const clusterDistance = (a, b) => {
+    let sum = 0;
+    let count = 0;
+    for (const ai of a.members) {
+      for (const bi of b.members) {
+        const distance = pairDistances.get(pairKey(ai, bi));
+        if (!Number.isFinite(distance)) continue;
+        sum += distance;
+        count += 1;
+      }
+    }
+    return count ? sum / count : Infinity;
+  };
+  const relaxedClusterDistance = (a, b) => {
+    let sum = 0;
+    let count = 0;
+    for (const ai of a.members) {
+      for (const bi of b.members) {
+        const result = sharedCompoundDistanceWithMinimum(features[ai], features[bi], 1);
+        if (!result) continue;
+        sum += result.distance;
+        count += 1;
+      }
+    }
+    return count ? sum / count : Infinity;
+  };
+  while (clusters.length > 1) {
+    let best = { i: -1, j: -1, distance: Infinity };
+    for (let i = 0; i < clusters.length; i += 1) {
+      for (let j = i + 1; j < clusters.length; j += 1) {
+        const distance = clusterDistance(clusters[i], clusters[j]);
+        if (distance < best.distance) best = { i, j, distance };
+      }
+    }
+    let bridged = false;
+    if (!Number.isFinite(best.distance)) {
+      if (!allowBridges) break;
+      for (let i = 0; i < clusters.length; i += 1) {
+        for (let j = i + 1; j < clusters.length; j += 1) {
+          const distance = relaxedClusterDistance(clusters[i], clusters[j]);
+          if (distance < best.distance) best = { i, j, distance };
+        }
+      }
+      if (!Number.isFinite(best.distance)) best = { i: 0, j: 1, distance: maxMergeHeight || 1 };
+      bridged = true;
+      bridgedMerges += 1;
+    }
+    const right = clusters.splice(best.j, 1)[0];
+    const left = clusters.splice(best.i, 1)[0];
+    const height = bridged ? Math.max(best.distance, maxMergeHeight * 1.04, maxMergeHeight + 0.02) : best.distance;
+    maxMergeHeight = Math.max(maxMergeHeight, height);
+    clusters.push({
+      id: nextId,
+      left,
+      right,
+      members: [...left.members, ...right.members],
+      height,
+      bridged,
+    });
+    nextId += 1;
+  }
+  return { root: clusters.length === 1 ? clusters[0] : null, validPairs, totalPairs, bridgedMerges };
+}
+
+function buildMissingAwareDendrogram(features) {
+  return buildMissingAwareAgglomerativeDendrogram(features);
+}
+
+function completeCompoundCount(features) {
+  if (!features.length) return 0;
+  let shared = new Set(features[0].values.keys());
+  for (const feature of features.slice(1)) {
+    shared = new Set([...shared].filter((compound) => feature.values.has(compound)));
+  }
+  return shared.size;
+}
+
+async function circularSiteFeature(row) {
+  const siteRow = Number(row?.siteRow ?? row?.rowId);
+  const catalogRow = Number.isFinite(siteRow) ? state.rowById.get(siteRow) : null;
+  const summary = catalogRow ? await siteSummaryForRow(catalogRow) : null;
+  const values = new Map();
+  for (const hit of summary?.hits || []) {
+    const value = Number(hit[1]);
+    if (hit[0] && Number.isFinite(value)) values.set(String(hit[0]), value);
+  }
+  return { row, values };
+}
+
+function reorderCircularHeatmap(rows, cells, order) {
+  const rowMap = new Map(order.map((oldIndex, newIndex) => [oldIndex, newIndex]));
+  return {
+    rows: order.map((index) => rows[index]),
+    cells: (cells || [])
+      .filter(([rowIndex]) => rowMap.has(rowIndex))
+      .map(([rowIndex, ...rest]) => [rowMap.get(rowIndex), ...rest]),
+  };
+}
+
+async function clusterCircularHeatmapSites(rows, cells) {
+  if (!rows?.length || rows.length < MIN_CLUSTER_SITE_ROWS) return { rows, cells, dendrogram: null, status: "" };
+  if (!rows.every((row) => row.level === "site" && Number.isFinite(Number(row.siteRow ?? row.rowId)))) {
+    return { rows, cells, dendrogram: null, status: "" };
+  }
+  const features = await Promise.all(rows.map(circularSiteFeature));
+  if (features.some((feature) => feature.values.size < MIN_CLUSTER_SHARED_COMPOUNDS)) {
+    return { rows, cells, dendrogram: null, status: `Not clustered: at least one site has fewer than ${MIN_CLUSTER_SHARED_COMPOUNDS} observed compounds` };
+  }
+  const completeCount = completeCompoundCount(features);
+  const dendrogram = buildMissingAwareDendrogram(features);
+  if (!dendrogram.root) {
+    const pairSummary = dendrogram.totalPairs ? `${dendrogram.validPairs}/${dendrogram.totalPairs}` : "0/0";
+    return { rows, cells, dendrogram: null, status: `Not clustered: only ${pairSummary} site pairs have >= ${MIN_CLUSTER_SHARED_COMPOUNDS} shared compounds` };
+  }
+  const order = rowOrderFromDendrogram(dendrogram.root);
+  const reordered = reorderCircularHeatmap(rows, cells, order);
+  const completeStatus =
+    completeCount < MIN_COMPLETE_CLUSTER_COMPOUNDS
+      ? `Complete-compound clustering skipped (${completeCount} compounds shared by all sites); missing-aware clustering used`
+      : `Missing-aware clustering used (${completeCount} complete compounds also available)`;
+  return {
+    rows: reordered.rows,
+    cells: reordered.cells,
+    dendrogram: { root: dendrogram.root, order },
+    status: `${completeStatus}; min shared pair overlap ${MIN_CLUSTER_SHARED_COMPOUNDS}`,
+  };
+}
+
+function drawCircularDendrogram(ctx, dendrogram, orderedRows, x, y, width, cellSize) {
+  if (!dendrogram) return;
+  const root = dendrogram.root || dendrogram;
+  const order = dendrogram.order || orderedRows.map((_, index) => index);
+  const leafY = new Map(order.map((leafIndex, displayIndex) => [leafIndex, y + displayIndex * cellSize + cellSize / 2]));
+  const maxHeight = Math.max(0.0001, root.height || 0.0001);
+  const xForHeight = (height) => x + width - 4 - (height / maxHeight) * (width - 12);
+  const drawNode = (node) => {
+    if (node.leaf != null) return { x: x + width - 4, y: leafY.get(node.leaf) };
+    const left = drawNode(node.left);
+    const right = drawNode(node.right);
+    const nodeX = xForHeight(node.height || 0);
+    ctx.beginPath();
+    ctx.moveTo(left.x, left.y);
+    ctx.lineTo(nodeX, left.y);
+    ctx.lineTo(nodeX, right.y);
+    ctx.lineTo(right.x, right.y);
+    ctx.stroke();
+    return { x: nodeX, y: (left.y + right.y) / 2 };
+  };
+  ctx.save();
+  ctx.strokeStyle = "rgba(47, 49, 54, 0.62)";
+  ctx.lineWidth = 1;
+  drawNode(root);
+  ctx.restore();
+}
+
+function circularVisibleSiteDendrogramKey(siteSegments) {
+  return `${state.datasetKey}:${siteSegments.map((segment) => segment.row?.siteRow ?? segment.row?.rowId ?? segment.id).join("|")}`;
+}
+
+function compoundVarianceForGroup(features, indexes, compound) {
+  const values = [];
+  for (const index of indexes) {
+    const value = features[index].values.get(compound);
+    if (Number.isFinite(value) && value > 0) values.push(Math.log2(value));
+  }
+  if (values.length < Math.max(3, Math.min(MIN_CLUSTER_SHARED_COMPOUNDS, Math.ceil(indexes.length * 0.2)))) return null;
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  return { variance, values };
+}
+
+function bestSplitCompound(features, indexes) {
+  const compounds = new Set();
+  indexes.forEach((index) => features[index].values.forEach((_, compound) => compounds.add(compound)));
+  let best = null;
+  compounds.forEach((compound) => {
+    const stats = compoundVarianceForGroup(features, indexes, compound);
+    if (!stats) return;
+    if (!best || stats.variance > best.variance) best = { compound, ...stats };
+  });
+  return best;
+}
+
+function meanDistanceToCluster(feature, cluster, features) {
+  let sum = 0;
+  let count = 0;
+  cluster.forEach((index) => {
+    const result = sharedCompoundDistance(feature, features[index]);
+    if (!result) return;
+    sum += result.distance;
+    count += 1;
+  });
+  return count ? sum / count : Infinity;
+}
+
+function buildMissingAwareDivisiveDendrogram(features, indexes = features.map((_, index) => index), depth = 0) {
+  if (indexes.length === 1) return { leaf: indexes[0], height: 0 };
+  const split = bestSplitCompound(features, indexes);
+  if (!split) {
+    const mid = Math.ceil(indexes.length / 2);
+    return {
+      left: buildMissingAwareDivisiveDendrogram(features, indexes.slice(0, mid), depth + 1),
+      right: buildMissingAwareDivisiveDendrogram(features, indexes.slice(mid), depth + 1),
+      height: indexes.length + depth,
+    };
+  }
+  const observed = indexes
+    .map((index) => ({ index, value: features[index].values.get(split.compound) }))
+    .filter((item) => Number.isFinite(item.value) && item.value > 0)
+    .sort((a, b) => a.value - b.value);
+  const median = observed[Math.floor(observed.length / 2)]?.value ?? 0;
+  const left = [];
+  const right = [];
+  const missing = [];
+  indexes.forEach((index) => {
+    const value = features[index].values.get(split.compound);
+    if (!Number.isFinite(value) || value <= 0) missing.push(index);
+    else if (value <= median) left.push(index);
+    else right.push(index);
+  });
+  missing.forEach((index) => {
+    const leftDistance = left.length ? meanDistanceToCluster(features[index], left, features) : Infinity;
+    const rightDistance = right.length ? meanDistanceToCluster(features[index], right, features) : Infinity;
+    if (leftDistance === Infinity && rightDistance === Infinity) (left.length <= right.length ? left : right).push(index);
+    else (leftDistance <= rightDistance ? left : right).push(index);
+  });
+  if (!left.length || !right.length) {
+    const mid = Math.ceil(indexes.length / 2);
+    left.splice(0, left.length, ...indexes.slice(0, mid));
+    right.splice(0, right.length, ...indexes.slice(mid));
+  }
+  return {
+    left: buildMissingAwareDivisiveDendrogram(features, left, depth + 1),
+    right: buildMissingAwareDivisiveDendrogram(features, right, depth + 1),
+    height: Math.max(split.variance, 0.0001) * indexes.length + depth,
+  };
+}
+
+function dendrogramBoundaryDistance(features, leftIndex, rightIndex) {
+  const result = sharedCompoundDistance(features[leftIndex], features[rightIndex]);
+  return result?.distance ?? Infinity;
+}
+
+function optimizeDendrogramLeafOrder(root, features) {
+  if (!root) return [];
+  if (root.leaf != null) return [root.leaf];
+  const leftOrder = optimizeDendrogramLeafOrder(root.left, features);
+  const rightOrder = optimizeDendrogramLeafOrder(root.right, features);
+  if (!leftOrder.length) return rightOrder;
+  if (!rightOrder.length) return leftOrder;
+  const currentDistance = dendrogramBoundaryDistance(features, leftOrder[leftOrder.length - 1], rightOrder[0]);
+  const swappedDistance = dendrogramBoundaryDistance(features, rightOrder[rightOrder.length - 1], leftOrder[0]);
+  if (swappedDistance < currentDistance) return [...rightOrder, ...leftOrder];
+  return [...leftOrder, ...rightOrder];
+}
+
+function rotateOrderAtLargestGap(order, features) {
+  if (order.length < 3) return order;
+  let bestIndex = -1;
+  let bestDistance = -Infinity;
+  for (let index = 0; index < order.length; index += 1) {
+    const next = (index + 1) % order.length;
+    const distance = dendrogramBoundaryDistance(features, order[index], order[next]);
+    if (distance > bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+    }
+  }
+  if (bestIndex < 0 || !Number.isFinite(bestDistance)) return order;
+  return [...order.slice(bestIndex + 1), ...order.slice(0, bestIndex + 1)];
+}
+
+function remapDendrogramLeaves(node, mapLeaf) {
+  if (!node) return null;
+  if (node.leaf != null) return { ...node, leaf: mapLeaf(node.leaf) };
+  return {
+    ...node,
+    left: remapDendrogramLeaves(node.left, mapLeaf),
+    right: remapDendrogramLeaves(node.right, mapLeaf),
+  };
+}
+
+function orientDendrogramToOrder(node, positionByLeaf) {
+  if (!node || node.leaf != null) return node;
+  const left = orientDendrogramToOrder(node.left, positionByLeaf);
+  const right = orientDendrogramToOrder(node.right, positionByLeaf);
+  const leftOrder = rowOrderFromDendrogram(left);
+  const rightOrder = rowOrderFromDendrogram(right);
+  const leftMin = Math.min(...leftOrder.map((leaf) => positionByLeaf.get(leaf) ?? Number.MAX_SAFE_INTEGER));
+  const rightMin = Math.min(...rightOrder.map((leaf) => positionByLeaf.get(leaf) ?? Number.MAX_SAFE_INTEGER));
+  return rightMin < leftMin ? { ...node, left: right, right: left } : { ...node, left, right };
+}
+
+function mergeOrderedDendrogramBlocks(blocks, heightBase) {
+  if (!blocks.length) return null;
+  if (blocks.length === 1) return blocks[0];
+  const mid = Math.ceil(blocks.length / 2);
+  const left = mergeOrderedDendrogramBlocks(blocks.slice(0, mid), heightBase);
+  const right = mergeOrderedDendrogramBlocks(blocks.slice(mid), heightBase);
+  const leftMembers = left?.members || rowOrderFromDendrogram(left);
+  const rightMembers = right?.members || rowOrderFromDendrogram(right);
+  return {
+    left,
+    right,
+    members: [...leftMembers, ...rightMembers],
+    height: heightBase + leftMembers.length + rightMembers.length,
+    bridged: true,
+  };
+}
+
+function buildParentBlockedCircularDendrogram(siteSegments, usable, usableFeatures) {
+  const blocks = [];
+  const byOriginalIndex = new Map(usable.map((item, localIndex) => [item.index, { localIndex, feature: item.feature }]));
+  for (const segment of siteSegments) {
+    const originalIndex = siteSegments.indexOf(segment);
+    const usableItem = byOriginalIndex.get(originalIndex);
+    if (!usableItem) continue;
+    const parentBlockId = segment.parentId || segment.row?.parentId || CIRCULAR_ROOT_ORDER_KEY;
+    const last = blocks[blocks.length - 1];
+    if (last?.parentBlockId === parentBlockId) {
+      last.items.push(usableItem);
+    } else {
+      blocks.push({ parentBlockId, items: [usableItem] });
+    }
+  }
+  const order = blocks.flatMap((block) => block.items.map((item) => item.localIndex));
+  const positionByLeaf = new Map(order.map((leaf, position) => [leaf, position]));
+  let bridgedMerges = 0;
+  let maxHeight = 0;
+  const roots = blocks
+    .map((block) => {
+      if (block.items.length === 1) return { leaf: block.items[0].localIndex, members: [block.items[0].localIndex], height: 0, parentBlockId: block.parentBlockId };
+      const localFeatures = block.items.map((item) => item.feature);
+      const dendrogram = buildMissingAwareAgglomerativeDendrogram(localFeatures, { allowBridges: true, minValidPairFraction: 0 });
+      bridgedMerges += dendrogram.bridgedMerges || 0;
+      maxHeight = Math.max(maxHeight, dendrogram.root?.height || 0);
+      const root = remapDendrogramLeaves(dendrogram.root, (localLeaf) => block.items[localLeaf].localIndex);
+      return orientDendrogramToOrder(root, positionByLeaf);
+    })
+    .filter(Boolean);
+  const root = mergeOrderedDendrogramBlocks(roots, Math.max(1, maxHeight));
+  const orientedRoot = orientDendrogramToOrder(root, positionByLeaf);
+  const treeOrder = rowOrderFromDendrogram(orientedRoot);
+  return { root: orientedRoot, order: treeOrder, bridgedMerges: bridgedMerges + Math.max(0, roots.length - 1), blockCount: blocks.length };
+}
+
+async function computeCircularVisibleSiteDendrogram(siteSegments, key) {
+  const rows = siteSegments.map((segment) => segment.row).filter(Boolean);
+  if (rows.length < MIN_VISIBLE_DENDROGRAM_SITES) return { key, root: null, order: [], status: "too few visible sites" };
+  const features = await Promise.all(rows.map(circularSiteFeature));
+  const usable = features
+    .map((feature, index) => ({ feature, index }))
+    .filter((item) => item.feature.values.size >= MIN_CLUSTER_SHARED_COMPOUNDS);
+  if (usable.length < MIN_VISIBLE_DENDROGRAM_SITES) {
+    return { key, root: null, order: [], status: `only ${usable.length} visible sites have >= ${MIN_CLUSTER_SHARED_COMPOUNDS} observed compounds` };
+  }
+  const usableFeatures = usable.map((item) => item.feature);
+  const dendrogram = buildParentBlockedCircularDendrogram(siteSegments, usable, usableFeatures);
+  const root = dendrogram.root;
+  const order = dendrogram.order.map((localIndex) => usable[localIndex].index);
+  const completeCount = completeCompoundCount(usableFeatures);
+  return {
+    key,
+    root,
+    order,
+    status: completeCount < MIN_COMPLETE_CLUSTER_COMPOUNDS
+      ? `center dendrogram: parent-blocked agglomerative visible-site clustering; complete compounds shared by all visible sites=${completeCount}; parent blocks=${dendrogram.blockCount}; bridged joins=${dendrogram.bridgedMerges}`
+      : `center dendrogram: parent-blocked agglomerative visible-site clustering; complete compounds shared by all visible sites=${completeCount}; parent blocks=${dendrogram.blockCount}; bridged joins=${dendrogram.bridgedMerges}`,
+  };
+}
+
+function prepareCircularVisibleSiteDendrogram(siteSegments) {
+  const key = circularVisibleSiteDendrogramKey(siteSegments);
+  if (state.circularVisibleSiteDendrogramKey === key && state.circularVisibleSiteDendrogram) return state.circularVisibleSiteDendrogram;
+  if (state.circularVisibleSiteDendrogramKey === key && state.circularVisibleSiteDendrogramPromise) return null;
+  state.circularVisibleSiteDendrogramKey = key;
+  state.circularVisibleSiteDendrogram = null;
+  state.circularVisibleSiteDendrogramPromise = computeCircularVisibleSiteDendrogram(siteSegments, key)
+    .then((result) => {
+      if (state.circularVisibleSiteDendrogramKey === key) {
+        state.circularVisibleSiteDendrogram = result;
+        state.circularVisibleSiteDendrogramPromise = null;
+        renderCircularCompoundAtlas();
+      }
+      return result;
+    })
+    .catch((err) => {
+      console.warn(`Unable to cluster visible ligandability sites: ${err.message}`);
+      if (state.circularVisibleSiteDendrogramKey === key) {
+        state.circularVisibleSiteDendrogram = { key, root: null, order: [], status: "center dendrogram unavailable" };
+        state.circularVisibleSiteDendrogramPromise = null;
+      }
+    });
+  return null;
+}
+
+function drawCircularCenterDendrogram(ctx, dendrogram, size) {
+  if (!dendrogram?.root || !dendrogram.order?.length) return;
+  const cx = size / 2;
+  const cy = size / 2;
+  const outerRadius = size * Math.max(0.02, CIRCULAR_BANDS.site[0] - 0.017);
+  const rootRadius = 3;
+  const dendrogramLeafDistance = (node) => {
+    if (!node || node.leaf != null) return 0;
+    return 1 + Math.max(dendrogramLeafDistance(node.left), dendrogramLeafDistance(node.right));
+  };
+  const maxLeafDistance = Math.max(1, dendrogramLeafDistance(dendrogram.root));
+  const radiusForLeafDistance = (distance) => rootRadius + (1 - distance / maxLeafDistance) * (outerRadius - rootRadius);
+  const angleByLeaf = new Map(
+    dendrogram.order.map((leafIndex, position) => [
+      leafIndex,
+      -Math.PI / 2 + ((position + 0.5) / Math.max(1, dendrogram.order.length)) * Math.PI * 2,
+    ]),
+  );
+  const normalizeRadialAngle = (angle, reference = 0) => {
+    let adjusted = angle;
+    while (adjusted - reference > Math.PI) adjusted -= Math.PI * 2;
+    while (adjusted - reference < -Math.PI) adjusted += Math.PI * 2;
+    return adjusted;
+  };
+  const radialPoint = (angle, radius) => ({ x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius });
+  const radialDendrogramPath = (from, to) => {
+    if (Math.hypot(to.x - from.x, to.y - from.y) < MIN_DENDROGRAM_STROKE_PX) return;
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+  };
+  const drawArc = (radius, startAngle, endAngle) => {
+    if (Math.abs(endAngle - startAngle) * radius < MIN_DENDROGRAM_STROKE_PX) return;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, endAngle, endAngle < startAngle);
+    ctx.stroke();
+  };
+  const drawRadialTree = (node) => {
+    if (node.leaf != null) {
+      const angle = angleByLeaf.get(node.leaf) ?? -Math.PI / 2;
+      return { ...radialPoint(angle, outerRadius), angle, radius: outerRadius, startAngle: angle, endAngle: angle, leafDistance: 0 };
+    }
+    const left = drawRadialTree(node.left);
+    const right = drawRadialTree(node.right);
+    const rightStart = normalizeRadialAngle(right.startAngle, left.startAngle);
+    const rightEnd = normalizeRadialAngle(right.endAngle, left.startAngle);
+    const startAngle = Math.min(left.startAngle, rightStart);
+    const endAngle = Math.max(left.endAngle, rightEnd);
+    const angle = (startAngle + endAngle) / 2;
+    const radius = radiusForLeafDistance(dendrogramLeafDistance(node));
+    const here = radialPoint(angle, radius);
+    const leftJoin = radialPoint(left.angle, radius);
+    const rightAngle = normalizeRadialAngle(right.angle, left.angle);
+    const rightJoin = radialPoint(rightAngle, radius);
+    const leafDistance = dendrogramLeafDistance(node);
+    radialDendrogramPath(left, leftJoin);
+    radialDendrogramPath(right, rightJoin);
+    drawArc(radius, left.angle, rightAngle);
+    return { ...here, angle, radius, startAngle, endAngle, leafDistance };
+  };
+  ctx.save();
+  ctx.strokeStyle = "#2f3136";
+  ctx.lineWidth = 0.35;
+  const treeRoot = drawRadialTree(dendrogram.root);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(treeRoot.x, treeRoot.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2.2, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(47, 49, 54, 0.5)";
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawFlatHeatmap(canvas, rows, compounds, cells, options = {}) {
+  const dendrogramWidth = options.dendrogram ? 72 : 0;
   const labelWidth = 180;
   const headerHeight = 96;
   const cellSize = 12;
-  const width = labelWidth + Math.max(1, compounds.length) * cellSize;
+  const heatmapX = dendrogramWidth + labelWidth;
+  const width = heatmapX + Math.max(1, compounds.length) * cellSize;
   const height = headerHeight + Math.max(1, rows.length) * cellSize;
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.round(width * dpr);
@@ -1823,17 +2954,18 @@ function drawFlatHeatmap(canvas, rows, compounds, cells) {
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, width, height);
-  ctx.font = "11px system-ui, sans-serif";
+  ctx.font = "11px Helvetica, Arial, sans-serif";
+  if (options.dendrogram) drawCircularDendrogram(ctx, options.dendrogram, rows, 4, headerHeight, dendrogramWidth - 8, cellSize);
   const labelTargets = [];
   rows.forEach((row, index) => {
     const label = String(row.label || row.id).slice(0, 28);
     const rowId = row.level === "site" ? Number(row.siteRow ?? row.rowId) : NaN;
     const isLinkedSite = row.level === "site" && Number.isFinite(rowId) && rowId >= 0;
     ctx.fillStyle = isLinkedSite ? MORANDI.blueDark : "#1f3136";
-    ctx.fillText(label, 6, headerHeight + index * cellSize + 10);
+    ctx.fillText(label, dendrogramWidth + 6, headerHeight + index * cellSize + 10);
     if (isLinkedSite) {
       labelTargets.push({
-        x: 0,
+        x: dendrogramWidth,
         y: headerHeight + index * cellSize,
         width: labelWidth,
         height: cellSize,
@@ -1846,7 +2978,7 @@ function drawFlatHeatmap(canvas, rows, compounds, cells) {
   compounds.forEach((compound, index) => {
     if (index % Math.max(1, Math.ceil(compounds.length / 80)) !== 0) return;
     ctx.save();
-    ctx.translate(labelWidth + index * cellSize + 8, headerHeight - 8);
+    ctx.translate(heatmapX + index * cellSize + 8, headerHeight - 8);
     ctx.rotate(-Math.PI / 2);
     ctx.fillText(compound.id, 0, 0);
     ctx.restore();
@@ -1854,12 +2986,12 @@ function drawFlatHeatmap(canvas, rows, compounds, cells) {
   const hitTargets = [];
   for (const [rowIndex, compoundIndex, maxR, hitCount, pValue] of cells) {
     ctx.fillStyle = circularColor(maxR);
-    ctx.fillRect(labelWidth + compoundIndex * cellSize, headerHeight + rowIndex * cellSize, cellSize, cellSize);
+    ctx.fillRect(heatmapX + compoundIndex * cellSize, headerHeight + rowIndex * cellSize, cellSize, cellSize);
     const row = rows[rowIndex] || {};
     const compound = compounds[compoundIndex] || {};
     const siteMode = row.level === "site";
     hitTargets.push({
-      x: labelWidth + compoundIndex * cellSize,
+      x: heatmapX + compoundIndex * cellSize,
       y: headerHeight + rowIndex * cellSize,
       width: cellSize,
       height: cellSize,
@@ -1949,8 +3081,9 @@ function circularHeatmapPayload(data, nodeId, segmentContext = null) {
   let cells = [];
   if (context.drilldown?.rows?.length) {
     const aggregateMemo = new Map();
+    const drilldownCells = circularDrilldownCellsForRow(data, context.row, context.parentCells || [], context.rowIndex);
     (context.drilldown.rows || []).forEach((row, rowIndex) => {
-      const aggregate = circularAggregateCellsForRow(data, row, context.drilldown.cells || [], rowIndex, aggregateMemo);
+      const aggregate = circularAggregateCellsForRow(data, row, drilldownCells, rowIndex, aggregateMemo);
       if (!circularAggregateHasHits(aggregate)) return;
       const filteredRowIndex = rows.length;
       rows.push(row);
@@ -1984,7 +3117,7 @@ function circularHeatmapPayload(data, nodeId, segmentContext = null) {
   };
 }
 
-function renderCircularDrilldown(nodeId, segmentContext = null) {
+async function renderCircularDrilldown(nodeId, segmentContext = null) {
   const data = circularDataset();
   if (!data) return;
   const payload = circularHeatmapPayload(data, nodeId, segmentContext);
@@ -1992,7 +3125,7 @@ function renderCircularDrilldown(nodeId, segmentContext = null) {
     openSummaryDetailModal("No lower-level heatmap", "", '<p class="muted">No lower-level heatmap is available for this sector.</p>');
     return;
   }
-  openCircularHeatmapModal(
+  await openCircularHeatmapModal(
     payload.title,
     payload.meta,
     payload.rows,
@@ -2002,6 +3135,8 @@ function renderCircularDrilldown(nodeId, segmentContext = null) {
 }
 
 function rowMatchesTarget(row, targetList, customGenes) {
+  if (!row) return false;
+  if (targetList === "all") return true;
   if (targetList === "cancer") return isCancerGene(row.gene);
   if (CONTACT_TYPES.includes(targetList)) return row.contactTypes.includes(targetList);
   if (targetList === "custom") return customGenes.has(String(row.gene).toUpperCase());
@@ -2022,49 +3157,86 @@ async function mapWithConcurrency(items, concurrency, worker) {
   return results;
 }
 
-async function renderSummary() {
-  updateConditionalFields();
-  const targetList = el("summaryTargetList").value;
-  const customGenes = customGeneSet(el("summaryCustomGenes").value);
-  const maxHits = hitCountLimit("summaryMaxHits");
-  const candidates = state.catalog.filter((row) => rowMatchesTarget(row, targetList, customGenes));
-  const uniqueGenes = [...new Set(candidates.map((row) => row.gene))];
-  await mapWithConcurrency(uniqueGenes, SUMMARY_GENE_FETCH_CONCURRENCY, (gene) => loadGeneSites(gene));
-  const scoredRows = candidates
-    .map((row) => {
-      const payload = state.geneSiteCache.get(row.gene);
-      const summary = payload?.sites.find((site) => site.row === row.i || site.label === row.label);
-      const hits = filteredHits(summary, summaryFilterIds(), maxHits);
-      const filteredMaxR = hits[0]?.[1] ?? Number(summary?.maxR ?? row.maxR);
-      return { ...row, filteredMaxR };
-    })
-    .filter((row) => Number.isFinite(Number(row.filteredMaxR)));
-  const dedupedRows = new Map();
-  for (const row of scoredRows) {
-    const key = row.label;
-    const prev = dedupedRows.get(key);
-    if (!prev || row.filteredMaxR > prev.filteredMaxR || (row.filteredMaxR === prev.filteredMaxR && row.i < prev.i)) {
-      dedupedRows.set(key, row);
-    }
-  }
-  const rows = [...dedupedRows.values()]
-    .sort((a, b) => (b.filteredMaxR ?? -1) - (a.filteredMaxR ?? -1) || a.label.localeCompare(b.label))
-    .slice(0, 2000);
-  const current = el("summarySiteSelect").value;
-  const selected = rows.some((row) => String(row.i) === current)
-    ? current
-    : rows[0]
-      ? String(rows[0].i)
-      : "";
+function siteTargetListValue() {
+  return el("siteTargetList")?.value || "all";
+}
 
-  setOptions(
-    el("summarySiteSelect"),
-    rows.length
-      ? rows.map((row) => ({ value: String(row.i), label: `${row.label} (Max R: ${roundLabel(row.filteredMaxR)})` }))
-      : [{ value: "", label: "No sites found" }],
-    selected
+function siteTargetCustomGenes() {
+  return customGeneSet(el("siteCustomGenes")?.value);
+}
+
+function isContactTargetList(targetList) {
+  return CONTACT_TYPES.includes(targetList);
+}
+
+function rowHasContactType(row, contacts, contactType) {
+  if (!row || !contacts || !contactType) return false;
+  return (row.positions || []).some((position) =>
+    (contacts[String(position)] || []).some((entry) => (entry.contacts || []).includes(contactType))
   );
-  await renderSummaryBar();
+}
+
+async function contactCandidateUniprots(contactType) {
+  const payload = await loadGlobalProteome();
+  const points = payload?.points || [];
+  if (!points.length) return null;
+  return new Set(points.filter((point) => (point.contactTypes || []).includes(contactType)).map((point) => point.uniprot));
+}
+
+async function loadContactFileIndex() {
+  if (state.contactFileIndex) return state.contactFileIndex;
+  if (state.contactFileIndexPromise) return state.contactFileIndexPromise;
+  state.contactFileIndexPromise = fetchJson("contacts/index.json")
+    .then((items) => {
+      state.contactFileIndex = new Set(items || []);
+      return state.contactFileIndex;
+    })
+    .catch(() => null)
+    .finally(() => {
+      state.contactFileIndexPromise = null;
+    });
+  return state.contactFileIndexPromise;
+}
+
+async function buildContactTargetRows(contactType) {
+  const candidateUniprots = await contactCandidateUniprots(contactType);
+  const contactFileIndex = await loadContactFileIndex();
+  const rowsByUniprot = new Map();
+  for (const row of state.catalog) {
+    if (Number(row.observedCount || 0) <= 0) continue;
+    if (!Number.isFinite(Number(row.maxR))) continue;
+    if (candidateUniprots && !candidateUniprots.has(row.uniprot)) continue;
+    if (contactFileIndex && !contactFileIndex.has(row.uniprot)) continue;
+    if (!rowsByUniprot.has(row.uniprot)) rowsByUniprot.set(row.uniprot, []);
+    rowsByUniprot.get(row.uniprot).push(row);
+  }
+  const rowGroups = [...rowsByUniprot.values()];
+  const matchedGroups = await mapWithConcurrency(rowGroups, 8, async (rows) => {
+    const contacts = await loadContactsForRow(rows[0]);
+    return rows.filter((row) => rowHasContactType(row, contacts, contactType));
+  });
+  return matchedGroups.flat();
+}
+
+async function contactTargetRows(contactType) {
+  const key = `${state.datasetKey}:${contactType}`;
+  if (!state.contactTargetRowCache.has(key)) {
+    state.contactTargetRowCache.set(key, buildContactTargetRows(contactType));
+  }
+  return state.contactTargetRowCache.get(key);
+}
+
+async function contactTargetRowSet(contactType) {
+  const key = `${state.datasetKey}:${contactType}`;
+  if (!state.contactTargetRowSetCache.has(key)) {
+    state.contactTargetRowSetCache.set(key, contactTargetRows(contactType).then((rows) => new Set(rows.map((row) => Number(row.i)))));
+  }
+  return state.contactTargetRowSetCache.get(key);
+}
+
+async function siteTargetRows(targetList, customGenes) {
+  if (isContactTargetList(targetList)) return contactTargetRows(targetList);
+  return state.catalog.filter((row) => rowMatchesTarget(row, targetList, customGenes));
 }
 
 async function loadGeneSites(gene) {
@@ -2100,6 +3272,8 @@ function filteredHits(summary, ids, maxHitCount = Infinity) {
 function siteFilterSignature(activeOnly = checkboxChecked("siteActiveOnly")) {
   return [
     state.datasetKey,
+    siteTargetListValue(),
+    [...siteTargetCustomGenes()].sort().join(","),
     activeOnly ? 1 : 0,
     el("siteMaxHits")?.value || "all",
     checkboxChecked("siteSigOnly") ? 1 : 0,
@@ -2109,6 +3283,8 @@ function siteFilterSignature(activeOnly = checkboxChecked("siteActiveOnly")) {
 }
 
 function renderHitBar(targetId, hits, threshold, rowId = null) {
+  if (targetId === "siteBar") clearPersistentHitTooltip();
+  const isSiteBar = targetId === "siteBar";
   const topHits = hits.slice(0, 20);
   if (!topHits.length) {
     plotMessage(targetId, "No compounds meet the selected filters.");
@@ -2125,15 +3301,22 @@ function renderHitBar(targetId, hits, threshold, rowId = null) {
       colorscale: PVALUE_BLUE_SCALE,
       cmin: 0,
       cmax: 1,
-      colorbar: { title: { text: "P-value", side: "right" }, len: 0.82 },
+      colorbar: {
+        title: { text: "P-value", side: "right" },
+        len: 0.82,
+        ...(isSiteBar ? { x: 0.995, xanchor: "left" } : {}),
+      },
     },
     customdata: hoverPayload,
     hoverinfo: "none",
   };
+  const syncedSize = isSiteBar ? syncSiteBarHeight() : null;
   const plotted = safePlot(
     targetId,
     [trace],
     mergeAxes(baseLayout({
+      ...(syncedSize ? { height: syncedSize.height, width: syncedSize.width } : {}),
+      ...(isSiteBar ? { margin: { l: 48, r: 66, t: 18, b: 88, autoexpand: false } } : {}),
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: threshold, y1: threshold, line: { dash: "dash", color: "#666" } }],
     }), { title: `Top ${topHits.length} Compounds (/${hits.length})`, tickangle: 42, automargin: true }, { title: "R" })
   );
@@ -2143,23 +3326,47 @@ function renderHitBar(targetId, hits, threshold, rowId = null) {
     plot.removeAllListeners?.("plotly_hover");
     plot.removeAllListeners?.("plotly_unhover");
     plot.removeAllListeners?.("plotly_click");
-    plot.on("plotly_hover", (event) => showHitTooltip(event.points[0].customdata, event));
-    plot.on("plotly_unhover", hideMoleculeTooltip);
-    plot.on("plotly_click", (event) => showHitTooltip(event.points[0].customdata, event));
+    plot.on("plotly_hover", (event) => showTransientHitTooltip(event.points[0].customdata, event));
+    plot.on("plotly_unhover", hideTransientHitTooltip);
+    plot.on("plotly_click", (event) => pinHitTooltip(event.points[0].customdata, event));
   }
   requestAnimationFrame(() => bindBarHover(targetId, hoverPayload));
 }
 
-async function renderSummaryBar() {
-  const row = state.rowById.get(Number(el("summarySiteSelect").value));
-  const summary = await siteSummaryForRow(row);
-  const maxProm = hitCountLimit("summaryMaxHits");
-  const hits = filteredHits(summary, {
-    sigOnly: "summarySigOnly",
-    hideVariance: "summaryHideVariance",
-    minSn: "summaryMinSn",
-  }, maxProm);
-  renderHitBar("summaryBar", hits, 2.0, row?.i ?? null);
+function syncSiteBarHeight() {
+  const layout = document.querySelector("#site .site-analysis-layout");
+  const settingsPanel = layout?.querySelector("aside.panel");
+  const chartPanel = layout?.querySelector("section.panel");
+  const bar = el("siteBar");
+  if (!layout || !settingsPanel || !chartPanel || !bar) return null;
+  const settingsHeight = settingsPanel.getBoundingClientRect().height;
+  if (!Number.isFinite(settingsHeight) || settingsHeight <= 0) return null;
+  const panelStyles = getComputedStyle(chartPanel);
+  const verticalInset =
+    Number.parseFloat(panelStyles.paddingTop || "0") +
+    Number.parseFloat(panelStyles.paddingBottom || "0") +
+    Number.parseFloat(panelStyles.borderTopWidth || "0") +
+    Number.parseFloat(panelStyles.borderBottomWidth || "0");
+  const horizontalInset =
+    Number.parseFloat(panelStyles.paddingLeft || "0") +
+    Number.parseFloat(panelStyles.paddingRight || "0") +
+    Number.parseFloat(panelStyles.borderLeftWidth || "0") +
+    Number.parseFloat(panelStyles.borderRightWidth || "0");
+  const plotHeight = Math.max(320, Math.round(settingsHeight - verticalInset));
+  const contentWidth = Math.max(320, Math.round(chartPanel.getBoundingClientRect().width - horizontalInset));
+  chartPanel.style.height = `${Math.round(settingsHeight)}px`;
+  bar.style.setProperty("--site-bar-height", `${plotHeight}px`);
+  bar.style.setProperty("--site-bar-width", `${contentWidth}px`);
+  bar.style.height = `${plotHeight}px`;
+  bar.style.width = `${contentWidth}px`;
+  return { height: plotHeight, width: contentWidth };
+}
+
+function resizeSyncedSiteBar() {
+  const size = syncSiteBarHeight();
+  if (!size) return;
+  if (window.Plotly?.relayout) Plotly.relayout(el("siteBar"), size);
+  schedulePlotResize("siteBar");
 }
 
 async function loadCompoundFromDataset(datasetKey, dataset, drug) {
@@ -2409,8 +3616,15 @@ function bindCompoundPointHover(targetId) {
 
 async function computeFilteredSitesForGene(gene, activeOnly) {
   const maxHits = hitCountLimit("siteMaxHits");
+  const targetList = siteTargetListValue();
+  const customGenes = siteTargetCustomGenes();
+  const targetRowSet = isContactTargetList(targetList) ? await contactTargetRowSet(targetList) : null;
   const payload = await loadGeneSites(gene);
   return (payload?.sites || [])
+    .filter((site) => {
+      const row = state.rowById.get(Number(site.row));
+      return targetRowSet ? targetRowSet.has(Number(site.row)) : rowMatchesTarget(row, targetList, customGenes);
+    })
     .map((site) => {
       if (!activeOnly) return { ...site, filteredMaxR: Number(site.maxR) };
       const hits = filteredHits(site, siteFilterIds(), maxHits);
@@ -2478,14 +3692,17 @@ async function activeGeneStatsForCurrentFilters() {
 async function refreshSiteControls(preferredGene = null, { allowFallback = false } = {}) {
   const seq = ++state.siteRefreshSeq;
   const activeOnly = checkboxChecked("siteActiveOnly");
+  const targetList = siteTargetListValue();
+  const customGenes = siteTargetCustomGenes();
   const currentGene = preferredGene || el("siteGeneSelect").value || state.dataset.defaultGene;
   const currentSite = el("siteSelect").value;
-  let geneStats = activeOnly ? await activeGeneStatsForCurrentFilters() : null;
+  const targetRows = await siteTargetRows(targetList, customGenes);
+  let geneStats = activeOnly && targetList === "all" ? await activeGeneStatsForCurrentFilters() : null;
   if (seq !== state.siteRefreshSeq) return;
 
   if (!geneStats) {
     geneStats = new Map();
-    for (const row of state.catalog) {
+    for (const row of targetRows) {
       if (Number(row.observedCount || 0) <= 0) continue;
       if (activeOnly && Number(row.hitCount || 0) <= 0) continue;
       if (!Number.isFinite(Number(row.maxR))) continue;
@@ -3070,771 +4287,6 @@ async function renderGlobalProteome() {
   }
 }
 
-function bioWorker() {
-  if (!state.bioWorker) {
-    state.bioWorker = new Worker("assets/bio-worker.js?v=pages-data-v26");
-    state.bioWorker.onmessage = handleBioWorkerMessage;
-  }
-  return state.bioWorker;
-}
-
-function bioFilters() {
-  return {
-    datasetKey: state.datasetKey,
-    targetList: "all",
-    customGenes: [],
-    cancerGenes: [...state.cancerSet],
-    search: el("bioSearch").value,
-    seenOnly: checkboxChecked("bioSeenOnly"),
-    hitOnly: checkboxChecked("bioHitOnly"),
-    sigOnly: checkboxChecked("bioSigOnly"),
-    hideVariance: checkboxChecked("bioHideVariance"),
-    minSn: numericValue("bioMinSn", 0),
-    maxHits: el("bioMaxHits")?.value || "all",
-    tier: el("bioTierFilter").value,
-    evidenceFamily: el("bioEvidenceFamily").value,
-    contextFilter: el("bioContextFilter").value,
-    minScore: numericValue("bioMinScore", 0),
-    bin: state.bioBinFilter,
-  };
-}
-
-function evidenceText(row, field) {
-  if (field === "variant") {
-    const values = [];
-    if (row.variant & 2) values.push("ClinVar");
-    if (row.variant & 4) values.push("COSMIC");
-    if (row.variant & 8) values.push("gnomAD");
-    if (!values.length && row.variant & 1) values.push("Context");
-    return values.join(", ") || "None";
-  }
-  if (field === "structure") {
-    const values = [];
-    if (row.structure & 1) values.push("Contact");
-    if (row.structure & 2) values.push("Active-site 3D");
-    if (row.structure & 4) values.push("PDB");
-    return values.join(", ") || "None";
-  }
-  return row[field] && row[field] !== "NONE" ? row[field] : "None";
-}
-
-function yptDatasetValue(row, field) {
-  return row.dataset?.[state.datasetKey]?.[field];
-}
-
-function bioRowHtml(row, index) {
-  return `<tr data-bio-row="${index}" tabindex="0">
-    <td>${escapeHtml(row.gene)}</td>
-    <td>Y${escapeHtml(row.site)}</td>
-    <td>${escapeHtml(row.uniprot)}</td>
-    <td>${yptDatasetValue(row, "seen") ? "Yes" : "No"}</td>
-    <td>${yptDatasetValue(row, "maxR") ? roundLabel(yptDatasetValue(row, "maxR"), 2) : "N/A"}</td>
-    <td>${Number(yptDatasetValue(row, "hits") || 0).toLocaleString()}</td>
-    <td>${escapeHtml(row.tier)}</td>
-    <td>${escapeHtml(evidenceText(row, "catalytic"))}</td>
-    <td>${escapeHtml(evidenceText(row, "regulatory"))}</td>
-    <td>${escapeHtml(evidenceText(row, "variant"))}</td>
-    <td>${escapeHtml(evidenceText(row, "structure"))}</td>
-    <td>${escapeHtml(evidenceText(row, "constraint"))}</td>
-  </tr>`;
-}
-
-function detailMetric(label, value) {
-  return `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value ?? "N/A")}</strong></div>`;
-}
-
-function prolineContextText(code) {
-  const values = [];
-  if (code & 1) values.push("Y-1 proline");
-  if (code & 2) values.push("Y+1 proline");
-  return values.join(", ") || "None";
-}
-
-function distanceText(value) {
-  return value ? `${roundLabel(value, 2)} ${ANGSTROM}` : "N/A";
-}
-
-function renderBioDetail(row) {
-  const panel = el("bioDetailPanel");
-  if (!row) {
-    panel.hidden = true;
-    panel.innerHTML = "";
-    state.bioCurrentDetailRow = null;
-    return;
-  }
-  state.bioCurrentDetailRow = row;
-  const current = row.dataset?.[state.datasetKey] || {};
-  const siteButton = current.seen
-    ? `<button id="bioOpenSite" type="button">Open in Site view</button>`
-    : "";
-  panel.hidden = false;
-  panel.innerHTML = `
-    <div class="bio-detail-header">
-      <div>
-        <h3>${escapeHtml(row.gene)} Y${escapeHtml(row.site)}</h3>
-        <p class="muted">${escapeHtml(row.uniprot)} · ${escapeHtml(row.tier)} · score ${roundLabel(row.score, 3)}</p>
-      </div>
-      ${siteButton}
-    </div>
-    <div class="bio-detail-grid">
-      <section>${detailMetric("Seen in current dataset", current.seen ? "Yes" : "No")}${detailMetric("YPT max R", current.maxR ? roundLabel(current.maxR, 2) : "N/A")}${detailMetric("YPT hits", current.hits || 0)}${detailMetric("Observed compounds", current.observed || 0)}</section>
-      <section>${detailMetric("Catalytic/active-site", evidenceText(row, "catalytic"))}${detailMetric("PTM/regulatory", evidenceText(row, "regulatory"))}${detailMetric("Active-site distance", row.activeSiteDistance ? `${roundLabel(row.activeSiteDistance, 2)} ${ANGSTROM}` : "N/A")}</section>
-      <section>${detailMetric("Variant evidence", evidenceText(row, "variant"))}${detailMetric("ClinVar pathogenic", row.clinvarPathogenic || 0)}${detailMetric("COSMIC samples", row.cosmicSamples || 0)}${detailMetric("gnomAD max AF", row.gnomadMaxAf ? row.gnomadMaxAf.toExponential(2) : "N/A")}</section>
-      <section>${detailMetric("Structure/contact", evidenceText(row, "structure"))}${detailMetric("PDB structures", row.pdbCount || 0)}${detailMetric("AlphaFold pLDDT", row.plddt ? roundLabel(row.plddt, 1) : "N/A")}${detailMetric("RSA", row.rsa ? roundLabel(row.rsa, 2) : "N/A")}</section>
-      <section>${detailMetric("Constraint/conservation", evidenceText(row, "constraint"))}${detailMetric("AlphaMissense max", row.amMax ? roundLabel(row.amMax, 3) : "N/A")}${detailMetric("GERP", row.gerp ? roundLabel(row.gerp, 2) : "N/A")}</section>
-      <section>${detailMetric("Essentiality", row.essentiality)}${detailMetric("Open Targets max", row.otMax ? roundLabel(row.otMax, 2) : "N/A")}${detailMetric("Network degree", row.systemsDegree || 0)}${detailMetric("Expression max", row.expressionMax ? roundLabel(row.expressionMax, 1) : "N/A")}</section>
-      <section>${detailMetric("InterPro annotations", row.interproCount || 0)}${detailMetric("EPSD records", row.epsdCount || 0)}${detailMetric("MC3 public variants", row.mc3Variants || 0)}${detailMetric("Evidence basis", row.evidenceBasis || "UNKNOWN")}</section>
-      <section>${detailMetric("Intrinsic region", row.intrinsicRegion || "UNKNOWN")}${detailMetric("Adjacent proline", prolineContextText(row.prolineContext || 0))}${detailMetric("Tier confidence", row.tierConfidence || "UNKNOWN")}</section>
-      <section>${detailMetric("Nearest MOD_RES", distanceText(row.modResDistance))}${detailMetric("Nearest binding site", distanceText(row.bindingDistance))}${detailMetric("Nearest UniProt SITE", distanceText(row.siteDistance))}</section>
-    </div>
-    <section class="bio-protein-track-section">
-      <div class="bio-protein-track-header">
-        <h4>Protein Site Track</h4>
-        <p class="muted">Loading tyrosines for ${escapeHtml(row.uniprot)}...</p>
-      </div>
-      <div id="bioProteinTrack" class="bio-protein-track"></div>
-    </section>`;
-  el("bioOpenSite")?.addEventListener("click", () => openBioSiteInSiteView(row));
-  requestBioProtein(row);
-}
-
-function requestBioProtein(row) {
-  const seq = ++state.bioProteinSeq;
-  bioWorker().postMessage({
-    type: "protein",
-    seq,
-    manifestPath: state.manifest?.atlas?.path || "atlas/manifest.json",
-    uniprot: row.uniprot,
-    datasetKey: state.datasetKey,
-  });
-}
-
-function rowEvidenceFamilies(row) {
-  const families = [];
-  if (row.catalytic && row.catalytic !== "NONE") families.push("catalytic");
-  if (row.regulatory && row.regulatory !== "NONE") families.push("regulatory");
-  if (row.variant > 0) families.push("variant");
-  if (row.structure > 0) families.push("structure");
-  if (row.constraint && row.constraint !== "NONE") families.push("constraint");
-  return families;
-}
-
-function primaryEvidenceFamily(row) {
-  return rowEvidenceFamilies(row)[0] || "none";
-}
-
-function renderBioProteinTrack(message) {
-  if (message.seq !== state.bioProteinSeq) return;
-  const track = el("bioProteinTrack");
-  if (!track || !state.bioCurrentDetailRow) return;
-  const rows = (message.rows || []).slice().sort((a, b) => a.site - b.site);
-  if (!rows.length) {
-    track.innerHTML = `<p class="muted">No protein-level atlas index was found for this UniProt accession.</p>`;
-    return;
-  }
-  const domains = message.domains || [];
-  const maxSite = Math.max(
-    ...rows.map((row) => Number(row.site || 0)),
-    ...domains.map((domain) => Number(domain.end || 0)),
-    1
-  );
-  const currentRowId = state.bioCurrentDetailRow.rowId;
-  const markers = rows
-    .map((row, index) => {
-      const dataset = row.dataset?.[state.datasetKey] || {};
-      const pct = Math.min(100, Math.max(0, (Number(row.site || 0) / maxSite) * 100));
-      const classes = [
-        "bio-protein-marker",
-        dataset.seen ? "seen" : "",
-        Number(dataset.hits || 0) > 0 ? "hit" : "",
-        row.rowId === currentRowId ? "current" : "",
-        bioFamilyClass(primaryEvidenceFamily(row)),
-      ].filter(Boolean).join(" ");
-      return `<button type="button" class="${classes}" data-protein-row="${index}" style="left:${pct}%" title="${escapeHtml(row.gene)} Y${escapeHtml(row.site)}">
-        <span>Y${escapeHtml(row.site)}</span>
-      </button>`;
-    })
-    .join("");
-  track.innerHTML = `
-    <div class="bio-protein-track-axis">
-      ${renderBioProteinDomains(domains, maxSite)}
-      ${markers}
-    </div>
-    <div id="bioProteinTrackDetail" class="bio-protein-track-detail"></div>
-    <div class="bio-protein-legend">
-      <span><i class="seen"></i>Seen</span>
-      <span><i class="hit"></i>YPT hit</span>
-      <span><i class="current"></i>Current row</span>
-      <span><i class="evidence"></i>Evidence-positive</span>
-      <span><i class="domain"></i>InterPro domain</span>
-    </div>`;
-  const detail = el("bioProteinTrackDetail");
-  const selectTrackRow = (row) => {
-    const dataset = row.dataset?.[state.datasetKey] || {};
-    detail.innerHTML = `
-      <strong>${escapeHtml(row.gene)} Y${escapeHtml(row.site)}</strong>
-      <span>${escapeHtml(row.uniprot)} · score ${roundLabel(row.score, 3)} · ${rowEvidenceFamilies(row).map(bioFamilyLabel).join(", ") || "No evidence"}</span>
-      ${dataset.seen && dataset.siteRow >= 0 ? `<button id="bioProteinOpenSite" type="button">Open in Site view</button>` : ""}`;
-    el("bioProteinOpenSite")?.addEventListener("click", () => openBioSiteInSiteView(row));
-  };
-  track.querySelectorAll("[data-protein-row]").forEach((button) => {
-    const row = rows[Number(button.dataset.proteinRow)];
-    button.addEventListener("click", () => selectTrackRow(row));
-  });
-  selectTrackRow(rows.find((row) => row.rowId === currentRowId) || rows[0]);
-}
-
-function renderBioProteinDomains(domains, maxSite) {
-  if (!domains?.length) return "";
-  const sorted = domains
-    .slice()
-    .sort((a, b) => (a.start - b.start) || (a.end - b.end) || String(a.name).localeCompare(String(b.name)))
-    .slice(0, 28);
-  return sorted
-    .map((domain, index) => {
-      const left = Math.max(0, Math.min(100, (Number(domain.start || 0) / maxSite) * 100));
-      const right = Math.max(left + 0.8, Math.min(100, (Number(domain.end || 0) / maxSite) * 100));
-      const lane = index % 3;
-      return `<span class="bio-protein-domain lane-${lane}" style="left:${left}%;width:${right - left}%" title="${escapeHtml(domain.name)} ${escapeHtml(domain.start)}-${escapeHtml(domain.end)}"></span>`;
-    })
-    .join("");
-}
-
-async function openBioSiteInSiteView(row) {
-  const current = row.dataset?.[state.datasetKey];
-  if (!current?.seen || current.siteRow == null || current.siteRow < 0) return;
-  switchTab("site");
-  if (el("siteGeneSelect").value !== row.gene) {
-    await refreshSiteControls(row.gene, { allowFallback: true });
-  }
-  el("siteSelect").value = String(current.siteRow);
-  await renderSite();
-}
-
-function updateBioSortButtons() {
-  document.querySelectorAll("[data-bio-sort]").forEach((button) => {
-    const active = button.dataset.bioSort === state.bioSort.column;
-    button.classList.toggle("active-sort", active);
-    button.dataset.direction = active ? state.bioSort.direction : "";
-  });
-}
-
-function renderBioLoading(message = "Loading atlas...") {
-  el("bioResultStatus").textContent = message;
-  el("bioTable").querySelector("tbody").innerHTML = `<tr><td colspan="12">${escapeHtml(message)}</td></tr>`;
-}
-
-function bioFamilyLabel(family) {
-  return BIO_FAMILY_META[family]?.label || family;
-}
-
-function bioFamilyClass(family) {
-  return BIO_FAMILY_META[family]?.className || "bio-family-none";
-}
-
-function bioFamilyColor(family) {
-  return BIO_FAMILY_META[family]?.color || MORANDI.gray;
-}
-
-function setBioEvidenceFilter(family) {
-  if (!family || family === "all") return;
-  el("bioEvidenceFamily").value = family;
-  state.bioPage = 0;
-  renderBioDetail(null);
-  renderBioTable();
-}
-
-function setBioBinFilter(bin) {
-  state.bioBinFilter = bin || null;
-  state.bioPage = 0;
-  renderBioVisualFilterStatus();
-  renderBioDetail(null);
-  renderBioTable();
-}
-
-function renderBioVisualFilterStatus() {
-  const node = el("bioVisualFilterStatus");
-  if (!state.bioBinFilter) {
-    node.hidden = true;
-    node.innerHTML = "";
-    return;
-  }
-  const bin = state.bioBinFilter;
-  node.hidden = false;
-  node.innerHTML = `
-    <span>Quadrant filter: YPT max R ${roundLabel(bin.maxRMin, 2)}-${roundLabel(bin.maxRMax, 2)}, score ${roundLabel(bin.scoreMin, 2)}-${roundLabel(bin.scoreMax, 2)}</span>
-    <button id="bioClearVisualFilter" type="button">Clear</button>`;
-  el("bioClearVisualFilter").addEventListener("click", () => setBioBinFilter(null));
-}
-
-function requestBioSummary() {
-  if (!state.manifest?.atlas) return;
-  const seq = ++state.bioVisualSeq;
-  el("bioVisualStatus").textContent = "Updating atlas visuals...";
-  bioWorker().postMessage({
-    type: "summary",
-    seq,
-    manifestPath: state.manifest?.atlas?.path || "atlas/manifest.json",
-    filters: bioFilters(),
-  });
-}
-
-function landscapeCell(group, family, value, maxValue) {
-  const pct = maxValue ? Math.max(4, Math.round((Number(value || 0) / maxValue) * 100)) : 0;
-  return `<button type="button" class="bio-landscape-cell ${bioFamilyClass(family)}" data-bio-evidence="${family}">
-    <span>${Number(value || 0).toLocaleString()}</span>
-    <i style="height:${pct}%"></i>
-  </button>`;
-}
-
-function renderEvidenceLandscape(summary) {
-  const groups = summary.landscape || [];
-  const maxValue = Math.max(1, ...groups.flatMap((group) => BIO_FAMILIES.map((family) => Number(group.families?.[family] || 0))));
-  el("bioEvidenceLandscape").innerHTML = `
-    <div class="bio-landscape-grid" role="table" aria-label="Evidence landscape">
-      <div class="bio-landscape-head"></div>
-      ${BIO_FAMILIES.map((family) => `<div class="bio-landscape-head">${escapeHtml(bioFamilyLabel(family))}</div>`).join("")}
-      ${groups
-        .map(
-          (group) => `
-            <div class="bio-landscape-row-label">
-              <strong>${escapeHtml(group.label)}</strong>
-              <span>${Number(group.count || 0).toLocaleString()} sites</span>
-            </div>
-            ${BIO_FAMILIES.map((family) => landscapeCell(group.value, family, group.families?.[family] || 0, maxValue)).join("")}`
-        )
-        .join("")}
-    </div>`;
-  el("bioEvidenceLandscape").querySelectorAll("[data-bio-evidence]").forEach((button) => {
-    button.addEventListener("click", () => setBioEvidenceFilter(button.dataset.bioEvidence));
-  });
-}
-
-function renderBioQuadrant(summary) {
-  const bins = summary.quadrantBins || [];
-  const traces = BIO_FAMILIES.map((family) => {
-    const familyBins = bins.filter((bin) => bin.family === family && bin.count > 0);
-    return {
-      type: "scatter",
-      mode: "markers",
-      name: bioFamilyLabel(family),
-      x: familyBins.map((bin) => bin.maxRCenter),
-      y: familyBins.map((bin) => bin.scoreCenter),
-      customdata: familyBins,
-      text: familyBins.map((bin) => `${bin.count.toLocaleString()} sites`),
-      marker: {
-        color: bioFamilyColor(family),
-        size: familyBins.map((bin) => Math.max(9, Math.min(36, 7 + Math.log10(bin.count + 1) * 10))),
-        opacity: 0.82,
-        line: { color: "white", width: 1 },
-      },
-      hovertemplate: "%{text}<br>YPT max R %{x:.2f}<br>Score %{y:.2f}<extra></extra>",
-    };
-  });
-  safePlot(
-    "bioQuadrantPlot",
-    traces,
-    mergeAxes(
-      baseLayout({
-        margin: { l: 52, r: 18, t: 16, b: 46 },
-        showlegend: true,
-        legend: { orientation: "h", y: -0.24 },
-      }),
-      { title: "YPT max R", gridcolor: "#ebe7df", zeroline: false },
-      { title: "Importance score", gridcolor: "#ebe7df", zeroline: false, range: [0, 1] }
-    )
-  );
-  const plot = el("bioQuadrantPlot");
-  if (plot?.removeAllListeners) plot.removeAllListeners("plotly_click");
-  if (plot?.on) {
-    plot.on("plotly_click", (event) => {
-      const bin = event?.points?.[0]?.customdata;
-      if (bin) setBioBinFilter(bin);
-    });
-  }
-}
-
-function renderDatasetOverlap(summary) {
-  const totals = summary.overlap || {};
-  const familyCounts = totals.families || {};
-  const maxFamily = Math.max(1, ...BIO_FAMILIES.map((family) => Number(familyCounts[family] || 0)));
-  el("bioDatasetOverlap").innerHTML = `
-    <div class="bio-overlap-layout">
-      <div class="bio-overlap-circles" aria-label="Dataset overlap">
-        <div class="bio-overlap-circle bio-overlap-os"><strong>OS</strong><span>${Number(totals.osSeen || 0).toLocaleString()} seen</span></div>
-        <div class="bio-overlap-circle bio-overlap-frac"><strong>Fractionated</strong><span>${Number(totals.fracSeen || 0).toLocaleString()} seen</span></div>
-        <div class="bio-overlap-circle bio-overlap-atlas"><strong>Atlas</strong><span>${Number(totals.matching || 0).toLocaleString()} matching</span></div>
-      </div>
-      <div class="bio-overlap-bars">
-        ${BIO_FAMILIES.map((family) => {
-          const count = Number(familyCounts[family] || 0);
-          const width = Math.max(3, Math.round((count / maxFamily) * 100));
-          return `<button type="button" data-bio-evidence="${family}" class="bio-overlap-bar">
-            <span>${escapeHtml(bioFamilyLabel(family))}</span>
-            <i class="${bioFamilyClass(family)}" style="width:${width}%"></i>
-            <strong>${count.toLocaleString()}</strong>
-          </button>`;
-        }).join("")}
-      </div>
-    </div>`;
-  el("bioDatasetOverlap").querySelectorAll("[data-bio-evidence]").forEach((button) => {
-    button.addEventListener("click", () => setBioEvidenceFilter(button.dataset.bioEvidence));
-  });
-}
-
-function renderBioSummary(message) {
-  if (message.seq !== state.bioVisualSeq) return;
-  const total = Number(message.overlap?.matching || 0);
-  el("bioVisualStatus").textContent = `${total.toLocaleString()} matching site${total === 1 ? "" : "s"} in visual summary`;
-  renderEvidenceLandscape(message);
-  renderBioQuadrant(message);
-  renderDatasetOverlap(message);
-  document.querySelectorAll(".bio-visual-view").forEach((view) => {
-    view.classList.toggle("active", view.id === (state.bioActiveVisual === "quadrant" ? "bioQuadrant" : state.bioActiveVisual === "overlap" ? "bioDatasetOverlap" : "bioEvidenceLandscape"));
-  });
-}
-
-function handleBioWorkerMessage(event) {
-  const message = event.data || {};
-  if (message.type === "error") {
-    if (message.seq === state.bioRequestSeq) {
-      el("bioResultStatus").textContent = message.message;
-      el("bioTable").querySelector("tbody").innerHTML = `<tr><td colspan="13">${escapeHtml(message.message)}</td></tr>`;
-    }
-    if (message.seq === state.bioVisualSeq) {
-      el("bioVisualStatus").textContent = message.message;
-    }
-    return;
-  }
-  if (message.type === "result") {
-    renderBioTableResult(message);
-    return;
-  }
-  if (message.type === "summary") {
-    renderBioSummary(message);
-    return;
-  }
-  if (message.type === "protein") {
-    renderBioProteinTrack(message);
-    return;
-  }
-  if (message.type === "domains") {
-    renderDomainList(message);
-    return;
-  }
-  if (message.type === "domain") {
-    renderDomainView(message);
-  }
-}
-
-function renderBioTableResult(message) {
-  if (message.seq !== state.bioRequestSeq) return;
-  const rows = message.rows || [];
-  state.bioLastRows = rows;
-  const total = Number(message.total || 0);
-  const page = Number(message.page || 0);
-  const pageCount = Math.max(1, Math.ceil(total / Number(message.pageSize || 100)));
-  el("bioResultStatus").textContent = `${total.toLocaleString()} atlas site${total === 1 ? "" : "s"}`;
-  el("bioPageStatus").textContent = `Page ${page + 1} of ${pageCount}`;
-  el("bioPrevPage").disabled = page <= 0;
-  el("bioNextPage").disabled = page + 1 >= pageCount;
-  el("bioTable").querySelector("tbody").innerHTML = rows.length
-    ? rows.map((row, index) => bioRowHtml(row, index)).join("")
-    : `<tr><td colspan="13">No atlas sites match the selected filters.</td></tr>`;
-  el("bioTable").querySelectorAll("tbody tr[data-bio-row]").forEach((rowNode) => {
-    const row = rows[Number(rowNode.dataset.bioRow)];
-    rowNode.addEventListener("click", () => renderBioDetail(row));
-    rowNode.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") renderBioDetail(row);
-    });
-  });
-  requestBioSummary();
-}
-
-function requestBioTable() {
-  const seq = ++state.bioRequestSeq;
-  renderBioLoading();
-  updateBioSortButtons();
-  bioWorker().postMessage({
-    type: "query",
-    seq,
-    manifestPath: state.manifest?.atlas?.path || "atlas/manifest.json",
-    filters: bioFilters(),
-    sort: state.bioSort,
-    page: state.bioPage,
-  });
-}
-
-function renderBioTable() {
-  if (!state.manifest?.atlas) {
-    renderBioLoading("Atlas metadata is unavailable.");
-    return;
-  }
-  requestBioTable();
-}
-
-function domainFilters() {
-  return {
-    datasetKey: state.datasetKey,
-    maxHits: el("domainMaxHits")?.value || "all",
-    seenOnly: checkboxChecked("domainSeenOnly"),
-    hitOnly: checkboxChecked("domainHitOnly"),
-    sigOnly: checkboxChecked("domainSigOnly"),
-    hideVariance: checkboxChecked("domainHideVariance"),
-    minSn: numericValue("domainMinSn", 0),
-  };
-}
-
-function requestDomainList() {
-  if (!state.manifest?.atlas) return;
-  const seq = ++state.domainListSeq;
-  el("domainListStatus").textContent = "Ranking domains by Max R...";
-  bioWorker().postMessage({
-    type: "domains",
-    seq,
-    manifestPath: state.manifest?.atlas?.path || "atlas/manifest.json",
-    search: el("domainSearch").value,
-    filters: domainFilters(),
-  });
-}
-
-function renderDomainList(message) {
-  if (message.seq !== state.domainListSeq) return;
-  const rows = message.rows || [];
-  const select = el("domainSelect");
-  select.innerHTML = rows
-    .map((entry) => `<option value="${entry.entryId}">${escapeHtml(entry.name)} (Max R: ${roundLabel(entry.domainMaxR, 2)}, Sites: ${Number(entry.filteredSites || 0).toLocaleString()})</option>`)
-    .join("");
-  el("domainListStatus").textContent = rows.length ? `${rows.length.toLocaleString()} domains ranked by current dataset Max R` : "No domains match the current dataset filters";
-  if (rows.length) {
-    state.domainCurrentEntry = rows[0];
-    requestDomainView();
-  } else {
-    renderDomainEmpty("No domains match the current search.");
-  }
-}
-
-function requestDomainView() {
-  if (!state.manifest?.atlas) return;
-  const entryId = Number(el("domainSelect").value || 0);
-  const seq = ++state.domainRequestSeq;
-  el("domainStatus").textContent = "Loading domain sites...";
-  bioWorker().postMessage({
-    type: "domain",
-    seq,
-    manifestPath: state.manifest?.atlas?.path || "atlas/manifest.json",
-    entryId,
-    filters: domainFilters(),
-  });
-}
-
-function renderDomainEmpty(message) {
-  el("domainStatus").textContent = message;
-  el("domainMeasurementSummary").innerHTML = "";
-  el("domainAlignment").innerHTML = `<p class="muted">${escapeHtml(message)}</p>`;
-  el("domainSiteTable").innerHTML = "";
-  el("domainDetailPanel").hidden = true;
-}
-
-function renderDomainMeasurementSummary(message) {
-  const entry = message.entry || {};
-  const topSite = message.domainTopSite || "N/A";
-  el("domainMeasurementSummary").innerHTML = `
-    <div><span>Domain</span><strong>${escapeHtml(entry.name || "Domain")}</strong></div>
-    <div><span>Max R</span><strong>${roundLabel(message.domainMaxR || 0, 2)}</strong></div>
-    <div><span>Top site</span><strong>${escapeHtml(topSite)}</strong></div>
-    <div><span>Sites in current view</span><strong>${Number(message.total || 0).toLocaleString()}</strong></div>
-    <div><span>Proteins</span><strong>${Number(message.proteinCount || 0).toLocaleString()}</strong></div>
-    <div><span>Hit sites</span><strong>${Number(message.hitSites || 0).toLocaleString()}</strong></div>
-    ${renderDomainOriginalAnnotations(entry)}`;
-}
-
-function renderDomainOriginalAnnotations(entry) {
-  const members = entry.members || [];
-  const suppressed = entry.suppressedMembers || [];
-  if ((!members.length || members.length === 1) && !suppressed.length) return "";
-  return `<div class="domain-original-annotations">
-    <span>Original InterPro annotations</span>
-    <ul>
-      ${members
-        .map((member) => `<li><strong>${escapeHtml(member.interproId)}</strong><span>${escapeHtml(member.name || "")}</span><small>${escapeHtml(member.memberDatabases || "")}${member.memberSignatures ? ` · ${escapeHtml(member.memberSignatures)}` : ""}</small></li>`)
-        .join("")}
-      ${suppressed
-        .map((member) => `<li><strong>${escapeHtml(member.interproId)}</strong><span>${escapeHtml(member.name || "")}</span><small>Suppressed broad annotation · ${escapeHtml(member.memberDatabases || "")}${member.memberSignatures ? ` · ${escapeHtml(member.memberSignatures)}` : ""}</small></li>`)
-        .join("")}
-    </ul>
-  </div>`;
-}
-
-function domainMemberTitle(domain) {
-  const members = domain.members || [];
-  const suppressedMembers = domain.suppressedMembers || [];
-  const memberPreview = (items) => items.slice(0, 8).map((member) => `${member.interproId} ${member.name || ""}`.trim()).join("; ");
-  const originals = members.length > 1 ? `Original annotations: ${memberPreview(members)}${members.length > 8 ? `; +${members.length - 8} more` : ""}` : "";
-  const suppressed = suppressedMembers.length ? `Suppressed broad annotations: ${memberPreview(suppressedMembers)}${suppressedMembers.length > 8 ? `; +${suppressedMembers.length - 8} more` : ""}` : "";
-  return [domain.name, `${domain.start}-${domain.end}`, originals, suppressed].filter(Boolean).join(" | ");
-}
-
-function domainAlignmentScale(intervals) {
-  if (!intervals?.length) return { byIndex: [], max: 1 };
-  const sorted = intervals
-    .map((domain, index) => ({ domain, index, start: Number(domain.start || 0), end: Number(domain.end || 0) }))
-    .sort((a, b) => (a.start - b.start) || (a.end - b.end) || String(a.domain.name).localeCompare(String(b.domain.name)));
-  const byIndex = [];
-  let cursor = 0;
-  let lastEnd = null;
-  for (const item of sorted) {
-    const length = Math.max(1, item.end - item.start + 1);
-    if (lastEnd != null && item.start > lastEnd) cursor += 8;
-    byIndex[item.index] = { domain: item.domain, originalStart: item.start, originalEnd: item.end, start: cursor, end: cursor + length };
-    cursor += length;
-    lastEnd = Math.max(lastEnd ?? item.end, item.end);
-  }
-  return { byIndex, max: Math.max(1, cursor) };
-}
-
-function domainMarkerPosition(site, scaledIntervals, scaleMax, fallbackMax) {
-  const position = Number(site || 0);
-  const containing = scaledIntervals.find((item) => position >= item.originalStart && position <= item.originalEnd) || null;
-  if (containing) {
-    const span = Math.max(1, containing.originalEnd - containing.originalStart);
-    const offset = ((position - containing.originalStart) / span) * (containing.end - containing.start);
-    return Math.max(0, Math.min(100, ((containing.start + offset) / scaleMax) * 100));
-  }
-  return Math.max(0, Math.min(100, (position / fallbackMax) * 100));
-}
-
-function renderDomainBars(intervals) {
-  if (!intervals?.length) return "";
-  const scale = domainAlignmentScale(intervals);
-  const sorted = intervals
-    .map((domain, index) => ({ domain, scaled: scale.byIndex[index] }))
-    .sort((a, b) => (a.scaled.start - b.scaled.start) || (a.scaled.end - b.scaled.end))
-    .slice(0, 24);
-  const laneEnds = [];
-  return sorted
-    .map(({ domain, scaled }) => {
-      const left = Math.max(0, Math.min(100, (scaled.start / scale.max) * 100));
-      const right = Math.max(left + 0.8, Math.min(100, (scaled.end / scale.max) * 100));
-      let lane = laneEnds.findIndex((end) => left >= end + 0.4);
-      if (lane < 0) lane = laneEnds.length;
-      lane = Math.min(lane, 2);
-      laneEnds[lane] = Math.max(laneEnds[lane] || 0, right);
-      return `<span class="domain-align-domain lane-${lane}" style="left:${left}%;width:${right - left}%" title="${escapeHtml(domainMemberTitle(domain))}"></span>`;
-    })
-    .join("");
-}
-
-function renderDomainAlignment(message) {
-  const rows = message.rows || [];
-  if (!rows.length) {
-    el("domainAlignment").innerHTML = `<p class="muted">No domain sites match the current dataset filters.</p>`;
-    return;
-  }
-  const intervalsByProtein = message.domainIntervals || {};
-  const byProtein = new Map();
-  for (const row of rows) {
-    const key = `${row.gene}|${row.uniprot}`;
-    if (!byProtein.has(key)) byProtein.set(key, []);
-    byProtein.get(key).push(row);
-  }
-  const proteinRows = [...byProtein.entries()].slice(0, 80).map(([key, sites]) => {
-    const [gene, uniprot] = key.split("|");
-    const intervals = intervalsByProtein[key] || [];
-    const scale = domainAlignmentScale(intervals);
-    const scaledIntervals = scale.byIndex.filter(Boolean);
-    const maxSite = Math.max(...sites.map((row) => Number(row.site || 0)), ...intervals.map((domain) => Number(domain.end || 0)), 1);
-    const domainBars = renderDomainBars(intervals);
-    const markers = sites
-      .sort((a, b) => a.site - b.site)
-      .map((row) => {
-        const current = row.dataset?.[state.datasetKey] || {};
-        const pct = scaledIntervals.length ? domainMarkerPosition(row.site, scaledIntervals, scale.max, maxSite) : Math.max(0, Math.min(100, (Number(row.site || 0) / maxSite) * 100));
-        const classes = ["domain-site-marker", current.seen ? "seen" : "", Number(current.hits || 0) > 0 ? "hit" : "", bioFamilyClass(primaryEvidenceFamily(row))]
-          .filter(Boolean)
-          .join(" ");
-        return `<button type="button" class="${classes}" data-domain-row="${row.rowId}" style="left:${pct}%" title="${escapeHtml(gene)} Y${escapeHtml(row.site)}"></button>`;
-      })
-      .join("");
-    return `<div class="domain-align-row">
-      <strong title="${escapeHtml(uniprot)}">${escapeHtml(gene)}</strong>
-      <div class="domain-align-track">${domainBars}${markers}</div>
-    </div>`;
-  });
-  el("domainAlignment").innerHTML = `
-    <div class="domain-align-axis"><span>Domain-aligned position</span><span>Hover bars for original annotations; click markers for details</span></div>
-    ${proteinRows.join("")}`;
-  el("domainAlignment").querySelectorAll("[data-domain-row]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const row = rows.find((candidate) => String(candidate.rowId) === String(button.dataset.domainRow));
-      if (row) renderDomainRowDetail(row);
-    });
-  });
-}
-
-function renderDomainRowDetail(row) {
-  const panel = el("domainDetailPanel");
-  const current = row.dataset?.[state.datasetKey] || {};
-  panel.hidden = false;
-  panel.innerHTML = `
-    <div class="bio-detail-header">
-      <div>
-        <h3>${escapeHtml(row.gene)} Y${escapeHtml(row.site)}</h3>
-        <p class="muted">${escapeHtml(row.uniprot)} · Max R ${current.maxR ? roundLabel(current.maxR, 2) : "N/A"} · ${Number(current.hits || 0).toLocaleString()} hit${Number(current.hits || 0) === 1 ? "" : "s"}</p>
-      </div>
-      ${current.seen && current.siteRow >= 0 ? `<button id="domainOpenSite" type="button">Open in Site view</button>` : ""}
-    </div>
-    <div class="bio-detail-grid">
-      <section>${detailMetric("Seen in current dataset", current.seen ? "Yes" : "No")}${detailMetric("YPT max R", current.maxR ? roundLabel(current.maxR, 2) : "N/A")}${detailMetric("YPT hits", current.hits || 0)}${detailMetric("Observed compounds", current.observed || 0)}</section>
-      <section>${detailMetric("Protein", row.uniprot)}${detailMetric("Site", `Y${row.site}`)}${detailMetric("Open Site view", current.seen && current.siteRow >= 0 ? "Available" : "Unavailable")}</section>
-    </div>`;
-  el("domainOpenSite")?.addEventListener("click", () => openBioSiteInSiteView(row));
-}
-
-function renderDomainSiteTable(message) {
-  const rows = (message.rows || []).slice(0, 80);
-  el("domainSiteTable").innerHTML = `
-    <table>
-      <thead><tr><th>Site</th><th>YPT max R</th><th>Hits</th><th>Observed compounds</th><th>UniProt</th><th>Seen</th></tr></thead>
-      <tbody>
-        ${rows
-          .map((row) => {
-            const current = row.dataset?.[state.datasetKey] || {};
-            return `<tr data-domain-row="${row.rowId}">
-              <td>${escapeHtml(row.gene)} Y${escapeHtml(row.site)}</td>
-              <td>${current.maxR ? roundLabel(current.maxR, 2) : "N/A"}</td>
-              <td>${current.hits || 0}</td>
-              <td>${current.observed || 0}</td>
-              <td>${escapeHtml(row.uniprot)}</td>
-              <td>${current.seen ? "Yes" : "No"}</td>
-            </tr>`;
-          })
-          .join("")}
-      </tbody>
-    </table>`;
-  el("domainSiteTable").querySelectorAll("[data-domain-row]").forEach((node) => {
-    node.addEventListener("click", () => {
-      const row = rows.find((candidate) => String(candidate.rowId) === String(node.dataset.domainRow));
-      if (row) renderDomainRowDetail(row);
-    });
-  });
-}
-
-function renderDomainView(message) {
-  if (message.seq !== state.domainRequestSeq) return;
-  if (!message.entry) {
-    renderDomainEmpty("Domain metadata is unavailable.");
-    return;
-  }
-  const entry = message.entry;
-  state.domainCurrentEntry = entry;
-  el("domainStatus").textContent = `${entry.name}: Max R ${roundLabel(message.domainMaxR || 0, 2)} across ${Number(message.total || 0).toLocaleString()} current-view site${message.total === 1 ? "" : "s"} in ${Number(message.proteinCount || 0).toLocaleString()} protein${message.proteinCount === 1 ? "" : "s"}`;
-  renderDomainMeasurementSummary(message);
-  renderDomainAlignment(message);
-  renderDomainSiteTable(message);
-  el("domainDetailPanel").hidden = true;
-}
-
 function switchTab(tabName) {
   document.querySelectorAll(".tab-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.tab === tabName);
@@ -3844,15 +4296,13 @@ function switchTab(tabName) {
   });
   updateConditionalFields();
   if (tabName === "summary") {
-    renderGlobalProteome();
-    renderCircularCompoundAtlas();
+    scheduleSummaryDatasetRender();
   }
-  if (tabName === "bio" && !state.bioLastRows.length) renderBioTable();
-  if (tabName === "domain") {
-    if (!el("domainSelect").options.length) requestDomainList();
-    else requestDomainView();
+  if (tabName === "compound") renderCompound();
+  if (tabName === "site") {
+    resizeSyncedSiteBar();
+    autoLoadStructures();
   }
-  if (tabName === "site") autoLoadStructures();
   document.querySelectorAll(`#${tabName} .plot`).forEach((plot) => schedulePlotResize(plot));
 }
 
@@ -3865,18 +4315,22 @@ async function refreshAllForSharedFilters(sourceView) {
     sourceView === "compound" || el("compound")?.classList.contains("active")
       ? populateCompoundChoices()
       : Promise.resolve();
-  await Promise.all([refreshCompoundChoices, renderSummary(), renderCompound(), refreshSiteControls(el("siteGeneSelect").value, { allowFallback: true })]);
+  await Promise.all([refreshCompoundChoices, renderCompound(), refreshSiteControls(el("siteGeneSelect").value, { allowFallback: true })]);
 }
 
-async function refreshAllForSelectivity(sourceId) {
-  ["summaryMaxHits", "siteMaxHits", "domainMaxHits", "bioMaxHits"].forEach((targetId) => {
-    if (targetId !== sourceId) copySelectivityValue(sourceId, targetId);
-  });
-  state.bioPage = 0;
-  await Promise.all([renderSummary(), refreshSiteControls(el("siteGeneSelect").value, { allowFallback: true }), requestDomainList(), renderBioTable()]);
+async function refreshAllForSelectivity() {
+  await refreshSiteControls(el("siteGeneSelect").value, { allowFallback: true });
 }
 
 function bindEvents() {
+  initSearchableControl("compoundSelect");
+  initSearchableControl("siteGeneSelect");
+  document.addEventListener("pointerdown", (event) => {
+    if (!state.persistentHitTooltip) return;
+    const target = event.target;
+    if (target?.closest?.("#siteBar .barlayer .bars .point") || target?.closest?.("#moleculeTooltip")) return;
+    clearPersistentHitTooltip();
+  });
   el("datasetSwitch").addEventListener("change", (event) => loadDataset(event.target.checked ? "frac" : "os"));
   el("summaryDetailClose").addEventListener("click", closeSummaryDetailModal);
   el("summaryDetailModal").addEventListener("click", (event) => {
@@ -3885,11 +4339,13 @@ function bindEvents() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeSummaryDetailModal();
   });
+  window.addEventListener("resize", () => {
+    if (el("site")?.classList.contains("active")) resizeSyncedSiteBar();
+  });
   el("dropNoReplicates").addEventListener("input", async () => {
     invalidateCompoundChoiceCounts();
     await populateCompoundChoices();
     await renderDatasetStaticPlots();
-    await renderSummary();
     await renderCompound();
     updateDatasetStatus();
   });
@@ -3898,11 +4354,6 @@ function bindEvents() {
       switchTab(button.dataset.tab);
     });
   });
-
-  ["summaryTargetList", "summaryCustomGenes"].forEach((id) => el(id).addEventListener("input", () => renderSummary()));
-  el("summaryMaxHits").addEventListener("input", () => refreshAllForSelectivity("summaryMaxHits"));
-  ["summarySigOnly", "summaryHideVariance", "summaryMinSn"].forEach((id) => el(id).addEventListener("input", () => refreshAllForSharedFilters("summary")));
-  el("summarySiteSelect").addEventListener("input", () => renderSummaryBar());
 
   ["compoundSelect", "compoundLabels", "compoundColorMode", "compoundCustomGenes"].forEach((id) =>
     el(id).addEventListener("input", () => renderCompound())
@@ -3918,6 +4369,16 @@ function bindEvents() {
   });
   ["compoundSigOnly", "compoundHideVariance", "compoundMinSn"].forEach((id) => el(id).addEventListener("input", () => refreshAllForSharedFilters("compound")));
 
+  ["siteTargetList", "siteCustomGenes"].forEach((id) =>
+    el(id).addEventListener("input", () => {
+      updateConditionalFields();
+      if (isContactTargetList(siteTargetListValue())) {
+        setOptions(el("siteGeneSelect"), [{ value: "", label: "Loading targets..." }], "");
+        setOptions(el("siteSelect"), [{ value: "", label: "Loading sites..." }], "");
+      }
+      refreshSiteControls(null, { allowFallback: true });
+    })
+  );
   el("siteGeneSelect").addEventListener("change", (event) => refreshSiteControls(event.target.value));
   el("siteMaxHits").addEventListener("input", () => refreshAllForSelectivity("siteMaxHits"));
   ["siteSigOnly", "siteHideVariance", "siteMinSn"].forEach((id) => el(id).addEventListener("input", () => refreshAllForSharedFilters("site")));
@@ -3942,7 +4403,7 @@ function bindEvents() {
   });
   el("circularCompoundAtlas").addEventListener("click", (event) => {
     const hit = circularHitAtEvent(event);
-    if (hit?.row?.id) renderCircularDrilldown(hit.row.id, hit.segment);
+    if (hit?.row?.id) void renderCircularDrilldown(hit.row.id, hit.segment);
   });
   el("circularCompoundAtlas").addEventListener("wheel", (event) => {
     event.preventDefault();
@@ -3979,56 +4440,6 @@ function bindEvents() {
   });
   window.addEventListener("resize", () => {
     if (el("summary")?.classList.contains("active")) renderCircularCompoundAtlas();
-  });
-  el("bioMaxHits").addEventListener("input", () => refreshAllForSelectivity("bioMaxHits"));
-  ["bioSearch", "bioSeenOnly", "bioHitOnly", "bioSigOnly", "bioHideVariance", "bioMinSn", "bioTierFilter", "bioEvidenceFamily", "bioContextFilter", "bioMinScore"].forEach((id) => {
-    el(id).addEventListener("input", () => {
-      state.bioPage = 0;
-      updateConditionalFields();
-      renderBioDetail(null);
-      renderBioTable();
-    });
-  });
-  el("domainSearch").addEventListener("input", () => requestDomainList());
-  el("domainSelect").addEventListener("input", () => requestDomainView());
-  el("domainMaxHits").addEventListener("input", () => refreshAllForSelectivity("domainMaxHits"));
-  ["domainSeenOnly", "domainHitOnly", "domainSigOnly", "domainHideVariance", "domainMinSn"].forEach((id) => el(id).addEventListener("input", () => requestDomainList()));
-  document.querySelectorAll("[data-bio-visual]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.bioActiveVisual = button.dataset.bioVisual;
-      document.querySelectorAll("[data-bio-visual]").forEach((node) => {
-        const active = node === button;
-        node.classList.toggle("active", active);
-        node.setAttribute("aria-selected", String(active));
-      });
-      document.querySelectorAll(".bio-visual-view").forEach((view) => {
-        view.classList.toggle(
-          "active",
-          view.id === (state.bioActiveVisual === "quadrant" ? "bioQuadrant" : state.bioActiveVisual === "overlap" ? "bioDatasetOverlap" : "bioEvidenceLandscape")
-        );
-      });
-      if (state.bioActiveVisual === "quadrant") schedulePlotResize("bioQuadrantPlot");
-    });
-  });
-  el("bioPrevPage").addEventListener("click", () => {
-    state.bioPage = Math.max(0, state.bioPage - 1);
-    renderBioTable();
-  });
-  el("bioNextPage").addEventListener("click", () => {
-    state.bioPage += 1;
-    renderBioTable();
-  });
-  document.querySelectorAll("[data-bio-sort]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const column = button.dataset.bioSort;
-      state.bioSort = {
-        column,
-        direction: state.bioSort.column === column && state.bioSort.direction === "desc" ? "asc" : "desc",
-      };
-      state.bioPage = 0;
-      renderBioDetail(null);
-      renderBioTable();
-    });
   });
 }
 
