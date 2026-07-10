@@ -3,7 +3,7 @@ const DATA_ROOTS = window.YPTLIB_DATA_ROOT
   : [
       "assets/data/",
       "https://cdn.jsdelivr.net/gh/jeljan/yptlib@ba1864e98dcc4ceba93893650276211d0b182bd7/assets/data/",
-      "https://cdn.statically.io/gh/jeljan/yptlib/ba1864e98dcc4ceba93893650276211d0b182bd7/assets/data/",
+      "https://cdn.statically.io/gh/jeljan/yptlib@ba1864e98dcc4ceba93893650276211d0b182bd7/assets/data/",
       "https://raw.githubusercontent.com/jeljan/yptlib/ba1864e98dcc4ceba93893650276211d0b182bd7/assets/data/",
     ];
 const RELEASE_DATA_ARCHIVE_URL = window.YPTLIB_DATA_ARCHIVE_URL || "";
